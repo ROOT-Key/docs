@@ -1,29 +1,32 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "Starter Kit",
+  "name": "ROOTKey",
   "logo": {
-    "dark": "/logo/dark.svg",
-    "light": "/logo/light.svg"
+    "dark": "https://media.notcybersec.com/Logos_NCS/280x60_branco.png",
+    "light": "https://media.notcybersec.com/Logos_NCS/280x60_preto.png"
   },
   "favicon": "/favicon.svg",
   "colors": {
-    "primary": "#0D9373",
-    "light": "#07C983",
-    "dark": "#0D9373",
+    "primary": "#6100FF",
+    "light": "#B800E6",
+    "dark": "#6100FF",
+    "background": {
+      "dark": "#0a090d"
+    },
     "anchors": {
-      "from": "#0D9373",
-      "to": "#07C983"
+      "from": "#B800E6",
+      "to": "#6100FF"
     }
   },
   "topbarLinks": [
     {
       "name": "Support",
-      "url": "mailto:hi@mintlify.com"
+      "url": "mailto:support@rootkey.ai"
     }
   ],
   "topbarCtaButton": {
     "name": "Dashboard",
-    "url": "https://dashboard.mintlify.com"
+    "url": "https://platform.rootkey.ai"
   },
   "tabs": [
     {
@@ -35,57 +38,81 @@
     {
       "name": "Documentation",
       "icon": "book-open-cover",
-      "url": "https://mintlify.com/docs"
+      "url": "http://localhost:3000/introduction"
     },
     {
       "name": "Community",
-      "icon": "slack",
-      "url": "https://mintlify.com/community"
+      "icon": "whatsapp",
+      "url": "https://chat.whatsapp.com/IHM2Grue6sW4Wb6S8OLFNb"
     },
     {
       "name": "Blog",
       "icon": "newspaper",
-      "url": "https://mintlify.com/blog"
+      "url": "https://blog.rootkey.ai"
     }
   ],
   "navigation": [
     {
-      "group": "Get Started",
+      "group": "",
       "pages": [
-        "introduction",
-        "quickstart",
-        "development"
+        "introduction"
       ]
     },
     {
-      "group": "Essentials",
+      "group": "Get Started",
       "pages": [
-        "essentials/markdown",
-        "essentials/code",
-        "essentials/images",
-        "essentials/settings",
-        "essentials/navigation",
-        "essentials/reusable-snippets"
+        "setup-guide",
+        "concepts",
+        "support"
+      ]
+    },
+    {
+      "group": "Authentication",
+      "pages": [
+        "Getting started"
       ]
     },
     {
       "group": "API Documentation",
       "pages": [
-        "api-reference/introduction"
+        "api-reference/introduction",
+        "api-reference/overview",
+        "api-reference/auth",
+        "api-reference/errors"
       ]
     },
     {
-      "group": "Endpoint Examples",
+      "group": "Status",
       "pages": [
-        "api-reference/endpoint/get",
-        "api-reference/endpoint/create",
-        "api-reference/endpoint/delete"
+        "api-reference/status"
+      ]
+    },
+    {
+      "group": "Platform API",
+      "pages": [
+        "api-reference/platform/endpoint/create-contract",
+        "api-reference/platform/endpoint/create-wallet",
+        "api-reference/platform/endpoint/delete-wallet",
+        "api-reference/platform/endpoint/list-contracts",
+        "api-reference/platform/endpoint/list-transactions",
+        "api-reference/platform/endpoint/validate-contract"
+      ]
+    },
+    {
+      "group": "DAMC API",
+      "pages": [
+        "api-reference/damc/overview",
+        "api-reference/damc/endpoint/list-assets",
+        "api-reference/damc/endpoint/create-asset",
+        "api-reference/damc/endpoint/list-asset-maintenances",
+        "api-reference/damc/endpoint/create-asset-maintenances",
+        "api-reference/damc/endpoint/delete-asset"
       ]
     }
   ],
   "footerSocials": {
-    "x": "https://x.com/mintlify",
-    "github": "https://github.com/mintlify",
-    "linkedin": "https://www.linkedin.com/company/mintsearch"
+    "instagram": "https://instagram.com/_rootkey/",
+    "github": "https://github.com/ROOT-Key",
+    "linkedin": "https://www.linkedin.com/company/rootkey"
   }
 }

@@ -1,0 +1,47 @@
+---
+title: Errors
+description: Troubleshooting has never been easier than with this guide.
+---
+
+ROOTKey API returns human readable error messages and a link to the docs to help you deal with that bug much faster.
+
+Here is how an error response looks like:
+
+```JSON 
+{
+  "error": {
+    "message": "The requested resource was not found.",
+	"timestamp": "2024-05-19T16:24:37.884Z",
+    "docUrl": "https://docs.rootkey.ai/docs/api-reference/errors#not-found"
+  }
+}
+```
+
+## HTTP Codes
+
+Give a look to the list of all errors our API returns:
+
+### `Not Found`
+- **Status:** 400
+- **Problem:** 
+- **Solution:** Check the request and make sure it is properly formatted.
+
+### `Unauthorized`
+- **Status:** 401
+- **Problem:** 
+- **Solution:** Check the request and make sure it is properly formatted.
+
+### `Forbidden`
+- **Status:** 403
+- **Problem:** 
+- **Solution:** Check the request and make sure it is properly formatted.
+
+### `Not Found`
+- **Status:** 403
+- **Problem:** 
+- **Solution:** Check the request and make sure it is properly formatted.
+
+### `Internal Error`
+- **Status:** 500
+- **Problem:** 
+- **Solution:** Check the request and make sure it is properly formatted.

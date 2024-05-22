@@ -1,92 +1,61 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
+    "title": "OpenAPI ROOTKey",
+    "description": "Your API of choice for creating, managing and validating information easily and securely!",
+    "termsOfService": "https://www.rootkey.ai/legal/privacy-policy",
+    "contact": {
+      "name": "ROOTKey",
+      "url": "https://www.rootkey.ai/contact",
+      "email": "support@rootkey.ai"
     },
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "description": "Production",
+      "url": "https://rootkey.westeurope.cloudapp.azure.com/auth-service/api-v1/"
+    },
+    {
+      "description": "Staging",
+      "url": "https://dev-rootkey.westeurope.cloudapp.azure.com/auth-service/api-v1/"
     }
   ],
   "security": [
     {
-      "bearerAuth": []
+      "x-api-key": []
     }
   ],
   "paths": {
-    "/plants": {
+    "/status": {
       "get": {
-        "description": "Returns all plants from the system that the user has access to",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
+        "tags": [
+          "Status"
         ],
+        "description": "Through this route users are able to check the status of api on selected version",
+        "security": [],
         "responses": {
           "200": {
             "description": "Plant response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
+                  "type": "object",
+                  "example": {
+                    "message": "[Auth service]: Status OK"
                   }
                 }
               }
             }
           },
-          "400": {
-            "description": "Unexpected error",
+          "404": {
+            "description": "Version Not Found",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "description": "Creates a new plant in the store",
-        "requestBody": {
-          "description": "Plant to add to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Plant"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "unexpected error",
-            "content": {
-              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Resource not found"
+                },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 }
@@ -96,30 +65,407 @@
         }
       }
     },
-    "/plants/{id}": {
+    "/creation/wallet": {
+      "post": {
+        "tags": [
+          "Platform"
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/walletCreationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wallet created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "name": "My first wallet",
+                  "description": "First wallet created throught ROOTKey API",
+                  "walletAddress": ""
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/NewWallet"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Wallet not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Wallet not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creation/smart-contract": {
+      "post": {
+        "tags": [
+          "Platform"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ownerWallet": {
+                    "description": "The name of the wallet",
+                    "type": "string"
+                  },
+                  "type": {
+                    "description": "The description of the wallet to help you organize your data",
+                    "type": "string",
+                    "enum": [
+                      "rootkey"
+                    ]
+                  },
+                  "subType": {
+                    "description": "The description of the wallet to help you organize your data",
+                    "type": "string",
+                    "enum": [
+                      "sec1"
+                    ]
+                  },
+                  "privateKey": {
+                    "description": "The description of the wallet to help you organize your data",
+                    "type": "string"
+                  },
+                  "expirationDate": {
+                    "description": "The description of the wallet to help you organize your data",
+                    "type": "string"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wallet created successfully"
+          },
+          "404": {
+            "description": "Wallet not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Wallet not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/management/list-Transactions": {
+      "post": {
+        "tags": [
+          "Platform"
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/listTransactionsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transactions relative to a wallet",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Wallet not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Wallet not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Wallet not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/management/list-nfts": {
+      "post": {
+        "tags": [
+          "Platform"
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/listNftsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Wallet not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Wallet not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/validation/compare": {
+      "post": {
+        "tags": [
+          "Platform"
+        ],
+        "responses": {
+          "404": {
+            "description": "Wallet not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Wallet not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/wallets/${walletAddress}": {
       "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+        "tags": [
+          "Platform"
+        ],
         "parameters": [
           {
-            "name": "id",
             "in": "path",
-            "description": "ID of plant to delete",
+            "name": "walletAddress",
+            "description": "Wallet Address",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string"
             }
           }
         ],
         "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
+          "200": {
+            "description": ""
           },
-          "400": {
-            "description": "unexpected error",
+          "404": {
+            "description": "Wallet not found",
             "content": {
               "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Wallet not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/assets/": {
+      "get": {
+        "tags": [
+          "DAMC"
+        ],
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/assets/${assetId}/maintenances": {
+      "get": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/createAssetMainetenancesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/assets/${assetId}": {
+      "delete": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetId",
+            "required": true,
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 }
@@ -132,42 +478,153 @@
   },
   "components": {
     "schemas": {
-      "Plant": {
+      "Wallet": {
         "required": [
-          "name"
+          "walletAddress",
+          "privateKey"
         ],
         "type": "object",
         "properties": {
           "name": {
-            "description": "The name of the plant",
+            "description": "The name of the wallet",
             "type": "string"
           },
-          "tag": {
-            "description": "Tag to specify the type",
+          "description": {
+            "description": "The description of the wallet to help you organize your data",
+            "type": "string"
+          },
+          "walletAddress": {
+            "description": "The address of the wallet",
+            "type": "string"
+          },
+          "privateKey": {
+            "description": "Private Key of the wallet to allow you create, delete and transfer data",
             "type": "string"
           }
         }
       },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
+      "NewWallet": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the wallet",
+            "type": "string"
           },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
-              }
-            }
+          "description": {
+            "description": "The description of the wallet to help you organize your data",
+            "type": "string"
+          },
+          "walletAddress": {
+            "description": "The address of the wallet",
+            "type": "string"
           }
-        ]
+        }
       },
+      "walletCreationRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the wallet",
+            "type": "string"
+          },
+          "description": {
+            "description": "The description of the wallet to help you organize your data",
+            "type": "string"
+          }
+        }
+      },
+      "smartContractCreationRequest": {
+        "type": "object",
+        "properties": {
+          "ownerWallet": {
+            "description": "The name of the wallet",
+            "type": "string"
+          },
+          "type": {
+            "description": "The description of the wallet to help you organize your data",
+            "type": "string",
+            "enum": [
+              "rootkey"
+            ]
+          },
+          "subType": {
+            "description": "The description of the wallet to help you organize your data",
+            "type": "string",
+            "enum": [
+              "sec1"
+            ]
+          },
+          "privateKey": {
+            "description": "The description of the wallet to help you organize your data",
+            "type": "string"
+          },
+          "expirationDate": {
+            "description": "The description of the wallet to help you organize your data",
+            "type": "string"
+          }
+        }
+      },
+      "listTransactionsRequest": {
+        "type": "object",
+        "properties": {
+          "walletAddress": {
+            "description": "",
+            "type": "string"
+          },
+          "initialDate": {
+            "description": "",
+            "type": "string"
+          },
+          "finalDate": {
+            "description": "",
+            "type": "string"
+          }
+        }
+      },
+      "listNftsRequest": {
+        "type": "object",
+        "properties": {
+          "walletAddress": {
+            "description": "",
+            "type": "string"
+          }
+        }
+      },
+      "createAssetRequest": {
+        "type": "object",
+        "properties": {
+          "walletAddress": {
+            "description": "",
+            "type": "string"
+          }
+        }
+      },
+      "listAssetMainetenancesRequest": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "description": "Asset Identifier",
+            "type": "string"
+          }
+        }
+      },
+      "createAssetMainetenancesRequest": {
+        "type": "object",
+        "properties": {
+          "hashFile": {
+            "description": "Asset Identifier",
+            "type": "string"
+          },
+          "expirationDate": {
+            "description": "",
+            "type": "string",
+            "required": [
+              "false"
+            ]
+          }
+        }
+      },
+      "deleteAssetMainetenanceRequest": {},
       "Error": {
         "required": [
           "error",
@@ -186,9 +643,10 @@
       }
     },
     "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+      "x-api-key": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header"
       }
     }
   }
