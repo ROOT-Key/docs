@@ -202,12 +202,9 @@
             "description": "Transactions relative to a wallet",
             "content": {
               "application/json": {
-                "example": {
-                  "error": 404,
-                  "message": "Wallet not found!"
-                },
+                
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/listTransactionsResponse"
                 }
               }
             }
@@ -268,15 +265,44 @@
         "tags": [
           "Platform"
         ],
+        "summary": "Validate file",
+        "description": "Compare file against your trustable file smart-contract",
+        "requestBody": {
+          "description": "Smart-contract info and file",
+          "content": {
+            "Multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareSmartContractRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
-          "404": {
-            "description": "Wallet not found",
+          "200": {
+            "description": "Result of the validation",
             "content": {
               "application/json": {
-                "example": {
-                  "error": 404,
-                  "message": "Wallet not found!"
-                },
+                "schema": {
+                  "$ref": "#/components/schemas/CompareSmartContractResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Client bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 }
@@ -581,12 +607,94 @@
           }
         }
       },
+      "listTransactionsResponse": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "description": "",
+            "type": "string"
+          },
+          "from": {
+            "description": "",
+            "type": "string"
+          },
+          "hash": {
+            "description": "",
+            "type": "string"
+          },
+          "transactionFee": {
+            "description": "",
+            "type": "number"
+          },
+          "price": {
+            "description": "",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "",
+            "type": "string"
+          }
+        }
+      },
       "listNftsRequest": {
         "type": "object",
         "properties": {
           "walletAddress": {
             "description": "",
             "type": "string"
+          }
+        }
+      },
+      "CompareSmartContractRequest": {
+        "required": [
+          "file",
+          "ownerWallet",
+          "type",
+          "subType"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "11ce9548-6548-4388-8efb-75716883239a"
+          },
+          "file": {
+            "type": "object"
+          },
+          "ownerWallet": {
+            "type": "string",
+            "example": "0xL2mn4B8id4PMU5DQZq4WZgjTDtuEKCGvn1389Kxz8b9Jqf9TaA56"
+          },
+          "tokenId": {
+            "type": "string",
+            "description": "Id of your trustable file",
+            "example": null
+          },
+          "type": {
+            "type": "string",
+            "example": "rootkey"
+          },
+          "subType": {
+            "type": "string",
+            "example": "sec1"
+          }
+        }
+      },
+      "CompareSmartContractResponse": {
+        "properties": {
+          "validation": {
+            "type": "object",
+            "properties": {
+              "ownership": {
+                "type": "boolean"
+              },
+              "integrity": {
+                "type": "boolean"
+              },
+              "validity": {
+                "type": "boolean"
+              }
+            }
           }
         }
       },
