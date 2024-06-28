@@ -36,11 +36,6 @@
   ],
   "anchors": [
     {
-      "name": "Documentation",
-      "icon": "book-open-cover",
-      "url": "/introduction"
-    },
-    {
       "name": "Community",
       "icon": "whatsapp",
       "url": "https://chat.whatsapp.com/IHM2Grue6sW4Wb6S8OLFNb"
@@ -59,17 +54,34 @@
       ]
     },
     {
-      "group": "Get Started",
+      "group": "Quickstart",
       "pages": [
-        "setup-guide",
-        "concepts",
-        "support"
+        "/overview",
+        "/generate-API-Key",
+        "/guides"
       ]
     },
     {
-      "group": "Authentication",
+      "group": "Ecosystem Guides",
       "pages": [
-        "Getting started"
+        "/environments",
+        "/concepts"
+    ]
+    },
+    {
+      "group": "API References",
+      "pages": [
+        "/overview",
+        "/platform",
+        "/damc"
+      ]
+    },
+    {
+      "group": "Additional Resources",
+      "pages": [
+        "/security-and-compliance",
+        "/FAQ",
+        "/support"
       ]
     },
     {
@@ -112,8 +124,9 @@
     }
   ],
   "footerSocials": {
-    "instagram": "https://instagram.com/_rootkey/",
     "github": "https://github.com/ROOT-Key",
-    "linkedin": "https://www.linkedin.com/company/rootkey"
+    "linkedin": "https://www.linkedin.com/company/rootkey",
+    "instagram": "https://instagram.com/_rootkey/",
+    "x": "https://x.com/__rootkey/"
   }
 }
