@@ -27,7 +27,7 @@
         "url": "https://app.rootkey.ai"
     },
     "tabs": [{
-            "name": "API Reference",
+            "name": "API References",
             "url": "api-reference"
         },
         {
@@ -55,32 +55,25 @@
         {
             "group": "Quickstart",
             "pages": [
-                "/overview",
-                "/generate-API-Key",
-                "/guides"
+                "pages/overview",
+                "pages/generate-API-Key",
+                "pages/guides"
             ]
         },
         {
             "group": "Ecosystem Guides",
             "pages": [
-                "/environments",
-                "/funding_(Amoy)",
-                "/concepts"
-            ]
-        },
-        {
-            "group": "API References",
-            "pages": [
-                "/platform",
-                "/DAMC"
+                "pages/environments",
+                "pages/funding_(Amoy)",
+                "pages/concepts"
             ]
         },
         {
             "group": "Additional Resources",
             "pages": [
-                "/security-and-compliance",
-                "/FAQ",
-                "/support"
+                "pages/security-and-compliance",
+                "pages/FAQ",
+                "pages/support"
             ]
         },
         {
