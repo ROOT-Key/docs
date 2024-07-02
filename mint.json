@@ -41,6 +41,11 @@
             "url": "https://chat.whatsapp.com/IHM2Grue6sW4Wb6S8OLFNb"
         },
         {
+            "name": "Github",
+            "icon": "github",
+            "url": "https://github.com/ROOT-Key"
+        },
+        {
             "name": "Blog",
             "icon": "newspaper",
             "url": "https://blog.rootkey.ai"
