@@ -26,12 +26,16 @@
   ],
   "topbarCtaButton": {
     "name": "Dashboard",
-    "url": "https://platform.rootkey.ai"
+    "url": "https://app.rootkey.ai"
   },
   "tabs": [
     {
       "name": "API Reference",
       "url": "api-reference"
+    },
+    {
+      "name": "Changelog",
+      "url": "changelog"
     }
   ],
   "anchors": [
@@ -119,6 +123,13 @@
         "api-reference/damc/endpoint/list-asset-maintenances",
         "api-reference/damc/endpoint/create-asset-maintenances",
         "api-reference/damc/endpoint/delete-asset"
+      ]
+    },
+    {
+      "group": "Changelog",
+      "pages": [
+        "changelog/2024/overview",
+        "changelog/2023/overview"
       ]
     }
   ],
