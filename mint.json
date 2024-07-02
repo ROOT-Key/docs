@@ -33,6 +33,10 @@
         {
             "name": "Changelog",
             "url": "changelog"
+        },
+        {
+            "name": "Pricing",
+            "url": "pricing"
         }
     ],
     "anchors": [{
@@ -62,8 +66,7 @@
             "group": "Quickstart",
             "pages": [
                 "pages/overview",
-                "pages/api-keys",
-                "pages/guides"
+                "pages/api-keys"
             ]
         },
         {
@@ -123,6 +126,12 @@
             "group": "Changelog",
             "pages": [
                 "changelog/2024/overview"
+            ]
+        },
+        {
+            "group": "Pricing",
+            "pages": [
+                "pricing/overview"
             ]
         }
     ],
