@@ -1,142 +1,137 @@
 {
-  "$schema": "https://mintlify.com/schema.json",
-  "name": "ROOTKey",
-  "logo": {
-    "dark": "https://media.notcybersec.com/Logos_NCS/280x60_branco.png",
-    "light": "https://media.notcybersec.com/Logos_NCS/280x60_preto.png"
-  },
-  "favicon": "/favicon.svg",
-  "colors": {
-    "primary": "#6100FF",
-    "light": "#B800E6",
-    "dark": "#6100FF",
-    "background": {
-      "dark": "#0a090d"
+    "$schema": "https://mintlify.com/schema.json",
+    "name": "ROOTKey",
+    "logo": {
+        "dark": "https://media.notcybersec.com/Logos_NCS/280x60_branco.png",
+        "light": "https://media.notcybersec.com/Logos_NCS/280x60_preto.png"
     },
-    "anchors": {
-      "from": "#B800E6",
-      "to": "#6100FF"
+    "favicon": "/favicon.svg",
+    "colors": {
+        "primary": "#6100FF",
+        "light": "#B800E6",
+        "dark": "#6100FF",
+        "background": {
+            "dark": "#0a090d"
+        },
+        "anchors": {
+            "from": "#B800E6",
+            "to": "#6100FF"
+        }
+    },
+    "topbarLinks": [{
+        "name": "Support",
+        "url": "mailto:support@rootkey.ai"
+    }],
+    "topbarCtaButton": {
+        "name": "Dashboard",
+        "url": "https://app.rootkey.ai"
+    },
+    "tabs": [{
+            "name": "API Reference",
+            "url": "api-reference"
+        },
+        {
+            "name": "Changelog",
+            "url": "changelog"
+        }
+    ],
+    "anchors": [{
+            "name": "Community",
+            "icon": "whatsapp",
+            "url": "https://chat.whatsapp.com/IHM2Grue6sW4Wb6S8OLFNb"
+        },
+        {
+            "name": "Blog",
+            "icon": "newspaper",
+            "url": "https://blog.rootkey.ai"
+        }
+    ],
+    "navigation": [{
+            "group": "",
+            "pages": [
+                "introduction"
+            ]
+        },
+        {
+            "group": "Quickstart",
+            "pages": [
+                "/overview",
+                "/generate-API-Key",
+                "/guides"
+            ]
+        },
+        {
+            "group": "Ecosystem Guides",
+            "pages": [
+                "/environments",
+                "/funding (Amoy)",
+                "/concepts"
+            ]
+        },
+        {
+            "group": "API References",
+            "pages": [
+                "/platform",
+                "/DAMC"
+            ]
+        },
+        {
+            "group": "Additional Resources",
+            "pages": [
+                "/security-and-compliance",
+                "/FAQ",
+                "/support"
+            ]
+        },
+        {
+            "group": "API Documentation",
+            "pages": [
+                "api-reference/overview",
+                "api-reference/auth",
+                "api-reference/errors"
+            ]
+        },
+        {
+            "group": "Status",
+            "pages": [
+                "api-reference/status"
+            ]
+        },
+        {
+            "group": "Platform API",
+            "pages": [
+                "api-reference/platform/overview",
+                "api-reference/platform/endpoint/create-contract",
+                "api-reference/platform/endpoint/create-wallet",
+                "api-reference/platform/endpoint/delete-wallet",
+                "api-reference/platform/endpoint/list-contracts",
+                "api-reference/platform/endpoint/list-transactions",
+                "api-reference/platform/endpoint/validate-contract"
+            ]
+        },
+        {
+            "group": "DAMC API",
+            "pages": [
+                "api-reference/damc/overview",
+                "api-reference/damc/endpoint/list-assets",
+                "api-reference/damc/endpoint/create-asset",
+                "api-reference/damc/endpoint/list-asset-maintenances",
+                "api-reference/damc/endpoint/create-asset-maintenances",
+                "api-reference/damc/endpoint/delete-asset"
+            ]
+        },
+        {
+            "group": "Changelog",
+            "pages": [
+                "changelog/2024/overview",
+                "changelog/2023/overview"
+            ]
+        }
+    ],
+    "footerSocials": {
+        "github": "https://github.com/ROOT-Key",
+        "linkedin": "https://www.linkedin.com/company/rootkey",
+        "instagram": "https://instagram.com/_rootkey/",
+        "x": "https://x.com/__rootkey/"
     }
-  },
-  "topbarLinks": [
-    {
-      "name": "Support",
-      "url": "mailto:support@rootkey.ai"
-    }
-  ],
-  "topbarCtaButton": {
-    "name": "Dashboard",
-    "url": "https://app.rootkey.ai"
-  },
-  "tabs": [
-    {
-      "name": "API Reference",
-      "url": "api-reference"
-    },
-    {
-      "name": "Changelog",
-      "url": "changelog"
-    }
-  ],
-  "anchors": [
-    {
-      "name": "Community",
-      "icon": "whatsapp",
-      "url": "https://chat.whatsapp.com/IHM2Grue6sW4Wb6S8OLFNb"
-    },
-    {
-      "name": "Blog",
-      "icon": "newspaper",
-      "url": "https://blog.rootkey.ai"
-    }
-  ],
-  "navigation": [
-    {
-      "group": "",
-      "pages": [
-        "introduction"
-      ]
-    },
-    {
-      "group": "Quickstart",
-      "pages": [
-        "/overview",
-        "/generate-API-Key",
-        "/guides"
-      ]
-    },
-    {
-      "group": "Ecosystem Guides",
-      "pages": [
-        "/environments",
-        "/concepts"
-    ]
-    },
-    {
-      "group": "API References",
-      "pages": [
-        "/overview",
-        "/platform",
-        "/damc"
-      ]
-    },
-    {
-      "group": "Additional Resources",
-      "pages": [
-        "/security-and-compliance",
-        "/FAQ",
-        "/support"
-      ]
-    },
-    {
-      "group": "API Documentation",
-      "pages": [
-        "api-reference/overview",
-        "api-reference/auth",
-        "api-reference/errors"
-      ]
-    },
-    {
-      "group": "Status",
-      "pages": [
-        "api-reference/status"
-      ]
-    },
-    {
-      "group": "Platform API",
-      "pages": [
-        "api-reference/platform/overview",
-        "api-reference/platform/endpoint/create-contract",
-        "api-reference/platform/endpoint/create-wallet",
-        "api-reference/platform/endpoint/delete-wallet",
-        "api-reference/platform/endpoint/list-contracts",
-        "api-reference/platform/endpoint/list-transactions",
-        "api-reference/platform/endpoint/validate-contract"
-      ]
-    },
-    {
-      "group": "DAMC API",
-      "pages": [
-        "api-reference/damc/overview",
-        "api-reference/damc/endpoint/list-assets",
-        "api-reference/damc/endpoint/create-asset",
-        "api-reference/damc/endpoint/list-asset-maintenances",
-        "api-reference/damc/endpoint/create-asset-maintenances",
-        "api-reference/damc/endpoint/delete-asset"
-      ]
-    },
-    {
-      "group": "Changelog",
-      "pages": [
-        "changelog/2024/overview",
-        "changelog/2023/overview"
-      ]
-    }
-  ],
-  "footerSocials": {
-    "github": "https://github.com/ROOT-Key",
-    "linkedin": "https://www.linkedin.com/company/rootkey",
-    "instagram": "https://instagram.com/_rootkey/",
-    "x": "https://x.com/__rootkey/"
-  }
 }
