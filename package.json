@@ -2,5 +2,7 @@
   "scripts": {
     "generate:docs": "npx @mintlify/scraping@latest openapi-file ./api-reference/openapi.json"
   },
-  "dependencies": {}
+  "dependencies": {
+    "sharp": "^0.33.4"
+  }
 }

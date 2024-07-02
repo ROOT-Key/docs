@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "OpenAPI ROOTKey",
+    "title": "ROOTKey Documentation",
     "description": "Your API of choice for creating, managing and validating information easily and securely!",
     "termsOfService": "https://www.rootkey.ai/legal/privacy-policy",
     "contact": {
@@ -181,7 +181,7 @@
         }
       }
     },
-    "/management/list-Transactions": {
+    "/management/list-transactions": {
       "post": {
         "tags": [
           "Platform"
