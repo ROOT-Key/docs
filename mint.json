@@ -52,9 +52,10 @@
         }
     ],
     "navigation": [{
-            "group": "",
+            "group": "Introduction",
             "pages": [
-                "introduction"
+                "introduction",
+                "api"
             ]
         },
         {
