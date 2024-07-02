@@ -123,8 +123,7 @@
         {
             "group": "Changelog",
             "pages": [
-                "changelog/2024/overview",
-                "changelog/2023/overview"
+                "changelog/2024/overview"
             ]
         }
     ],

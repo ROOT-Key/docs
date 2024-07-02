@@ -181,7 +181,7 @@
         }
       }
     },
-    "/management/list-Transactions": {
+    "/management/list-transactions": {
       "post": {
         "tags": [
           "Platform"
