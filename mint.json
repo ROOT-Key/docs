@@ -103,22 +103,27 @@
             "group": "Platform API",
             "pages": [
                 "api-reference/platform/overview",
-                "api-reference/platform/endpoint/create-contract",
-                "api-reference/platform/endpoint/create-wallet",
-                "api-reference/platform/endpoint/delete-wallet",
                 "api-reference/platform/endpoint/list-contracts",
                 "api-reference/platform/endpoint/list-transactions",
-                "api-reference/platform/endpoint/validate-contract"
+                "api-reference/platform/endpoint/create-contract",
+                "api-reference/platform/endpoint/create-wallet",
+                "api-reference/platform/endpoint/validate-contract",
+                "api-reference/platform/endpoint/delete-wallet"
             ]
         },
         {
             "group": "DAMC API",
             "pages": [
                 "api-reference/damc/overview",
+                "api-reference/damc/endpoint/list-workers",
                 "api-reference/damc/endpoint/list-assets",
-                "api-reference/damc/endpoint/create-asset",
+                "api-reference/damc/endpoint/list-worker-maintenances",
                 "api-reference/damc/endpoint/list-asset-maintenances",
+                "api-reference/damc/endpoint/create-worker",
+                "api-reference/damc/endpoint/create-asset",
                 "api-reference/damc/endpoint/create-asset-maintenances",
+                "api-reference/damc/endpoint/associate-worker-to-asset",
+                "api-reference/damc/endpoint/delete-worker",
                 "api-reference/damc/endpoint/delete-asset"
             ]
         },
