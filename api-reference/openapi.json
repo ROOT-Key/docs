@@ -627,6 +627,164 @@
           }
         }
       }
+    },
+    "/damc/worker/{workerAddress}/assets/": {
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workerAddress",
+            "required": true,
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/associateWorkerToAssetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Worker not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/asset/{assetId}/viewers/": {
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetId",
+            "required": true,
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/associateViewerToAssetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/worker/{workerAddress}/assets/{assetId}": {
+      "put": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workerAddress",
+            "required": true,
+            "schema": {}
+          },
+          {
+            "in": "path",
+            "name": "assetId",
+            "required": true,
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Worker not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/asset/{assetId}/viewers/{viewerAddress}": {
+      "put": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetId",
+            "required": true,
+            "schema": {}
+          },
+          {
+            "in": "path",
+            "name": "viewerAddress",
+            "required": true,
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -673,6 +831,24 @@
           }
         }
       },
+      "associateWorkerToAssetRequest": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "description": "The identifier of the asset to be associated with the worker",
+            "type": "string"
+          }
+        }
+      },
+      "associateViewerToAssetRequest": {
+        "type": "object",
+        "properties": {
+          "viewerAddress": {
+            "description": "The address of the viewer to whitelist to access the asset's data",
+            "type": "string"
+          }
+        }
+      },
       "assetCreationRequest": {
         "type": "object",
         "properties": {
@@ -690,7 +866,7 @@
             "type": "string"
           },
           "description": {
-            "description": "Notes relative to the worker",
+            "description": "Notes relative to the worker (Optional)",
             "type": "string"
           }
         }
@@ -871,13 +1047,6 @@
           "hashFile": {
             "description": "Asset Identifier",
             "type": "string"
-          },
-          "expirationDate": {
-            "description": "",
-            "type": "string",
-            "required": [
-              "false"
-            ]
           }
         }
       },

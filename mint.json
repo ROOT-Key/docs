@@ -123,6 +123,9 @@
                 "api-reference/damc/endpoint/create-asset",
                 "api-reference/damc/endpoint/create-asset-maintenances",
                 "api-reference/damc/endpoint/associate-worker-to-asset",
+                "api-reference/damc/endpoint/associate-viewer-with-asset",
+                "api-reference/damc/endpoint/disassociate-worker-from-asset",
+                "api-reference/damc/endpoint/disassociate-viewer-from-asset",
                 "api-reference/damc/endpoint/delete-worker",
                 "api-reference/damc/endpoint/delete-asset"
             ]
