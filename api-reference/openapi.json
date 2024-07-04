@@ -202,7 +202,6 @@
             "description": "Transactions relative to a wallet",
             "content": {
               "application/json": {
-                
                 "schema": {
                   "$ref": "#/components/schemas/listTransactionsResponse"
                 }
@@ -375,6 +374,17 @@
         "tags": [
           "DAMC"
         ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/assetCreationRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "404": {
             "description": "Asset not found",
@@ -393,7 +403,7 @@
         }
       }
     },
-    "/damc/assets/${assetId}/maintenances": {
+    "/damc/assets/{assetId}/maintenances": {
       "get": {
         "tags": [
           "DAMC"
@@ -470,7 +480,7 @@
         }
       }
     },
-    "/damc/assets/${assetId}": {
+    "/damc/assets/{assetId}": {
       "delete": {
         "tags": [
           "DAMC"
@@ -491,6 +501,123 @@
                 "example": {
                   "error": 404,
                   "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/workers": {
+      "get": {
+        "tags": [
+          "DAMC"
+        ],
+        "responses": {
+          "404": {
+            "description": "Worker not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Worker not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/workerCreationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Worker created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "name": "John Smith",
+                  "workerAddress": ""
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/NewWallet"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/worker/{workerAddress}": {
+      "delete": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workerAddress",
+            "required": true,
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Worker not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Worker not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/worker/{workerAddress}/maintenances": {
+      "get": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workerAddress",
+            "required": true,
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Worker not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Worker not found!"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -542,6 +669,28 @@
           },
           "walletAddress": {
             "description": "The address of the wallet",
+            "type": "string"
+          }
+        }
+      },
+      "assetCreationRequest": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "description": "The identifier of the new asset",
+            "type": "string"
+          }
+        }
+      },
+      "workerCreationRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of worker",
+            "type": "string"
+          },
+          "description": {
+            "description": "Notes relative to the worker",
             "type": "string"
           }
         }
