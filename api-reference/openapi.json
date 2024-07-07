@@ -874,7 +874,7 @@
       "walletCreationRequest": {
         "type": "object",
         "properties": {
-          "name": {
+          "walletName": {
             "description": "The name of the wallet",
             "type": "string"
           },
