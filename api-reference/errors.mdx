@@ -64,3 +64,75 @@ Give a look to the list of all errors our API returns:
 - **Status:** 500
 - **Problem:** 
 - **Solution:** Check the request and make sure it is properly formatted.
+
+### `email_invalid`
+- **Status:** 400
+- **Problem:** The email is invalid
+- **Solution:** Check if the email address is properly formatted and only includes [allowed characters](https://en.wikipedia.org/wiki/Email_address#Local-part).
+
+### `resource_not_found`
+- **Status:** 400
+- **Problem:** The resource specified by the submitted ID does not exist
+- **Solution:** Ensure that the identifier provided is in the list of resources owned by your account.
+
+### `unsubmitted_file`
+- **Status:** 400
+- **Problem:** The file needed to complete the desired action was not submitted 
+- **Solution:** Make sure that you are attaching the file required for the desired action and that the argument is well specified. <br/>In addition, make sure you have set the `multipart/form-data` header correctly.
+
+### `code_expired`
+- **Status:** 400
+- **Problem:** The secure code provided has expired!
+- **Solution:** Request a new code from our app.
+
+### `invalid_code`
+- **Status:** 400
+- **Problem:** The secure code provided is invalid!
+- **Solution:** Make sure the code you provide is the same as the one sent to your email address!
+
+### `inactive_account`
+- **Status:** 400
+- **Problem:** The user account has not been activated!
+- **Solution:** Activate the user account by accessing your email and navigating to the link sent to your email for this purpose!
+
+
+### `invalid_credentails`
+- **Status:** 400
+- **Problem:** The credentials provided are invalid!
+- **Solution:** Make sure that the e-mail and password are the same as the ones you used to create a ROOTKey account!
+
+### `max_resource_limit`
+- **Status:** 400
+- **Problem:** You have reached the monthly limit of this resource for your subscription.
+- **Solution:** Upgrade your subscription to the next level or contact our team to define a customized plan for your needs.
+
+### `invalid_balance_parameter`
+- **Status:** 400
+- **Problem:** The balance received as parameter, is invalid
+- **Solution:** Make sure that the value provided is a number and greater than 0 
+
+### `balance_insufficient`
+- **Status:** 400
+- **Problem:** The balance received as parameter, is invalid
+- **Solution:** Upgrade your subscription to the next level or contact our team to define a customized plan for your needs.
+
+### `title_invalid`
+- **Status:** 400
+- **Problem:** The title submmited is invalid and does not meet with our gidelines
+- **Solution:** Make sure that the title is between 4 and 200 characters long.
+
+### `password_invalid`
+- **Status:** 400
+- **Problem:** The password submmited is invalid and does not meet with our gidelines
+- **Solution:** Make sure that the password is between 6 and 100 characters long.
+
+### `private_key_invalid`
+- **Status:** 400
+- **Problem:** The private key submmited is invalid!
+- **Solution:** The private key must be associated with an existing wallet in the polygon blockchain and must follow the correct scheme. For more information check our [concepts page](docs.rootkey.ai/concepts#private-key)
+
+### `wallet_address_invalid`
+- **Status:** 400
+- **Problem:** The wallet address submmited is invalid!
+- **Solution:** The wallet address must be associated with an existing wallet in the polygon's blockchain and must consist of 42 characters.
+
