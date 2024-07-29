@@ -115,11 +115,14 @@
             "group": "DAMC API",
             "pages": [
                 "api-reference/damc/overview",
+                "api-reference/damc/endpoint/list-admins",
                 "api-reference/damc/endpoint/list-workers",
                 "api-reference/damc/endpoint/list-assets",
                 "api-reference/damc/endpoint/list-worker-maintenances",
                 "api-reference/damc/endpoint/list-asset-maintenances",
+                "api-reference/damc/endpoint/create-admin",
                 "api-reference/damc/endpoint/create-worker",
+                "api-reference/damc/endpoint/create-damc-worker",
                 "api-reference/damc/endpoint/create-asset",
                 "api-reference/damc/endpoint/create-asset-maintenances",
                 "api-reference/damc/endpoint/associate-worker-to-asset",
@@ -127,7 +130,8 @@
                 "api-reference/damc/endpoint/disassociate-worker-from-asset",
                 "api-reference/damc/endpoint/disassociate-viewer-from-asset",
                 "api-reference/damc/endpoint/delete-worker",
-                "api-reference/damc/endpoint/delete-asset"
+                "api-reference/damc/endpoint/delete-asset",
+                "api-reference/damc/endpoint/delete-admin"
             ]
         },
         {
