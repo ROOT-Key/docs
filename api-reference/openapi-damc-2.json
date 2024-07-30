@@ -27,7 +27,7 @@
     }
   ],
   "paths": {
-    "/status": {
+    "/status/": {
       "get": {
         "tags": [
           "Status"
@@ -65,7 +65,36 @@
         }
       }
     },
-    "/damc/asset/": {
+    "/damc/assets/": {
+      "get": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "adminWallet",
+            "required": true,
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "DAMC"
@@ -99,7 +128,52 @@
         }
       }
     },
-    "/damc/asset/{assetId}/collective": {
+    "/damc/assets/{assetId}/transfer": {
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetId",
+            "description": "Admin address with permissions to list all the admins",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/assetTransfer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/assets/{assetId}/collective/": {
       "post": {
         "tags": [
           "DAMC"
@@ -159,7 +233,7 @@
         }
       }
     },
-    "/damc/asset/{assetId}/collective/unset": {
+    "/damc/assets/{assetId}/collective/unset/": {
       "put": {
         "tags": [
           "DAMC"
@@ -204,7 +278,39 @@
         }
       }
     },
-    "/damc/workers": {
+    "/damc/workers/": {
+      "get": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "name": "adminWallet",
+            "in": "path",
+            "description": "Admin wallet with permissions to list all DAMC Workers",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Worker not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Worker not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "DAMC"
@@ -238,7 +344,7 @@
         }
       }
     },
-    "/damc/collective/set": {
+    "/damc/collective/set/": {
       "post": {
         "tags": [
           "DAMC"
@@ -272,7 +378,7 @@
         }
       }
     },
-    "/damc/collective/unset": {
+    "/damc/collective/unset/": {
       "put": {
         "tags": [
           "DAMC"
@@ -306,10 +412,21 @@
         }
       }
     },
-    "/damc/viewers": {
+    "/damc/viewers/{assetId}": {
       "post": {
         "tags": [
           "DAMC"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetId",
+            "description": "Admin address with permissions to list all the admins",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "requestBody": {
           "description": "",
@@ -372,7 +489,7 @@
         }
       }
     },
-    "/damc/maintenances": {
+    "/damc/maintenances/": {
       "post": {
         "tags": [
           "DAMC"
@@ -422,6 +539,28 @@
           },
           "assetURI": {
             "description": "Asset URI",
+            "type": "string"
+          }
+        }
+      },
+      "assetTransfer": {
+        "required": [
+          "assetId",
+          "ownerWallet",
+          "destinationWallet"
+        ],
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "description": "Asset Identifier",
+            "type": "string"
+          },
+          "ownerWallet": {
+            "description": "Address of the current owner of the asset to be transferred",
+            "type": "string"
+          },
+          "destinationWallet": {
+            "description": "Destination address to which the asset should be transferred",
             "type": "string"
           }
         }

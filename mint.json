@@ -118,6 +118,7 @@
                 "api-reference/damc/endpoint/v2/list-assets",
                 "api-reference/damc/endpoint/v2/list-workers",
                 "api-reference/damc/endpoint/v2/create-asset",
+                "api-reference/damc/endpoint/v2/transfer-asset",
                 "api-reference/damc/endpoint/v2/set-asset-workers",
                 "api-reference/damc/endpoint/v2/add-asset-viewers",
                 "api-reference/damc/endpoint/v2/set-asset-collective",
