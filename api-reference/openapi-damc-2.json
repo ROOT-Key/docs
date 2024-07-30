@@ -70,14 +70,6 @@
         "tags": [
           "DAMC"
         ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "adminWallet",
-            "required": true,
-            "schema": {}
-          }
-        ],
         "responses": {
           "404": {
             "description": "Asset not found",
@@ -282,17 +274,6 @@
       "get": {
         "tags": [
           "DAMC"
-        ],
-        "parameters": [
-          {
-            "name": "adminWallet",
-            "in": "path",
-            "description": "Admin wallet with permissions to list all DAMC Workers",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
         ],
         "responses": {
           "404": {
@@ -545,16 +526,11 @@
       },
       "assetTransfer": {
         "required": [
-          "assetId",
           "ownerWallet",
           "destinationWallet"
         ],
         "type": "object",
         "properties": {
-          "assetId": {
-            "description": "Asset Identifier",
-            "type": "string"
-          },
           "ownerWallet": {
             "description": "Address of the current owner of the asset to be transferred",
             "type": "string"
@@ -568,17 +544,12 @@
       "setAssetCollective": {
         "required": [
           "ownerWallet",
-          "assetId",
           "collectiveWorkers"
         ],
         "type": "object",
         "properties": {
           "ownerWallet": {
             "description": "A previous admin with the rights to add new workers",
-            "type": "string"
-          },
-          "assetId": {
-            "description": "Asset Identifier",
             "type": "string"
           },
           "collectiveWorkers": {
@@ -590,17 +561,12 @@
       "unsetAssetCollective": {
         "required": [
           "ownerWallet",
-          "assetId",
           "collectiveWorkers"
         ],
         "type": "object",
         "properties": {
           "ownerWallet": {
             "description": "A previous admin with the rights to add new workers",
-            "type": "string"
-          },
-          "assetId": {
-            "description": "Asset Identifier",
             "type": "string"
           },
           "collectiveWorkers": {
