@@ -13,10 +13,6 @@
   },
   "servers": [
     {
-      "description": "Production",
-      "url": "https://rootkey.westeurope.cloudapp.azure.com/auth-service/api-v1/"
-    },
-    {
       "description": "Staging",
       "url": "https://dev-rootkey.westeurope.cloudapp.azure.com/auth-service/api-v1/"
     }
