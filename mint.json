@@ -115,6 +115,8 @@
             "group": "DAMC API",
             "pages": [
                 "api-reference/damc/overview",
+                "api-reference/damc/endpoint/v2/list-asset",
+                "api-reference/damc/endpoint/v2/list-workers",
                 "api-reference/damc/endpoint/v2/create-asset",
                 "api-reference/damc/endpoint/v2/set-asset-workers",
                 "api-reference/damc/endpoint/v2/add-asset-viewers",
