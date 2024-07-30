@@ -70,6 +70,7 @@
         "tags": [
           "DAMC"
         ],
+        "description": "Listing of registered assets",
         "responses": {
           "404": {
             "description": "Asset not found",
@@ -91,6 +92,7 @@
         "tags": [
           "DAMC"
         ],
+        "description": "Create a new asset",
         "requestBody": {
           "description": "",
           "required": true,
@@ -125,6 +127,7 @@
         "tags": [
           "DAMC"
         ],
+        "description": "Transfer a specific asset to a new owner",
         "parameters": [
           {
             "in": "path",
@@ -275,6 +278,7 @@
         "tags": [
           "DAMC"
         ],
+        "description": "Listing of registered workers",
         "responses": {
           "404": {
             "description": "Worker not found",
@@ -475,6 +479,7 @@
         "tags": [
           "DAMC"
         ],
+        "description": "Creating new maintenance for a particular asset",
         "requestBody": {
           "description": "",
           "required": true,
@@ -515,7 +520,7 @@
         "type": "object",
         "properties": {
           "ownerWallet": {
-            "description": "A previous admin with the rights to add new workers",
+            "description": "The address of the asset owner",
             "type": "string"
           },
           "assetURI": {
@@ -549,7 +554,7 @@
         "type": "object",
         "properties": {
           "ownerWallet": {
-            "description": "A previous admin with the rights to add new workers",
+            "description": "The address of the asset owner",
             "type": "string"
           },
           "collectiveWorkers": {
@@ -566,7 +571,7 @@
         "type": "object",
         "properties": {
           "ownerWallet": {
-            "description": "A previous admin with the rights to add new workers",
+            "description": "The address of the asset owner",
             "type": "string"
           },
           "collectiveWorkers": {
@@ -583,7 +588,7 @@
         "type": "object",
         "properties": {
           "ownerWallet": {
-            "description": "A previous admin with the rights to add new workers",
+            "description": "The address of the asset owner",
             "type": "string"
           },
           "workersAddresses": {
@@ -602,11 +607,11 @@
         "type": "object",
         "properties": {
           "ownerWallet": {
-            "description": "A previous admin with the rights to add new workers",
+            "description": "The address of the asset owner",
             "type": "string"
           },
           "assetId": {
-            "description": "The worker to be added to damc contract",
+            "description": "The asset identifier",
             "type": "string"
           },
           "collective": {
@@ -624,11 +629,11 @@
         "type": "object",
         "properties": {
           "ownerWallet": {
-            "description": "A previous admin with the rights to add new workers",
+            "description": "The address of the asset owner",
             "type": "string"
           },
           "assetId": {
-            "description": "The worker to be added to damc contract",
+            "description": "The asset identifier",
             "type": "string"
           },
           "collective": {
@@ -649,7 +654,7 @@
             "type": "string"
           },
           "viewers": {
-            "description": "The worker to be added to damc contract",
+            "description": "The address of the asset viewer",
             "type": "array"
           }
         }
@@ -666,11 +671,11 @@
             "type": "string"
           },
           "assetId": {
-            "description": "The worker to be added to damc contract",
+            "description": "The asset identifier",
             "type": "string"
           },
           "workerWallet": {
-            "description": "The worker to be added to damc contract",
+            "description": "The address of the worker responsible for the maintenance",
             "type": "string"
           },
           "fileHash": {
