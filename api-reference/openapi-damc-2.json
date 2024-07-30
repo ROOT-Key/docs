@@ -707,8 +707,8 @@
             "description": "The worker to be added to damc contract",
             "type": "string"
           },
-          "hashFile": {
-            "description": "Asset Identifier",
+          "fileHash": {
+            "description": "Hash of the file to be stored",
             "type": "string"
           }
         }
