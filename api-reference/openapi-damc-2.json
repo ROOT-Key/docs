@@ -1,0 +1,708 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ROOTKey Documentation",
+    "description": "Your API of choice for creating, managing and validating information easily and securely!",
+    "termsOfService": "https://www.rootkey.ai/legal/privacy-policy",
+    "contact": {
+      "name": "ROOTKey",
+      "url": "https://www.rootkey.ai/contact",
+      "email": "support@rootkey.ai"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "description": "Staging",
+      "url": "https://dev-rootkey.westeurope.cloudapp.azure.com/auth-service/api-v1/"
+    }
+  ],
+  "security": [
+    {
+      "x-api-key": []
+    }
+  ],
+  "paths": {
+    "/status/": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "description": "Through this route users are able to check the status of api on selected version",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Plant response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "message": "[Auth service]: Status OK"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Version Not Found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Resource not found"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/assets/": {
+      "get": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "Listing of registered assets",
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "Create a new asset",
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/assetCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/assets/{assetId}/transfer": {
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "Transfer a specific asset to a new owner",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetId",
+            "description": "Admin address with permissions to list all the admins",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/assetTransfer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/assets/{assetId}/collective/": {
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetId",
+            "description": "Admin address with permissions to list all the admins",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/setAssetCollective"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List of DAMC Workers",
+            "content": {
+              "application/json": {
+                "example": {
+                  "workers": [
+                    "Worker 1",
+                    "Worker 2",
+                    "Worker 3",
+                    "Worker 4"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/assets/{assetId}/collective/unset/": {
+      "put": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetId",
+            "description": "Admin address with permissions to list all the admins",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/unsetAssetCollective"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/workers/": {
+      "get": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "Listing of registered workers",
+        "responses": {
+          "404": {
+            "description": "Worker not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Worker not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/workersCollective"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/collective/set/": {
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/setCollective"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/collective/unset/": {
+      "put": {
+        "tags": [
+          "DAMC"
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/unsetCollective"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/viewers/{assetId}": {
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetId",
+            "description": "Admin address with permissions to list all the admins",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/addAndRemoveAssetViewer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "DAMC"
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/addAndRemoveAssetViewer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/maintenances/": {
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "Creating new maintenance for a particular asset",
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/createAssetMainetenancesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "assetCreation": {
+        "required": [
+          "ownerWallet",
+          "assetURI"
+        ],
+        "type": "object",
+        "properties": {
+          "ownerWallet": {
+            "description": "The address of the asset owner",
+            "type": "string"
+          },
+          "assetURI": {
+            "description": "Asset URI",
+            "type": "string"
+          }
+        }
+      },
+      "assetTransfer": {
+        "required": [
+          "ownerWallet",
+          "destinationWallet"
+        ],
+        "type": "object",
+        "properties": {
+          "ownerWallet": {
+            "description": "Address of the current owner of the asset to be transferred",
+            "type": "string"
+          },
+          "destinationWallet": {
+            "description": "Destination address to which the asset should be transferred",
+            "type": "string"
+          }
+        }
+      },
+      "setAssetCollective": {
+        "required": [
+          "ownerWallet",
+          "collectiveWorkers"
+        ],
+        "type": "object",
+        "properties": {
+          "ownerWallet": {
+            "description": "The address of the asset owner",
+            "type": "string"
+          },
+          "collectiveWorkers": {
+            "description": "Array of the multiple workers to be added",
+            "type": "array"
+          }
+        }
+      },
+      "unsetAssetCollective": {
+        "required": [
+          "ownerWallet",
+          "collectiveWorkers"
+        ],
+        "type": "object",
+        "properties": {
+          "ownerWallet": {
+            "description": "The address of the asset owner",
+            "type": "string"
+          },
+          "collectiveWorkers": {
+            "description": "Array of the multiple workers to be removed",
+            "type": "array"
+          }
+        }
+      },
+      "workersCollective": {
+        "required": [
+          "ownerWallet",
+          "workersAddresses"
+        ],
+        "type": "object",
+        "properties": {
+          "ownerWallet": {
+            "description": "The address of the asset owner",
+            "type": "string"
+          },
+          "workersAddresses": {
+            "description": "Array of the multiple workers to be added",
+            "type": "array"
+            
+          }
+        }
+      },
+      "setCollective": {
+        "required": [
+          "ownerWallet",
+          "assetId",
+          "collective"
+        ],
+        "type": "object",
+        "properties": {
+          "ownerWallet": {
+            "description": "The address of the asset owner",
+            "type": "string"
+          },
+          "assetId": {
+            "description": "The asset identifier",
+            "type": "string"
+          },
+          "collective": {
+            "description": "The collective of wallets to be added to damc contract",
+            "type": "array"
+          }
+        }
+      },
+      "unsetCollective": {
+        "required": [
+          "ownerWallet",
+          "assetId",
+          "collective"
+        ],
+        "type": "object",
+        "properties": {
+          "ownerWallet": {
+            "description": "The address of the asset owner",
+            "type": "string"
+          },
+          "assetId": {
+            "description": "The asset identifier",
+            "type": "string"
+          },
+          "collective": {
+            "description": "The collective of wallets to be removed",
+            "type": "array"
+          }
+        }
+      },
+      "addAndRemoveAssetViewer": {
+        "required": [
+          "adminWallet",
+          "viewers"
+        ],
+        "type": "object",
+        "properties": {
+          "adminWallet": {
+            "description": "A previous admin with the rights to add new workers",
+            "type": "string"
+          },
+          "viewers": {
+            "description": "The address of the asset viewer",
+            "type": "array"
+          }
+        }
+      },
+      "createAssetMainetenancesRequest": {
+        "required": [
+          "ownerWallet",
+          "workerWallet"
+        ],
+        "type": "object",
+        "properties": {
+          "ownerWallet": {
+            "description": "The owner of the asset",
+            "type": "string"
+          },
+          "assetId": {
+            "description": "The asset identifier",
+            "type": "string"
+          },
+          "workerWallet": {
+            "description": "The address of the worker responsible for the maintenance",
+            "type": "string"
+          },
+          "fileHash": {
+            "description": "Hash of the file to be stored",
+            "type": "string"
+          }
+        }
+      },
+      "Error": {
+        "required": [
+          "error",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "x-api-key": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header"
+      }
+    }
+  }
+}
