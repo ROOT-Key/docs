@@ -25,7 +25,7 @@ ROOTKey API returns human readable error messages and a link to the docs to help
 
 Here is how an error response looks like:
 
-```JSON 
+```JSON
 {
   "error": {
     "errorCode": "AUTH_001",
@@ -42,27 +42,27 @@ Give a look to the list of all errors our API returns:
 
 ### `Not Found`
 - **Status:** 400
-- **Problem:** 
+- **Problem:**
 - **Solution:** Check the request and make sure it is properly formatted.
 
 ### `Unauthorized`
 - **Status:** 401
-- **Problem:** 
+- **Problem:**
 - **Solution:** Check the request and make sure it is properly formatted.
 
 ### `Forbidden`
 - **Status:** 403
-- **Problem:** 
+- **Problem:**
 - **Solution:** Check the request and make sure it is properly formatted.
 
 ### `Not Found`
 - **Status:** 403
-- **Problem:** 
+- **Problem:**
 - **Solution:** Check the request and make sure it is properly formatted.
 
 ### `Internal Error`
 - **Status:** 500
-- **Problem:** 
+- **Problem:**
 - **Solution:** Check the request and make sure it is properly formatted.
 
 # ROOTKey Error Codes
@@ -119,7 +119,7 @@ Give a look to the list of all errors our API returns:
 
 ### `unsubmitted_file`
 - **Status:** 400
-- **Problem:** The file needed to complete the desired action was not submitted 
+- **Problem:** The file needed to complete the desired action was not submitted
 - **Solution:** Make sure that you are attaching the file required for the desired action and that the argument is well specified. <br/>In addition, make sure you have set the `multipart/form-data` header correctly.
 
 ### `code_expired`
@@ -132,9 +132,9 @@ Give a look to the list of all errors our API returns:
 ### `invalid_balance_parameter`
 - **Status:** 400
 - **Problem:** The balance received as parameter, is invalid
-- **Solution:** Make sure that the value provided is a number and greater than 0 
+- **Solution:** Make sure that the value provided is a number and greater than 0
 
-### `balance_insufficient`
+### `insufficient_balance`
 - **Status:** 400
 - **Problem:** The balance received as parameter, is invalid
 - **Solution:** Upgrade your subscription to the next level or contact our team to define a customized plan for your needs.
