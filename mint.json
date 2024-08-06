@@ -119,14 +119,11 @@
                 "api-reference/damc/endpoint/list-workers",
                 "api-reference/damc/endpoint/create-asset",
                 "api-reference/damc/endpoint/transfer-asset",
-                "api-reference/damc/endpoint/set-asset-workers",
                 "api-reference/damc/endpoint/add-asset-viewers",
-                "api-reference/damc/endpoint/set-asset-collective",
+                "api-reference/damc/endpoint/set-collective-of-workers",
                 "api-reference/damc/endpoint/create-maintenances",
-                "api-reference/damc/endpoint/set-collective-in-collective",
                 "api-reference/damc/endpoint/remove-asset-viewers",
-                "api-reference/damc/endpoint/unset-asset-collective",
-                "api-reference/damc/endpoint/unset-collective-in-collective"
+                "api-reference/damc/endpoint/unset-collective-of-workers"
             ]
         },
         {

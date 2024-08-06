@@ -164,7 +164,7 @@
         }
       }
     },
-    "/damc/assets/{assetId}/collective/": {
+    "/damc/assets/{assetId}/workers/collective": {
       "post": {
         "tags": [
           "DAMC"
@@ -186,7 +186,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/setAssetCollective"
+                "$ref": "#/components/schemas/setCollectiveOfWorkers"
               }
             }
           }
@@ -224,7 +224,7 @@
         }
       }
     },
-    "/damc/assets/{assetId}/collective/unset/": {
+    "/damc/assets/{assetId}/workers/collective/unset/": {
       "put": {
         "tags": [
           "DAMC"
@@ -246,7 +246,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/unsetAssetCollective"
+                "$ref": "#/components/schemas/unsetCollectiveOfWorkers"
               }
             }
           }
@@ -542,10 +542,10 @@
           }
         }
       },
-      "setAssetCollective": {
+      "setCollectiveOfWorkers": {
         "required": [
           "ownerWallet",
-          "collectiveWorkers"
+          "workers"
         ],
         "type": "object",
         "properties": {
@@ -553,16 +553,16 @@
             "description": "The address of the asset owner",
             "type": "string"
           },
-          "collectiveWorkers": {
+          "workers": {
             "description": "Array of the multiple workers to be added",
             "type": "array"
           }
         }
       },
-      "unsetAssetCollective": {
+      "unsetCollectiveOfWorkers": {
         "required": [
           "ownerWallet",
-          "collectiveWorkers"
+          "workers"
         ],
         "type": "object",
         "properties": {
@@ -570,7 +570,7 @@
             "description": "The address of the asset owner",
             "type": "string"
           },
-          "collectiveWorkers": {
+          "workers": {
             "description": "Array of the multiple workers to be removed",
             "type": "array"
           }
