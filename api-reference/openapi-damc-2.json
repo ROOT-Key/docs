@@ -67,6 +67,17 @@
           "DAMC"
         ],
         "description": "Listing of registered assets",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "ownerWallet",
+            "description": "The owner's address to list all assets",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "404": {
             "description": "Asset not found",
@@ -118,7 +129,62 @@
         }
       }
     },
-    "/damc/assets/{assetId}/transfer": {
+    "/damc/assets/{assetId}/maintenances/": {
+      "get": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "Transfer a specific asset to a new owner",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetId",
+            "description": "The asset identifier for listing maintenance",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "viewerWallet",
+            "description": "Admin address with permissions to list all the admins",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/listAssetMaintenances"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/assets/{assetId}/transfer/": {
       "post": {
         "tags": [
           "DAMC"
@@ -164,7 +230,7 @@
         }
       }
     },
-    "/damc/assets/{assetId}/workers/collective": {
+    "/damc/assets/{assetId}/workers/collective/": {
       "post": {
         "tags": [
           "DAMC"
@@ -222,10 +288,8 @@
             }
           }
         }
-      }
-    },
-    "/damc/assets/{assetId}/workers/collective/unset/": {
-      "put": {
+      },
+      "delete": {
         "tags": [
           "DAMC"
         ],
@@ -233,24 +297,31 @@
           {
             "in": "path",
             "name": "assetId",
-            "description": "Admin address with permissions to list all the admins",
+            "description": "Identifier of the asset to remove a collective of workers",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ownerWallet",
+            "description": "The address of the owner of the given asset",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "workerCollective",
+            "description": "The address of the collective of workers oto be removed from the given asset",
             "required": true,
             "schema": {
               "type": "string"
             }
           }
         ],
-        "requestBody": {
-          "description": "",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/unsetCollectiveOfWorkers"
-              }
-            }
-          }
-        },
         "responses": {
           "404": {
             "description": "Asset not found",
@@ -275,6 +346,26 @@
           "DAMC"
         ],
         "description": "Listing of registered workers",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "ownerWallet",
+            "description": "The owner's address to list all assets",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "assetId",
+            "description": "The identifier of the asset for which you want to list the workers",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "404": {
             "description": "Worker not found",
@@ -283,38 +374,6 @@
                 "example": {
                   "error": 404,
                   "message": "Worker not found!"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "DAMC"
-        ],
-        "requestBody": {
-          "description": "",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/workersCollective"
-              }
-            }
-          }
-        },
-        "responses": {
-          "404": {
-            "description": "Asset not found",
-            "content": {
-              "application/json": {
-                "example": {
-                  "error": 404,
-                  "message": "Asset not found!"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -393,7 +452,7 @@
         }
       }
     },
-    "/damc/viewers/{assetId}": {
+    "/damc/assets/{assetId}/viewers/": {
       "post": {
         "tags": [
           "DAMC"
@@ -437,7 +496,41 @@
           }
         }
       },
-      "put": {
+      "patch": {
+        "tags": [
+          "DAMC"
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/addAndRemoveAssetViewer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "404": {
+            "description": "Asset not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Asset not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/assets/{assetId}/viewers/remove/": {
+      "patch": {
         "tags": [
           "DAMC"
         ],
@@ -542,6 +635,18 @@
           }
         }
       },
+      "listAssetMaintenances": {
+        "required": [
+          "viewerWallet"
+        ],
+        "type": "object",
+        "properties": {
+          "viewerWallet": {
+            "description": "The address of the asset viewer",
+            "type": "string"
+          }
+        }
+      },
       "setCollectiveOfWorkers": {
         "required": [
           "ownerWallet",
@@ -556,41 +661,6 @@
           "workers": {
             "description": "Array of the multiple workers to be added",
             "type": "array"
-          }
-        }
-      },
-      "unsetCollectiveOfWorkers": {
-        "required": [
-          "ownerWallet",
-          "workers"
-        ],
-        "type": "object",
-        "properties": {
-          "ownerWallet": {
-            "description": "The address of the asset owner",
-            "type": "string"
-          },
-          "workers": {
-            "description": "Array of the multiple workers to be removed",
-            "type": "array"
-          }
-        }
-      },
-      "workersCollective": {
-        "required": [
-          "ownerWallet",
-          "workersAddresses"
-        ],
-        "type": "object",
-        "properties": {
-          "ownerWallet": {
-            "description": "The address of the asset owner",
-            "type": "string"
-          },
-          "workersAddresses": {
-            "description": "Array of the multiple workers to be added",
-            "type": "array"
-            
           }
         }
       },
@@ -640,12 +710,17 @@
       },
       "addAndRemoveAssetViewer": {
         "required": [
-          "adminWallet",
+          "assetId",
+          "ownerWallet",
           "viewers"
         ],
         "type": "object",
         "properties": {
-          "adminWallet": {
+          "assetId": {
+            "description": "The Id of the assets to join the list of workers",
+            "type": "array"
+          },
+          "ownerWallet": {
             "description": "A previous admin with the rights to add new workers",
             "type": "string"
           },
@@ -657,17 +732,18 @@
       },
       "createAssetMainetenancesRequest": {
         "required": [
+          "assetId",
           "ownerWallet",
           "workerWallet"
         ],
         "type": "object",
         "properties": {
-          "ownerWallet": {
-            "description": "The owner of the asset",
-            "type": "string"
-          },
           "assetId": {
             "description": "The asset identifier",
+            "type": "string"
+          },
+          "ownerWallet": {
+            "description": "The owner of the asset",
             "type": "string"
           },
           "workerWallet": {
