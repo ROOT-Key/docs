@@ -100,7 +100,7 @@
             "content": {
               "application/json": {
                 "example": {
-                  "assetId": 404,
+                  "assetId": "1",
                   "assetURI": "https://example.com/assets/asset_1.json",
                   "owner": "0xB411f2302B73331c96D983fE466E85F287Da8A98"
                 },
@@ -298,22 +298,17 @@
         },
         "responses": {
           "200": {
-            "description": "List of DAMC Workers",
+            "description": "Add workers collective successfully",
             "content": {
               "application/json": {
                 "example": {
-                  "workers": [
-                    "Worker 1",
-                    "Worker 2",
-                    "Worker 3",
-                    "Worker 4"
-                  ]
+                  "message": "Workers added successfully!"
                 }
               }
             }
           },
           "400": {
-            "description": "Wallet not found",
+            "description": "Invalid Address",
             "content": {
               "application/json": {
                 "example": {
@@ -455,13 +450,15 @@
           }
         },
         "responses": {
-          "404": {
-            "description": "Asset not found",
+          "400": {
+            "description": "Invalid Address",
             "content": {
               "application/json": {
                 "example": {
-                  "error": 404,
-                  "message": "Asset not found!"
+                  "errorCode": "wallet_address_invalid",
+                  "message": "Invalid Address submmited",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#wallet-address-invalid",
+                  "timestamp": "2024-08-01T00:00:00.294Z"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -521,13 +518,15 @@
           }
         },
         "responses": {
-          "404": {
-            "description": "Asset not found",
+          "400": {
+            "description": "Invalid Address",
             "content": {
               "application/json": {
                 "example": {
-                  "error": 404,
-                  "message": "Asset not found!"
+                  "errorCode": "wallet_address_invalid",
+                  "message": "Invalid Address submmited",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#wallet-address-invalid",
+                  "timestamp": "2024-08-01T00:00:00.294Z"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -556,13 +555,27 @@
           }
         },
         "responses": {
-          "404": {
-            "description": "Asset not found",
+          "400": {
+            "description": "Invalid Address",
             "content": {
               "application/json": {
                 "example": {
-                  "error": 404,
-                  "message": "Asset not found!"
+                  "errorCode": "wallet_address_invalid",
+                  "message": "Invalid Address submmited",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#wallet-address-invalid",
+                  "timestamp": "2024-08-01T00:00:00.294Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Maintenance Recorded Successfully",
+            "content": {
+              "application/json": {
+                "example": {
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
