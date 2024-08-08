@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "ROOTKey Documentation",
-    "description": "Your API of choice for creating, managing and validating information easily and securely!",
+    "description": "Your API of choice for creating, managing, and validating information easily and securely!",
     "termsOfService": "https://www.rootkey.ai/legal/privacy-policy",
     "contact": {
       "name": "ROOTKey",
@@ -28,11 +28,11 @@
         "tags": [
           "Status"
         ],
-        "description": "Through this route users are able to check the status of api on selected version",
+        "description": "Check the status of the API on the selected version",
         "security": [],
         "responses": {
           "200": {
-            "description": "Plant response",
+            "description": "API status response",
             "content": {
               "application/json": {
                 "schema": {
@@ -45,7 +45,7 @@
             }
           },
           "404": {
-            "description": "Version Not Found",
+            "description": "Version not found",
             "content": {
               "application/json": {
                 "example": {
@@ -66,7 +66,7 @@
         "tags": [
           "DAMC"
         ],
-        "description": "Listing of registered assets",
+        "description": "List registered assets",
         "parameters": [
           {
             "in": "query",
@@ -79,13 +79,30 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "Asset not found",
+          "400": {
+            "description": "Invalid Address",
             "content": {
               "application/json": {
                 "example": {
-                  "error": 404,
-                  "message": "Asset not found!"
+                  "errorCode": "resource_not_found",
+                  "message": "Wallet not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
+                  "timestamp": "2024-08-01T00:00:00.294Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "List of Assets",
+            "content": {
+              "application/json": {
+                "example": {
+                  "assetId": 404,
+                  "assetURI": "https://example.com/assets/asset_1.json",
+                  "owner": ""
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -101,7 +118,7 @@
         ],
         "description": "Create a new asset",
         "requestBody": {
-          "description": "",
+          "description": "Asset creation request payload",
           "required": true,
           "content": {
             "application/json": {
@@ -134,7 +151,7 @@
         "tags": [
           "DAMC"
         ],
-        "description": "Transfer a specific asset to a new owner",
+        "description": "List maintenances for a specific asset",
         "parameters": [
           {
             "in": "path",
@@ -148,24 +165,13 @@
           {
             "in": "query",
             "name": "viewerWallet",
-            "description": "Admin address with permissions to list all the admins",
+            "description": "Admin address with permissions to list maintenances",
             "required": true,
             "schema": {
               "type": "string"
             }
           }
         ],
-        "requestBody": {
-          "description": "",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/listAssetMaintenances"
-              }
-            }
-          }
-        },
         "responses": {
           "404": {
             "description": "Asset not found",
@@ -194,7 +200,7 @@
           {
             "in": "path",
             "name": "assetId",
-            "description": "Admin address with permissions to list all the admins",
+            "description": "The asset identifier to be transferred",
             "required": true,
             "schema": {
               "type": "string"
@@ -202,7 +208,7 @@
           }
         ],
         "requestBody": {
-          "description": "",
+          "description": "Asset transfer request payload",
           "required": true,
           "content": {
             "application/json": {
@@ -235,11 +241,12 @@
         "tags": [
           "DAMC"
         ],
+        "description": "Set a collective of workers for a specific asset",
         "parameters": [
           {
             "in": "path",
             "name": "assetId",
-            "description": "Admin address with permissions to list all the admins",
+            "description": "The asset identifier",
             "required": true,
             "schema": {
               "type": "string"
@@ -247,7 +254,7 @@
           }
         ],
         "requestBody": {
-          "description": "",
+          "description": "Collective of workers request payload",
           "required": true,
           "content": {
             "application/json": {
@@ -293,6 +300,7 @@
         "tags": [
           "DAMC"
         ],
+        "description": "Remove a collective of workers from a specific asset",
         "parameters": [
           {
             "in": "path",
@@ -315,7 +323,7 @@
           {
             "in": "query",
             "name": "workerCollective",
-            "description": "The address of the collective of workers oto be removed from the given asset",
+            "description": "The address of the collective of workers to be removed from the given asset",
             "required": true,
             "schema": {
               "type": "string"
@@ -345,12 +353,12 @@
         "tags": [
           "DAMC"
         ],
-        "description": "Listing of registered workers",
+        "description": "List registered workers",
         "parameters": [
           {
             "in": "query",
             "name": "ownerWallet",
-            "description": "The owner's address to list all assets",
+            "description": "The owner's address to list all workers",
             "required": true,
             "schema": {
               "type": "string"
@@ -368,80 +376,12 @@
         ],
         "responses": {
           "404": {
-            "description": "Worker not found",
+            "description": "Workers not found",
             "content": {
               "application/json": {
                 "example": {
                   "error": 404,
-                  "message": "Worker not found!"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/damc/collective/set/": {
-      "post": {
-        "tags": [
-          "DAMC"
-        ],
-        "requestBody": {
-          "description": "",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/setCollective"
-              }
-            }
-          }
-        },
-        "responses": {
-          "404": {
-            "description": "Asset not found",
-            "content": {
-              "application/json": {
-                "example": {
-                  "error": 404,
-                  "message": "Asset not found!"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/damc/collective/unset/": {
-      "put": {
-        "tags": [
-          "DAMC"
-        ],
-        "requestBody": {
-          "description": "",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/unsetCollective"
-              }
-            }
-          }
-        },
-        "responses": {
-          "404": {
-            "description": "Asset not found",
-            "content": {
-              "application/json": {
-                "example": {
-                  "error": 404,
-                  "message": "Asset not found!"
+                  "message": "Workers not found!"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -457,11 +397,12 @@
         "tags": [
           "DAMC"
         ],
+        "description": "Register new viewer on the specifc asset",
         "parameters": [
           {
             "in": "path",
             "name": "assetId",
-            "description": "Admin address with permissions to list all the admins",
+            "description": "The asset's identifier",
             "required": true,
             "schema": {
               "type": "string"
@@ -469,7 +410,7 @@
           }
         ],
         "requestBody": {
-          "description": "",
+          "description": "Add Viewers request payload",
           "required": true,
           "content": {
             "application/json": {
@@ -757,17 +698,18 @@
         }
       },
       "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
-        "type": "object",
+        "description": "An error occurred.",
         "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
-          },
           "message": {
+            "type": "string"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "docUrl": {
+            "type": "string"
+          },
+          "timestamp": {
             "type": "string"
           }
         }
