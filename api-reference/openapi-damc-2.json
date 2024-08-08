@@ -421,23 +421,12 @@
         }
       }
     },
-    "/damc/assets/{assetId}/viewers/": {
+    "/damc/assets/viewers/": {
       "post": {
         "tags": [
           "DAMC"
         ],
         "description": "Register new viewer on the specifc asset",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "assetId",
-            "description": "The asset's identifier",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "requestBody": {
           "description": "Add Viewers request payload",
           "required": true,
@@ -467,41 +456,9 @@
             }
           }
         }
-      },
-      "patch": {
-        "tags": [
-          "DAMC"
-        ],
-        "requestBody": {
-          "description": "",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/addAndRemoveAssetViewer"
-              }
-            }
-          }
-        },
-        "responses": {
-          "404": {
-            "description": "Asset not found",
-            "content": {
-              "application/json": {
-                "example": {
-                  "error": 404,
-                  "message": "Asset not found!"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
       }
     },
-    "/damc/assets/{assetId}/viewers/remove/": {
+    "/damc/assets/viewers/remove/": {
       "patch": {
         "tags": [
           "DAMC"
