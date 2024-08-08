@@ -80,13 +80,13 @@
         ],
         "responses": {
           "400": {
-            "description": "Invalid Address",
+            "description": "Wallet not found",
             "content": {
               "application/json": {
                 "example": {
                   "errorCode": "resource_not_found",
                   "message": "Wallet not found!",
-                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
                   "timestamp": "2024-08-01T00:00:00.294Z"
                 },
                 "schema": {
@@ -102,7 +102,7 @@
                 "example": {
                   "assetId": 404,
                   "assetURI": "https://example.com/assets/asset_1.json",
-                  "owner": ""
+                  "owner": "0xB411f2302B73331c96D983fE466E85F287Da8A98"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -129,13 +129,28 @@
           }
         },
         "responses": {
-          "404": {
-            "description": "Asset not found",
+          "400": {
+            "description": "Wallet not found",
             "content": {
               "application/json": {
                 "example": {
-                  "error": 404,
-                  "message": "Asset not found!"
+                  "errorCode": "resource_not_found",
+                  "message": "Wallet not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2024-08-01T00:00:00.294Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Asset Created",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Asset registered successfully!"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -173,13 +188,30 @@
           }
         ],
         "responses": {
-          "404": {
-            "description": "Asset not found",
+          "400": {
+            "description": "Wallet not found",
             "content": {
               "application/json": {
                 "example": {
-                  "error": 404,
-                  "message": "Asset not found!"
+                  "errorCode": "resource_not_found",
+                  "message": "Wallet not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2024-08-01T00:00:00.294Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "List of asset maintenances",
+            "content": {
+              "application/json": {
+                "example": {
+                  "assetId": "1",
+                  "maintenanceId": "3",
+                  "maintenanceHash": "0x6162635465737400000000000000000000000000000000000000000000000000"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -280,13 +312,15 @@
               }
             }
           },
-          "404": {
-            "description": "Asset not found",
+          "400": {
+            "description": "Wallet not found",
             "content": {
               "application/json": {
                 "example": {
-                  "error": 404,
-                  "message": "Asset not found!"
+                  "errorCode": "wallet_address_invalid",
+                  "message": "Invalid Address submmited",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#wallet-address-invalid",
+                  "timestamp": "2024-08-01T00:00:00.294Z"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
