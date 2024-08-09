@@ -119,6 +119,7 @@
                 "api-reference/damc/endpoint/list-workers",
                 "api-reference/damc/endpoint/list-asset-maintenances",
                 "api-reference/damc/endpoint/create-asset",
+                "api-reference/damc/endpoint/create-worker",
                 "api-reference/damc/endpoint/transfer-asset",
                 "api-reference/damc/endpoint/add-asset-viewers",
                 "api-reference/damc/endpoint/add-workers-collective",
