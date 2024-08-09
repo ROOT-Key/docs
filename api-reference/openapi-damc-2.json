@@ -419,6 +419,36 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "Create new workers",
+        "requestBody": {
+          "description": "Create new workers request payload",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/workerCreation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Worker created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "name": "Worker 1",
+                  "walletAddress": "0xB411f2302B73331c96D983fE466E85F287Da8A98"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/damc/assets/viewers/": {
@@ -546,6 +576,18 @@
   },
   "components": {
     "schemas": {
+      "workerCreation": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the worker",
+            "type": "string"
+          }
+        }
+      },
       "assetCreation": {
         "required": [
           "ownerWallet",
