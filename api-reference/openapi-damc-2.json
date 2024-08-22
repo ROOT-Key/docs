@@ -720,17 +720,13 @@
       "createAssetMainetenancesRequest": {
         "required": [
           "assetId",
-          "ownerWallet",
-          "workerWallet"
+          "workerWallet",
+          "fileHash"
         ],
         "type": "object",
         "properties": {
           "assetId": {
             "description": "The asset identifier",
-            "type": "string"
-          },
-          "ownerWallet": {
-            "description": "The owner of the asset",
             "type": "string"
           },
           "workerWallet": {
