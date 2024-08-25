@@ -222,6 +222,65 @@
         }
       }
     },
+    "/damc/assets/{assetId}/viewers/verify/": {
+      "get": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "Verify a viewer's access to a specific asset",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetId",
+            "description": "The asset identifier for listing maintenance",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "viewerAddress",
+            "description": "The address of the viewer to check if it has access to the asset",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Wallet not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "resource_not_found",
+                  "message": "Wallet not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2024-08-01T00:00:00.294Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Confirmation of the permissions of the viewer",
+            "content": {
+              "application/json": {
+                "example": {
+                  "isViewer": true
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/damc/assets/{assetId}/transfer/": {
       "post": {
         "tags": [
@@ -273,7 +332,7 @@
         "tags": [
           "DAMC"
         ],
-        "description": "Set a collective of workers for a specific asset",
+        "description": "Add a collective of workers to a specific asset",
         "parameters": [
           {
             "in": "path",
@@ -291,7 +350,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/setCollectiveOfWorkers"
+                "$ref": "#/components/schemas/addCollectiveOfWorkers"
               }
             }
           }
@@ -449,6 +508,183 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "Remove workers from a collective of workers",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "ownerWallet",
+            "description": "The owner's address to list all workers",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "collectiveAddress",
+            "description": "The address of the collective to witch the workers are to be added",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "workers",
+            "description": "The list of the workers to be added to the collective",
+            "required": true,
+            "schema": {
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Workers not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Workers not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/workers/collective/": {
+      "get": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "List collective of workers",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "assetId",
+            "description": "The identifier of the asset for which you want to list the workers",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ownerWallet",
+            "description": "The owner's address to list all workers",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of collectives",
+            "content": {
+              "application/json": {
+                "example": {
+                  "collectives": [
+                    "0xae4d92973021ef824ef4ea12b10e3af158826996",
+                    "0x5d8fa815704e3c328d8ef548e92a8666266e2ec5",
+                    "0xf1788d2bf7f38934c03a9c67ef03d0d02561143c",
+                    "0xdbd25a3a99dd737b2659d8dd3fb84931a22d8b29"
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Address",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "wallet_address_invalid",
+                  "message": "Invalid Address submmited",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#wallet-address-invalid",
+                  "timestamp": "2024-08-01T00:00:00.294Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "Create a new collective of workers",
+        "requestBody": {
+          "description": "Create a new collective of workers request payload",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/createCollective"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Collective created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Collective created successfully",
+                  "transactionHash": "0x0a535c95f4450bf2b468a606a093936b90d09c13c1cac6ca2d2f8543f9bfb433"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/workers/collective/add-workers/": {
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "Create new workers",
+        "requestBody": {
+          "description": "Create new workers request payload",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/addWorkersToCollective"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Workers added successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Workers successfully added to collective!",
+                  "transactionHash": "0x0a535c95f4450bf2b468a606a093936b90d09c13c1cac6ca2d2f8543f9bfb433"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/damc/assets/viewers/": {
@@ -562,8 +798,7 @@
             "description": "Maintenance Recorded Successfully",
             "content": {
               "application/json": {
-                "example": {
-                },
+                "example": {},
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 }
@@ -634,9 +869,27 @@
           }
         }
       },
-      "setCollectiveOfWorkers": {
+      "addCollectiveOfWorkers": {
         "required": [
           "ownerWallet",
+          "collectiveAddress"
+        ],
+        "type": "object",
+        "properties": {
+          "ownerWallet": {
+            "description": "The address of the asset owner",
+            "type": "string"
+          },
+          "collectiveAddress": {
+            "description": "Address of the collective to be added to the asset",
+            "type": "string"
+          }
+        }
+      },
+      "addWorkersToCollective": {
+        "required": [
+          "ownerWallet",
+          "collectiveAddress",
           "workers"
         ],
         "type": "object",
@@ -645,8 +898,12 @@
             "description": "The address of the asset owner",
             "type": "string"
           },
+          "collectiveAddress": {
+            "description": "Address of the collective to be added to the asset",
+            "type": "string"
+          },
           "workers": {
-            "description": "Array of the multiple workers to be added",
+            "description": "The list of workers to be added to the collective",
             "type": "array"
           }
         }
@@ -713,6 +970,28 @@
           },
           "viewers": {
             "description": "The address of the asset viewer",
+            "type": "array"
+          }
+        }
+      },
+      "createCollective": {
+        "required": [
+          "assetId",
+          "ownerWallet",
+          "workers"
+        ],
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "description": "The asset identifier",
+            "type": "string"
+          },
+          "ownerWallet": {
+            "description": "The address of the owner of the collective",
+            "type": "string"
+          },
+          "workers": {
+            "description": "The list of workers to be added to the collective",
             "type": "array"
           }
         }
