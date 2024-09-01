@@ -222,6 +222,120 @@
         }
       }
     },
+    "/damc/assets/{assetId}/maintenances/{maintenanceId}/": {
+      "get": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "Get the total of the maintenances realized on the specified asset",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetId",
+            "description": "The asset id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "maintenanceId",
+            "description": "The maintenance id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "viewerAddress",
+            "description": "The viewers's address to list all asset maintenances",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid Address",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "wallet_address_invalid",
+                  "message": "Invalid Address submmited",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#wallet-address-invalid",
+                  "timestamp": "2024-08-01T00:00:00.294Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Maintenance Recorded Successfully",
+            "content": {
+              "application/json": {
+                "example": {},
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/damc/assets/{assetId}/maintenances/count/": {
+      "get": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "Get the total of the maintenances realized on the specified asset",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "ownerWallet",
+            "description": "The owner's address to list all assets",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid Address",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "wallet_address_invalid",
+                  "message": "Invalid Address submmited",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#wallet-address-invalid",
+                  "timestamp": "2024-08-01T00:00:00.294Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Total amount of maintenances on specified asset",
+            "content": {
+              "application/json": {
+                "example": {},
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/damc/assets/{assetId}/viewers/verify/": {
       "get": {
         "tags": [
@@ -233,6 +347,15 @@
             "in": "path",
             "name": "assetId",
             "description": "The asset identifier for listing maintenance",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ownerWallet",
+            "description": "The address of the owner of the asset",
             "required": true,
             "schema": {
               "type": "string"
@@ -410,7 +533,7 @@
           },
           {
             "in": "query",
-            "name": "workerCollective",
+            "name": "collectiveAddress",
             "description": "The address of the collective of workers to be removed from the given asset",
             "required": true,
             "schema": {
@@ -660,9 +783,9 @@
         "tags": [
           "DAMC"
         ],
-        "description": "Create new workers",
+        "description": "Add new workers to a existent collective",
         "requestBody": {
-          "description": "Create new workers request payload",
+          "description": "Add new workers to a existent  request payload",
           "required": true,
           "content": {
             "application/json": {
@@ -807,6 +930,65 @@
           }
         }
       }
+    },
+    "/damc/assets/{assetId}/uri/": {
+      "put": {
+        "tags": [
+          "DAMC"
+        ],
+        "description": "Get the total of the maintenances realized on the specified asset",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assetId",
+            "description": "The asset id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/updateAssetUriRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid Address",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "wallet_address_invalid",
+                  "message": "Invalid Address submmited",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#wallet-address-invalid",
+                  "timestamp": "2024-08-01T00:00:00.294Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Maintenance Recorded Successfully",
+            "content": {
+              "application/json": {
+                "example": {},
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -836,6 +1018,23 @@
           },
           "assetURI": {
             "description": "Asset URI",
+            "type": "string"
+          }
+        }
+      },
+      "updateAssetUriRequest": {
+        "required": [
+          "ownerWallet",
+          "newUri"
+        ],
+        "type": "object",
+        "properties": {
+          "ownerWallet": {
+            "description": "The address of the asset owner",
+            "type": "string"
+          },
+          "newUri": {
+            "description": "Updated asset URI",
             "type": "string"
           }
         }
