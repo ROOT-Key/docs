@@ -28,10 +28,10 @@ Here is how an error response looks like:
 ```JSON
 {
   "error": {
-    "errorCode": "AUTH_001",
-    "message": "INVALID_CREDENTIALS",
-	"timestamp": "2024-05-19T16:24:37.884Z",
-    "docUrl": "https://docs.rootkey.ai/api-reference/errors#AUTH_001",
+    "message": "Incorrect credentials",
+    "errorCode": "invalid-credentials",
+	  "timestamp": "2024-05-19T16:24:37.884Z",
+    "docUrl": "https://docs.rootkey.ai/api-reference/errors#invalid-credentials",
   }
 }
 ```
@@ -82,7 +82,7 @@ Give a look to the list of all errors our API returns:
 - **Problem:** The user account has not been activated!
 - **Solution:** Activate the user account by accessing your email and navigating to the link sent to your email for this purpose!
 
-### `invalid_credentails`
+### `invalid_credentials`
 - **Status:** 400
 - **Problem:** The credentials provided are invalid!
 - **Solution:** Make sure that the e-mail and password are the same as the ones you used to create a ROOTKey account!
@@ -147,4 +147,9 @@ Give a look to the list of all errors our API returns:
 ### `invalid_file_hash_format`
 - **Status:** 400
 - **Problem:** The submitted file hash has an invalid format!
-- **Solution:** Check if the hash is correctly formatted, contains 64 characters in length and includes only hexadecimal characters 
+- **Solution:** Check if the hash is correctly formatted, contains 64 characters in length and includes only hexadecimal characters
+
+### `invalid_token_id`
+- **Status:** 400
+- **Problem:** The provided token ID is invalid!
+- **Solution:** Make sure the token ID exists, is valid and is not empty.
