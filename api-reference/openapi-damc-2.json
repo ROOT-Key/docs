@@ -296,6 +296,15 @@
         "description": "Get the total of the maintenances realized on the specified asset",
         "parameters": [
           {
+            "in": "path",
+            "name": "assetId",
+            "description": "The id of the asset from which to obtain the maintenance total",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "in": "query",
             "name": "ownerWallet",
             "description": "The owner's address to list all assets",
@@ -691,15 +700,6 @@
         ],
         "description": "List collective of workers",
         "parameters": [
-          {
-            "in": "query",
-            "name": "assetId",
-            "description": "The identifier of the asset for which you want to list the workers",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "ownerWallet",
