@@ -1175,16 +1175,11 @@
       },
       "createCollective": {
         "required": [
-          "assetId",
           "ownerWallet",
           "workers"
         ],
         "type": "object",
         "properties": {
-          "assetId": {
-            "description": "The asset identifier",
-            "type": "string"
-          },
           "ownerWallet": {
             "description": "The address of the owner of the collective",
             "type": "string"

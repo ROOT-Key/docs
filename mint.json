@@ -128,7 +128,7 @@
                 "api-reference/damc/endpoint/add-workers-to-collective",
                 "api-reference/damc/endpoint/transfer-asset",
                 "api-reference/damc/endpoint/add-asset-viewers",
-                "api-reference/damc/endpoint/add-workers-collective",
+                "api-reference/damc/endpoint/add-collective-to-asset",
                 "api-reference/damc/endpoint/create-maintenances",
                 "api-reference/damc/endpoint/update-asset-uri",
                 "api-reference/damc/endpoint/remove-asset-viewers",
