@@ -702,8 +702,17 @@
         "parameters": [
           {
             "in": "query",
+            "name": "assetId",
+            "description": "The asset identifier for listing the asset's collective",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "ownerWallet",
-            "description": "The owner's address to list all workers",
+            "description": "The address of the owner of the asset from which to list the associated collective",
             "required": true,
             "schema": {
               "type": "string"
