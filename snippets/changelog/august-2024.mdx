@@ -1,37 +1,40 @@
 <Accordion title="August 2024" defaultOpen>
 
   ### Breaking changes
-    - Introduced new DAMC product API endpoints.
-      - `GET` [/damc/assets](/api-reference/damc/endpoint/list-assets) - *Listing of registered assets*
-      - `GET` [/damc/workers](/api-reference/damc/endpoint/list-workers) - *Listing of registered workers*
-      - `POST` [/damc/assets](/api-reference/damc/endpoint/create-asset) - *Create new asset*
-      - `POST` [/damc/assets/(assetId)/transfer](/api-reference/damc/endpoint/transfer-asset) - *Transfer a specific asset to a new owner*
-      - `POST` [/damc/workers](/api-reference/damc/endpoint/set-asset-workers) - *Set workers to a asset*
-      - `POST` [/damc/viewers/(assetId)](/api-reference/damc/endpoint/add-asset-viewers) - *Add viewers a specific asset*
-      - `POST` [/damc/assets/(assetId)/collective](/api-reference/damc/endpoint/set-asset-collective) - *Set collective to a specific asset*
-      - `POST` [/damc/maintenances](/api-reference/damc/endpoint/create-maintenances) - *Creating new maintenance for a particular asset*
-      - `POST` [/damc/collective/set](/api-reference/damc/endpoint/set-collective-in-collective) - *Set a collective to another collective*
-      - `PUT` [/damc/collective/unset](/api-reference/damc/endpoint/unset-collective-in-collective) - *Unset a collective  from another collective*
-      - `PUT` [/damc/viewers](/api-reference/damc/endpoint/add-asset-viewers) - *Remove viewers from a specific asset*
-      - `PUT` [/damc/collective/unset](/api-reference/damc/endpoint/unset-collective-in-collective) - *Unset a collective  from another collective*
-    - Featured a new adding funds on wallets' functionality.
-    - Expanded report documents to DAMC and Platform.
-
+    - Introduce subscriptions to Platform and DAMC products
+    - Revamping DAMC endpoints
+        - Removed `POST` [/damc/viewers/{assetId}](/api-reference/damc/viewers/{assetId}) - *Add viewers a specific asset*
+        - Removed `POST` [/damc/assets/{assetId}/collective](/api-reference/damc/assets/{assetId}/collective) - *Set collective to a specific asset*
+        - Removed `POST` [/damc/collective/set](/api-reference/damc/collective/set) - *Set collective to a specific asset*
+        - Removed `PUT` [/damc/collective/unset](/api-reference/damc/collective/unset) - *Unset a collective from another collective*
+        - Removed `PUT` [/damc/viewers](/api-reference/damc/viewers) - *Remove viewers from a specific asset*
+        - Added `GET` [/damc/assets/{:assetId}/viewers/verify](/api-reference/damc/assets/{:assetId}/viewers/verify) - *Make verifier viewer*
+        - Added `GET` [/damc/assets/{:assetId}/maintenances](/api-reference/damc/assets/{:assetId}/maintenances) - *List DAMC Maintenances*
+        - Added `GET` [/damc/assets/{:assetId}/maintenances/{:maintenanceId}](/api-reference/damc/assets/{:assetId}/maintenances/{:maintenanceId}) - *Fetch Maintenance By Id*
+        - Added `GET` [/damc/assets/{:assetId}/maintenances/count](/api-reference/damc/assets/{:assetId}/maintenances/count) - *Fetch Total asset maintenances*
+        - Added `GET` [/damc/assets/{:assetId}/workers/collective](/api-reference/damc/assets/{:assetId}/workers/collective) - *List DAMC Collectives*
+        - Added `GET` [/damc/assets/{:assetId}/workers](/api-reference/damc/assets/{:assetId}/workers) - *List DAMC Workers*
+        - Added `POST` [/damc/assets/{:assetId}/workers/collective](/api-reference/damc/assets/{:assetId}/workers/collective) - *Add Worker to collective*
+        - Added `POST` [/damc/assets/viewers](/api-reference/damc/viewers) - *Add DAMC viewer*
+        - Added `POST` [/damc/collective/{:collectiveAddress}/workers](/api-reference/damc/collective/{:collectiveAddress}/workers) - * Add workers to collective*
+        - Added `POST` [/damc/collective/{:collectiveAddress}/workers](/api-reference/damc/collective/{:collectiveAddress}/workers) - *Create Worker Collective*
+        - Added `DELETE` [/damc/assets/{:assetId}/workers/collective](/api-reference/damc/assets/{:assetId}/workers/collective) - *Remove Worker Collective*
+        - Added `DELETE` [/damc/collective/{:collectiveAddress}/workers](/api-reference/damc/collective/{:collectiveAddress}/workers) - *Remove workers from collective*
+        - Added `PATCH` [/damc/assets/viewers/remove](/api-reference/damc/viewers/remove) - *Remove DAMC viewer*
   ### API Features
-    - Added a new user activities functionality.
-    - Improved the Platform's report document generation for single or multiple wallets.
-    - Integrated proof certificates regarding asset validations.
-    - Developed a new mechanism over error boundaries and http codes for end-users.
-    - Added new blockchain and product-related [error codes](/api-reference/errors) for new and already existing features.
-    - Increased file upload for documents from 2mb to 15mb.
-
+    - Added automatic PDF certificate generation after file validation.
+    - Updated API documentation with detailed error information.
   ### Platform Features
-    - Enhanced a formerly created asset comparison validation mechanism.
-    - Activated notifications based on user actions on ROOTKey's Platform.
-    - Upgraded UI/UX on NFT's related subjects, from actions to design.
-    - Introduced a new dashboard to visualise all vault's information.
+    - Made the Pricing Table publicly accessible.
+    - Enabled users to add funds to their accounts.
+    - Added support for single and bulk report generation.
+    - Introduced NFT validation directly on the platform.
+    - Implemented user activity and login tracking.
+    - Completed Main Net deployment.
+    - Detailed Overview and Evaluation of Workforce Performance and Activities
+    - Comprehensive analysis of organizational assets.
+    - Detailed evaluation of workforce performance.
 
   ### Fixes
-    - Fixed attributes on both product's API endpoints.
 
 </Accordion>
