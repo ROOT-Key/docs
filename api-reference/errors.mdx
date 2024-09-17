@@ -89,12 +89,12 @@ Give a look to the list of all errors our API returns:
 
 ### `invalid_title`
 - **Status:** 400
-- **Problem:** The title submmited is invalid and does not meet with our gidelines
+- **Problem:** The title submmited is invalid and does not meet with our guidelines.
 - **Solution:** Make sure that the title is between 4 and 200 characters long.
 
 ### `invalid_password`
 - **Status:** 400
-- **Problem:** The password submmited is invalid and does not meet with our gidelines
+- **Problem:** The password submmited is invalid and does not meet with our guidelines.
 - **Solution:** Make sure that the password is between 6 and 100 characters long.
 
 ### `invalid_private_key`
@@ -107,6 +107,11 @@ Give a look to the list of all errors our API returns:
 - **Problem:** The wallet address submmited is invalid!
 - **Solution:** The wallet address must be associated with an existing wallet in the polygon's blockchain and must consist of 42 characters.
 
+### `invalid_subscription`
+- **Status:** 400
+- **Problem:** The product subscription is invalid.
+- **Solution:** A product subscription is required. Ensure that the product subscription is provided and valid.
+
 ### `max_resource_limit`
 - **Status:** 400
 - **Problem:** You have reached the monthly limit of this resource for your subscription.
@@ -114,18 +119,28 @@ Give a look to the list of all errors our API returns:
 
 ### `resource_not_found`
 - **Status:** 400
-- **Problem:** The resource specified by the submitted ID does not exist
+- **Problem:** The resource specified by the submitted ID does not exist.
 - **Solution:** Ensure that the identifier provided is in the list of resources owned by your account.
 
 ### `unsubmitted_file`
 - **Status:** 400
-- **Problem:** The file needed to complete the desired action was not submitted
+- **Problem:** The file needed to complete the desired action was not submitted.
 - **Solution:** Make sure that you are attaching the file required for the desired action and that the argument is well specified. <br/>In addition, make sure you have set the `multipart/form-data` header correctly.
 
 ### `code_expired`
 - **Status:** 400
 - **Problem:** The secure code provided has expired!
 - **Solution:** Request a new code from our app.
+
+### `default_api_key_deletion_forbidden`
+- **Status:** 400
+- **Problem:** The default API key cannot be deleted.
+- **Solution:** Ensure that you are not attempting to delete the default API key. If you need to manage API keys, consider creating and setting a new default key instead.
+
+### `already_default_api_key`
+- **Status:** 400
+- **Problem:** The API key is already set as the default key.
+- **Solution:** Ensure that you are not attempting to set an API key as the default if it is already the default key. If you need to change the default key, select a different API key.
 
 # Blockchain Error Codes
 
@@ -141,8 +156,8 @@ Give a look to the list of all errors our API returns:
 
 ### `smart_contract_exception`
 - **Status:** 400
-- **Problem:** Something went wrong on the blockchain side of things
-- **Solution:** Make sure that all the values provided are correct. 
+- **Problem:** An error occurred on the blockchain side of the operation.
+- **Solution:** Ensure that all provided values are correct and comply with the requirements.
 
 ### `invalid_file_hash_format`
 - **Status:** 400
