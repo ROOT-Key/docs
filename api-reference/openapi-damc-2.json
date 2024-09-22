@@ -1028,6 +1028,10 @@
           "assetURI": {
             "description": "Asset URI",
             "type": "string"
+          },
+          "externalId": {
+            "description": "An external ID that references the asset in an existing system",
+            "type": "string"
           }
         }
       },
