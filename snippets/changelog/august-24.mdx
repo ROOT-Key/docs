@@ -3,24 +3,21 @@
   ### Breaking changes
     - Introduce subscriptions to Platform and DAMC products
     - Remaping DAMC endpoints
-        - Removed `POST` [/damc/viewers/{assetId}](/api-reference/damc/viewers/{assetId}) - *Add viewers a specific asset*
-        - Removed `POST` [/damc/assets/{assetId}/collective](/api-reference/damc/assets/{assetId}/collective) - *Set collective to a specific asset*
-        - Removed `POST` [/damc/collective/set](/api-reference/damc/collective/set) - *Set collective to a specific asset*
-        - Removed `PUT` [/damc/collective/unset](/api-reference/damc/collective/unset) - *Unset a collective from another collective*
-        - Removed `PUT` [/damc/viewers](/api-reference/damc/viewers) - *Remove viewers from a specific asset*
-        - Added `GET` [/damc/assets/{assetId}/viewers/verify](/api-reference/damc/assets/{:assetId}/viewers/verify) - *Make verifier viewer*
-        - Added `GET` [/damc/assets/{assetId}/maintenances](/api-reference/damc/assets/{:assetId}/maintenances) - *List DAMC Maintenances*
-        - Added `GET` [/damc/assets/{assetId}/maintenances/{maintenanceId}](/api-reference/damc/assets/{:assetId}/maintenances/{:maintenanceId}) - *Fetch Maintenance By Id*
-        - Added `GET` [/damc/assets/{assetId}/maintenances/count](/api-reference/damc/assets/{:assetId}/maintenances/count) - *Fetch Total asset maintenances*
-        - Added `GET` [/damc/assets/{assetId}/workers/collective](/api-reference/damc/assets/{:assetId}/workers/collective) - *List DAMC Collectives*
-        - Added `GET` [/damc/assets/{assetId}/workers](/api-reference/damc/assets/{:assetId}/workers) - *List DAMC Workers*
-        - Added `POST` [/damc/assets/{assetId}/workers/collective](/api-reference/damc/assets/{:assetId}/workers/collective) - *Add Worker to collective*
-        - Added `POST` [/damc/assets/viewers](/api-reference/damc/viewers) - *Add DAMC viewer*
-        - Added `POST` [/damc/collective/{collectiveAddress}/workers](/api-reference/damc/collective/{:collectiveAddress}/workers) - * Add workers to collective*
-        - Added `POST` [/damc/collective/{collectiveAddress}/workers](/api-reference/damc/collective/{:collectiveAddress}/workers) - *Create Worker Collective*
-        - Added `DELETE` [/damc/assets/{assetId}/workers/collective](/api-reference/damc/assets/{:assetId}/workers/collective) - *Remove Worker Collective*
-        - Added `DELETE` [/damc/collective/{collectiveAddress}/workers](/api-reference/damc/collective/{:collectiveAddress}/workers) - *Remove workers from collective*
-        - Added `PATCH` [/damc/assets/viewers/remove](/api-reference/damc/viewers/remove) - *Remove DAMC viewer*
+        - Removed `PUT` [/damc/collective/unset]() - *Unset a collective from another collective*
+        - Removed `PUT` [/damc/viewers]() - *Remove viewers from a specific asset*
+        - Added `GET` [/damc/assets/(assetId)/viewers/verify](/api-reference/damc/endpoint/assets/verify-viewer) - *Verify viewer*
+        - Added `GET` [/damc/assets/(assetId)/maintenances](/api-reference/damc/endpoint/list-asset-maintenances) - *List DAMC Maintenances*
+        - Added `GET` [/damc/assets/(assetId)/maintenances/(maintenanceId)](/api-reference/damc/endpoint/list-asset-maintenance-by-id) - *Fetch Maintenance By Id*
+        - Added `GET` [/damc/assets/(assetId)/maintenances/count](/api-reference/damc/endpoint/total-asset-maintenances) - *Fetch Total asset maintenances*
+        - Added `GET` [/damc/assets/(assetId)/workers/collective](/api-reference/damc/endpoint/list-collectives) - *List DAMC Collectives*
+        - Added `GET` [/damc/assets/(assetId)/workers](/api-reference/damc/endpoint/list-workers) - *List DAMC Workers*
+        - Added `POST` [/damc/assets/(assetId)/collective](/api-reference/damc/endpoint/add-collective-to-asset) - *Set collective to a specific asset*
+        - Added `POST` [/damc/assets/(assetId)/workers/collective](/api-reference/damc/endpoint/add-workers-to-collective) - *Add Worker to collective*
+        - Added `POST` [/damc/assets/viewers](/api-reference/damc/endpoint/add-asset-viewers) - *Add DAMC viewer*
+        - Added `POST` [/damc/collective/(collectiveAddress)/workers](/api-reference/damc/endpoint/create-collective) - *Create Worker Collective*
+        - Added `DELETE` [/damc/assets/(assetId)/workers/collective](/api-reference/damc/endpoint/remove-collective) - *Remove Worker Collective*
+        - Added `DELETE` [/damc/collective/(collectiveAddress)/workers](/api-reference/damc/endpoint/remove-workers-from-collective) - *Remove workers from collective*
+        - Added `PATCH` [/damc/assets/viewers/remove](/api-reference/damc/endpoint/remove-asset-viewers) - *Remove DAMC viewer*
   ### API Features
     - Added automatic PDF certificate generation after file validation.
     - Updated API documentation with detailed error information.
@@ -34,7 +31,5 @@
     - Detailed Overview and Evaluation of Workforce Performance and Activities
     - Comprehensive analysis of organizational assets.
     - Detailed evaluation of workforce performance.
-
-  ### Fixes
 
 </Accordion>
