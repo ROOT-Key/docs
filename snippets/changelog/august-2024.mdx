@@ -1,11 +1,11 @@
-<Accordion title="August 2024" defaultOpen>
+<Accordion title="August 2024">
 
-  ### Breaking changes
+  ### Breaking Changes
     - Introduce subscriptions to Platform and DAMC products
     - Remaping DAMC endpoints
         - Removed `PUT` [/damc/collective/unset]() - *Unset a collective from another collective*
         - Removed `PUT` [/damc/viewers]() - *Remove viewers from a specific asset*
-        - Added `GET` [/damc/assets/(assetId)/viewers/verify](/api-reference/damc/endpoint/assets/verify-viewer) - *Verify viewer*
+        - Added `GET` [/damc/assets/(assetId)/viewers/verify](/api-reference/damc/endpoint/verify-viewer) - *Verify viewer*
         - Added `GET` [/damc/assets/(assetId)/maintenances](/api-reference/damc/endpoint/list-asset-maintenances) - *List DAMC Maintenances*
         - Added `GET` [/damc/assets/(assetId)/maintenances/(maintenanceId)](/api-reference/damc/endpoint/list-asset-maintenance-by-id) - *Fetch Maintenance By Id*
         - Added `GET` [/damc/assets/(assetId)/maintenances/count](/api-reference/damc/endpoint/total-asset-maintenances) - *Fetch Total asset maintenances*
