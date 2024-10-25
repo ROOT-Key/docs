@@ -107,6 +107,7 @@
                 "api-reference/platform/endpoint/list-transactions",
                 "api-reference/platform/endpoint/create-contract",
                 "api-reference/platform/endpoint/create-wallet",
+                "api-reference/platform/endpoint/transfer-contract",
                 "api-reference/platform/endpoint/validate-contract",
                 "api-reference/platform/endpoint/delete-wallet"
             ]

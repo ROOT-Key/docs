@@ -255,6 +255,58 @@
         }
       }
     },
+    "/management/smart-contract/transfer": {
+      "post": {
+        "tags": [
+          "DAMC"
+        ],
+        "summary": "Transfer contract",
+        "description": "Transfer your NFT to another wallet",
+        "requestBody": {
+          "description": "Smart-contract info and file",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/transferNftsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Result of the validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompareSmartContractResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Client bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/validation/compare": {
       "post": {
         "tags": [
@@ -525,6 +577,43 @@
           "walletAddress": {
             "description": "",
             "type": "string"
+          }
+        }
+      },
+      "transferNftsRequest": {
+        "type": "object",
+        "required": [
+          "ownerWallet",
+          "destinationWallet",
+          "tokenID",
+          "type",
+          "subType"
+        ],
+        "properties": {
+          "ownerWallet": {
+            "description": "The address of the wallet",
+            "type": "string"
+          },
+          "destinationWallet": {
+            "description": "The address of the destination wallet",
+            "type": "string"
+          },
+          "tokenID": {
+            "type": "string",
+            "description": "The ID of your trustable file",
+            "example": null
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "rootkey"
+            ]
+          },
+          "subType": {
+            "type": "string",
+            "enum": [
+              "sec1"
+            ]
           }
         }
       },
