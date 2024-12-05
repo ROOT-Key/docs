@@ -691,7 +691,7 @@
               "application/json": {
                 "example": {
                   "name": "Worker 1",
-                  "walletAddress": "0xB411f2302B73331c96D983fE466E85F287Da8A98"
+                  "address": "0xB411f2302B73331c96D983fE466E85F287Da8A98"
                 }
               }
             }
