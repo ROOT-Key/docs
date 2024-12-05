@@ -465,6 +465,17 @@
           }
         },
         "responses": {
+          "200": {
+            "description": "Add workers collective successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "chainId": 80002,
+                  "transactionHash": "0xdee485f695a79bc8e37a0efcee21c42be0854f1754fe5b52113be70cbfb8d858"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Asset not found",
             "content": {
