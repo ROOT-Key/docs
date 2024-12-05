@@ -100,9 +100,14 @@
             "content": {
               "application/json": {
                 "example": {
-                  "assetId": "1",
-                  "assetURI": "https://example.com/assets/asset_1.json",
-                  "owner": "0xB411f2302B73331c96D983fE466E85F287Da8A98"
+                  "chainId": 80002,
+                  "assets": [
+                    {
+                      "assetId": "1",
+                      "assetURI": "https://example.com/assets/asset_1.json",
+                      "owner": "0xB411f2302B73331c96D983fE466E85F287Da8A98"
+                    }
+                  ]
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -150,7 +155,9 @@
             "content": {
               "application/json": {
                 "example": {
-                  "message": "Asset registered successfully!"
+                  "chainId": 80002,
+                  "message": "Asset registered successfully!",
+                  "transactionHash": "0xdee485f695a79bc8e37a0efcee21c42be0854f1754fe5b52113be70cbfb8d858"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -209,9 +216,14 @@
             "content": {
               "application/json": {
                 "example": {
-                  "assetId": "1",
-                  "maintenanceId": "3",
-                  "maintenanceHash": "0x6162635465737400000000000000000000000000000000000000000000000000"
+                  "chainId": 80002,
+                  "maintenances": [
+                    {
+                      "assetId": "1",
+                      "maintenanceId": "3",
+                      "maintenanceHash": "0x6162635465737400000000000000000000000000000000000000000000000000"
+                    }
+                  ]
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -278,7 +290,14 @@
             "description": "Maintenance Recorded Successfully",
             "content": {
               "application/json": {
-                "example": {},
+                "example": {
+                  "chainId": 80002,
+                  "maintenance": {
+                    "assetId": "1",
+                    "maintenanceId": "19",
+                    "maintenanceHash": "0xdcaf06f497df15c11cbde0d6cbd077178383ba2c04612dbe7143f6ef615af015"
+                  }
+                },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 }
@@ -335,7 +354,10 @@
             "description": "Total amount of maintenances on specified asset",
             "content": {
               "application/json": {
-                "example": {},
+                "example": {
+                  "chainId": 80002,
+                  "maintenancesTotal": "1220"
+                },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 }
@@ -402,6 +424,7 @@
             "content": {
               "application/json": {
                 "example": {
+                  "chainId": 80002,
                   "isViewer": true
                 },
                 "schema": {
@@ -493,7 +516,8 @@
             "content": {
               "application/json": {
                 "example": {
-                  "message": "Workers added successfully!"
+                  "chainId": 80002,
+                  "transactionHash": "0xdee485f695a79bc8e37a0efcee21c42be0854f1754fe5b52113be70cbfb8d858"
                 }
               }
             }
@@ -551,6 +575,20 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "Successfully removed a collective of workers from the asset",
+            "content": {
+              "application/json": {
+                "example": {
+                  "chainId": 80002,
+                  "transactionHash": "0x0a535c95f4450bf2b468a606a093936b90d09c13c1cac6ca2d2f8543f9bfb433"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Asset not found",
             "content": {
@@ -595,6 +633,25 @@
           }
         ],
         "responses": {
+          "200": {
+            "description": "Workers",
+            "content": {
+              "application/json": {
+                "example": {
+                  "chainId": 80002,
+                  "workers": [
+                    "0xae4d92973021ef824ef4ea12b10e3af158826996",
+                    "0x5d8fa815704e3c328d8ef548e92a8666266e2ec5",
+                    "0xf1788d2bf7f38934c03a9c67ef03d0d02561143c",
+                    "0xdbd25a3a99dd737b2659d8dd3fb84931a22d8b29"
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Workers not found",
             "content": {
@@ -725,12 +782,8 @@
             "content": {
               "application/json": {
                 "example": {
-                  "collectives": [
-                    "0xae4d92973021ef824ef4ea12b10e3af158826996",
-                    "0x5d8fa815704e3c328d8ef548e92a8666266e2ec5",
-                    "0xf1788d2bf7f38934c03a9c67ef03d0d02561143c",
-                    "0xdbd25a3a99dd737b2659d8dd3fb84931a22d8b29"
-                  ]
+                  "chainId": 80002,
+                  "collective": "0xae4d92973021ef824ef4ea12b10e3af158826996"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -773,13 +826,13 @@
           }
         },
         "responses": {
-          "201": {
+          "200": {
             "description": "Collective created successfully",
             "content": {
               "application/json": {
                 "example": {
-                  "message": "Collective created successfully",
-                  "transactionHash": "0x0a535c95f4450bf2b468a606a093936b90d09c13c1cac6ca2d2f8543f9bfb433"
+                  "chainId": 80002,
+                  "transactionHash": "0xdee485f695a79bc8e37a0efcee21c42be0854f1754fe5b52113be70cbfb8d858"
                 }
               }
             }
@@ -810,7 +863,7 @@
             "content": {
               "application/json": {
                 "example": {
-                  "message": "Workers successfully added to collective!",
+                  "chainId": 80002,
                   "transactionHash": "0x0a535c95f4450bf2b468a606a093936b90d09c13c1cac6ca2d2f8543f9bfb433"
                 }
               }
@@ -837,6 +890,17 @@
           }
         },
         "responses": {
+          "200": {
+            "description": "Workers added successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "chainId": 80002,
+                  "transactionHash": "0x0a535c95f4450bf2b468a606a093936b90d09c13c1cac6ca2d2f8543f9bfb433"
+                }
+              }
+            }
+          },
           "400": {
             "description": "Invalid Address",
             "content": {
@@ -873,6 +937,20 @@
           }
         },
         "responses": {
+          "200": {
+            "description": "Viewers removed successfully from the asset",
+            "content": {
+              "application/json": {
+                "example": {
+                  "chainId": 80002,
+                  "transactionHash": "0x0a535c95f4450bf2b468a606a093936b90d09c13c1cac6ca2d2f8543f9bfb433"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "400": {
             "description": "Invalid Address",
             "content": {
@@ -930,7 +1008,10 @@
             "description": "Maintenance Recorded Successfully",
             "content": {
               "application/json": {
-                "example": {},
+                "example": {
+                  "chainId": 80002,
+                  "transactionHash": "0x0a535c95f4450bf2b468a606a093936b90d09c13c1cac6ca2d2f8543f9bfb433"
+                },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 }
@@ -945,7 +1026,7 @@
         "tags": [
           "DAMC"
         ],
-        "description": "Get the total of the maintenances realized on the specified asset",
+        "description": "Update the URI previous defined for a specified asset",
         "parameters": [
           {
             "in": "path",
@@ -989,7 +1070,10 @@
             "description": "Maintenance Recorded Successfully",
             "content": {
               "application/json": {
-                "example": {},
+                "example": {
+                  "chainId": 80002,
+                  "transactionHash": "0x0a535c95f4450bf2b468a606a093936b90d09c13c1cac6ca2d2f8543f9bfb433"
+                },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
                 }
