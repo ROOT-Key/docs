@@ -140,6 +140,7 @@
         {
             "group": "Changelog",
             "pages": [
+                "changelog/2025/overview",
                 "changelog/2024/overview"
             ]
         },
