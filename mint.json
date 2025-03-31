@@ -33,10 +33,6 @@
         {
             "name": "Changelog",
             "url": "changelog"
-        },
-        {
-            "name": "Pricing",
-            "url": "pricing"
         }
     ],
     "anchors": [{
@@ -59,7 +55,8 @@
             "group": "Introduction",
             "pages": [
                 "introduction",
-                "api"
+                "api",
+                "pages/pricing"
             ]
         },
         {
@@ -142,12 +139,6 @@
             "pages": [
                 "changelog/2025/overview",
                 "changelog/2024/overview"
-            ]
-        },
-        {
-            "group": "Pricing",
-            "pages": [
-                "pricing/overview"
             ]
         }
     ],
