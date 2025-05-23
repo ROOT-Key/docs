@@ -23,7 +23,7 @@
     }
   ],
   "paths": {
-    "/status": {
+    "/healthz": {
       "get": {
         "tags": [
           "Status"
