@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "ROOTKey Documentation",
-    "description": "Your API of choice for creating, managing and validating information easily and securely!",
+    "description": "Your API of choice for creating, managing, and validating information easily and securely!",
     "termsOfService": "https://www.rootkey.ai/legal/privacy-policy",
     "contact": {
       "name": "ROOTKey",
@@ -28,11 +28,11 @@
         "tags": [
           "Status"
         ],
-        "description": "Through this route users are able to check the status of api on selected version",
+        "description": "Check the status of the API on the selected version",
         "security": [],
         "responses": {
           "200": {
-            "description": "Plant response",
+            "description": "API status response",
             "content": {
               "application/json": {
                 "schema": {
@@ -45,7 +45,7 @@
             }
           },
           "404": {
-            "description": "Version Not Found",
+            "description": "Version not found",
             "content": {
               "application/json": {
                 "example": {
@@ -61,10 +61,452 @@
         }
       }
     },
-    "/creation/wallet": {
+    "/platform/vaults": {
       "post": {
         "tags": [
-          "Platform"
+          "Platform",
+          "Vaults"
+        ],
+        "description": "Create a new vault",
+        "requestBody": {
+          "description": "Vault creation request payload",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/walletCreationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wallet created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "name": "My first wallet",
+                  "description": "First wallet created throught ROOTKey API",
+                  "address": ""
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/NewWallet"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "You have exceeded your usage quota for one or more features.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 400,
+                  "message": "You have exceeded your usage quota for one or more features.",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#usage_limit_exceeded",
+                  "errorCode": "usage_limit_exceeded",
+                  "timestamp": "2025-05-28T22:07:31.000Z",
+                  "details": []
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/vaults/{vaultAddress}": {
+      "put": {
+        "tags": [
+          "Platform",
+          "Vaults"
+        ],
+        "description": "Update a vault",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vaultAddress",
+            "description": "The vault address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Vault update request payload",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VaultUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Vault updated successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "name": "My first wallet",
+                  "description": "First wallet created throught ROOTKey API",
+                  "walletAddress": ""
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/NewWallet"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Wallet not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Wallet not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Platform",
+          "Vaults"
+        ],
+        "description": "Delete a vault",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vaultAddress",
+            "description": "The vault address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vault deleted successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "name": "My first wallet",
+                  "description": "First wallet created throught ROOTKey API",
+                  "walletAddress": ""
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Wallet not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Wallet not found!"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/vaults/{vaultAddress}/transactions": {
+      "post": {
+        "tags": [
+          "Platform",
+          "Vaults"
+        ],
+        "description": "List transactions relative to a vault",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vaultAddress",
+            "description": "The vault address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Vault transactions list request payload",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VaultTransactionsListRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transactions list successfully retrieved",
+            "content": {
+              "application/json": {
+                "example": {
+                  "hash": "0x1234567890123456789012345678901234567890123456789012345678901234",
+                  "from": "0x1234567890123456789012345678901234567890",
+                  "to": "0x1234567890123456789012345678901234567890",
+                  "value": "1000000000000000000",
+                  "timestamp": "2025-05-28T22:07:31.000Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/VaultTransactionsListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Vault not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "resource_not_found",
+                  "message": "Vault not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
+                  "timestamp": "2025-05-28T22:07:31.000Z",
+                  "details": []
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/files": {
+      "get": {
+        "tags": [
+          "Platform",
+          "Files"
+        ],
+        "description": "List files stored in a vault",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "walletAddress",
+            "description": "The vault address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "description": "The cursor for pagination",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "token",
+            "description": "The smart contract address from where is intended to list the files",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Files successfully retrieved",
+            "content": {
+              "application/json": {
+                "example": {
+                  "chainId": 80002,
+                  "nfts": [
+                    {
+                      "contractType": "ERC721",
+                      "tokenAddress": "0x1234567890123456789012345678901234567890",
+                      "tokenId": "1",
+                      "uri": "https://example.com/token/1",
+                      "name": "ROOT1",
+                      "symbol": "RTK",
+                      "owner": "0x1234567890123456789012345678901234567890"
+                    }
+                  ],
+                  "nextCursor": ""
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/VaultFilesListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Vault not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "resource_not_found",
+                  "message": "Vault not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
+                  "timestamp": "2025-05-28T22:07:31.000Z",
+                  "details": []
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Platform",
+          "Files"
+        ],
+        "description": "Create a file to a vault",
+        "requestBody": {
+          "description": "File creation request payload",
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ownerWallet": {
+                    "type": "string"
+                  },
+                  "fileName": {
+                    "type": "string"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "expirationDate": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Files successfully retrieved",
+            "content": {
+              "application/json": {
+                "example": {
+                  "files": [
+                    {
+                      "chain": "Ethereum",
+                      "tokenType": "ERC721",
+                      "tokenAddress": "0x1234567890123456789012345678901234567890",
+                      "tokenId": "1",
+                      "tokenUri": "https://example.com/token/1",
+                      "name": "My first NFT",
+                      "symbol": "NFT",
+                      "ownerOf": "0x1234567890123456789012345678901234567890",
+                      "tokenHash": "0x1234567890123456789012345678901234567890"
+                    }
+                  ],
+                  "nextCursor": ""
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/VaultFilesListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Vault not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "resource_not_found",
+                  "message": "Vault not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
+                  "timestamp": "2025-05-28T22:07:31.000Z",
+                  "details": []
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/files/{fileId}": {
+      "get": {
+        "tags": [
+          "Platform",
+          "Files"
+        ],
+        "description": "List specific file stored in a vault",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileId",
+            "description": "The file id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File successfully retrieved",
+            "content": {
+              "application/json": {
+                "example": {},
+                "schema": {
+                  "$ref": "#/components/schemas/ListFileResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Vault not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "resource_not_found",
+                  "message": "Vault not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
+                  "timestamp": "2025-05-28T22:07:31.000Z",
+                  "details": []
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/vaults/reports": {
+      "post": {
+        "tags": [
+          "Platform",
+          "Vaults"
         ],
         "requestBody": {
           "description": "",
@@ -109,296 +551,30 @@
           }
         }
       }
-    },
-    "/creation/smart-contract": {
-      "post": {
-        "tags": [
-          "Platform"
-        ],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "ownerWallet": {
-                    "description": "The name of the wallet",
-                    "type": "string"
-                  },
-                  "type": {
-                    "description": "The description of the wallet to help you organize your data",
-                    "type": "string",
-                    "enum": [
-                      "rootkey"
-                    ]
-                  },
-                  "subType": {
-                    "description": "The description of the wallet to help you organize your data",
-                    "type": "string",
-                    "enum": [
-                      "sec1"
-                    ]
-                  },
-                  "privateKey": {
-                    "description": "The description of the wallet to help you organize your data",
-                    "type": "string"
-                  },
-                  "expirationDate": {
-                    "description": "The description of the wallet to help you organize your data",
-                    "type": "string"
-                  },
-                  "file": {
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Wallet created successfully"
-          },
-          "404": {
-            "description": "Wallet not found",
-            "content": {
-              "application/json": {
-                "example": {
-                  "error": 404,
-                  "message": "Wallet not found!"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/management/list-transactions": {
-      "post": {
-        "tags": [
-          "Platform"
-        ],
-        "requestBody": {
-          "description": "",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/listTransactionsRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Transactions relative to a wallet",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/listTransactionsResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Wallet not found",
-            "content": {
-              "application/json": {
-                "example": {
-                  "error": 404,
-                  "message": "Wallet not found!"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/management/list-nfts": {
-      "post": {
-        "tags": [
-          "Platform"
-        ],
-        "requestBody": {
-          "description": "",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/listNftsRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "404": {
-            "description": "Wallet not found",
-            "content": {
-              "application/json": {
-                "example": {
-                  "error": 404,
-                  "message": "Wallet not found!"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/management/smart-contract/transfer": {
-      "post": {
-        "tags": [
-          "DAMC"
-        ],
-        "summary": "Transfer contract",
-        "description": "Transfer your NFT to another wallet",
-        "requestBody": {
-          "description": "Smart-contract info and file",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/transferNftsRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Result of the validation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CompareSmartContractResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Client bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/validation/compare": {
-      "post": {
-        "tags": [
-          "Platform"
-        ],
-        "summary": "Validate file",
-        "description": "Compare file against your trustable file smart-contract",
-        "requestBody": {
-          "description": "Smart-contract info and file",
-          "content": {
-            "Multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/CompareSmartContractRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Result of the validation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CompareSmartContractResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Client bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/user/wallets/${walletAddress}": {
-      "delete": {
-        "tags": [
-          "Platform"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "walletAddress",
-            "description": "Wallet Address",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          },
-          "404": {
-            "description": "Wallet not found",
-            "content": {
-              "application/json": {
-                "example": {
-                  "error": 404,
-                  "message": "Wallet not found!"
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
     "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          },
+          "docUrl": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          }
+        }
+      },
       "Wallet": {
         "required": [
           "walletAddress",
@@ -435,48 +611,79 @@
             "description": "The description of the wallet to help you organize your data",
             "type": "string"
           },
-          "walletAddress": {
+          "address": {
             "description": "The address of the wallet",
             "type": "string"
           }
         }
       },
-      "associateWorkerToAssetRequest": {
+      "CreateFileRequest": {
         "type": "object",
         "properties": {
-          "assetId": {
-            "description": "The identifier of the asset to be associated with the worker",
-            "type": "string"
-          }
-        }
-      },
-      "associateViewerToAssetRequest": {
-        "type": "object",
-        "properties": {
-          "viewerAddress": {
-            "description": "The address of the viewer to whitelist to access the asset's data",
-            "type": "string"
-          }
-        }
-      },
-      "assetCreationRequest": {
-        "type": "object",
-        "properties": {
-          "assetId": {
-            "description": "The identifier of the new asset",
-            "type": "string"
-          }
-        }
-      },
-      "workerCreationRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of worker",
+          "ownerWallet": {
+            "description": "The address of the owner wallet to where the file will be created",
             "type": "string"
           },
-          "description": {
-            "description": "Notes relative to the worker (Optional)",
+          "file": {
+            "description": "The file to be created",
+            "type": "string",
+            "format": "binary"
+          },
+          "fileName": {
+            "description": "The name of the file",
+            "type": "string"
+          },
+          "expirationDate": {
+            "description": "The expiration date of the file",
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "VaultTransactionsListRequest": {
+        "type": "object",
+        "properties": {
+          "cursor": {
+            "description": "",
+            "type": "string"
+          },
+          "initialDate": {
+            "description": "",
+            "type": "string",
+            "format": "date"
+          },
+          "finalDate": {
+            "description": "",
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "VaultTransactionsListResponse": {
+        "type": "array",
+        "properties": {
+          "to": {
+            "description": "",
+            "type": "string"
+          },
+          "from": {
+            "description": "",
+            "type": "string"
+          },
+          "hash": {
+            "description": "",
+            "type": "string"
+          },
+          "transactionFee": {
+            "description": "",
+            "type": "number"
+          },
+          "price": {
+            "description": "",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "",
             "type": "string"
           }
         }
@@ -484,7 +691,11 @@
       "walletCreationRequest": {
         "type": "object",
         "properties": {
-          "walletName": {
+          "address": {
+            "description": "The name of the wallet",
+            "type": "string"
+          },
+          "name": {
             "description": "The name of the wallet",
             "type": "string"
           },
@@ -525,194 +736,67 @@
           }
         }
       },
-      "listTransactionsRequest": {
+      "VaultFilesListRequest": {
         "type": "object",
         "properties": {
           "walletAddress": {
-            "description": "",
+            "description": "The vault address",
             "type": "string"
           },
-          "initialDate": {
-            "description": "",
+          "cursor": {
+            "description": "The cursor for pagination",
             "type": "string"
           },
-          "finalDate": {
-            "description": "",
-            "type": "string"
-          }
-        }
-      },
-      "listTransactionsResponse": {
-        "type": "object",
-        "properties": {
-          "to": {
-            "description": "",
-            "type": "string"
-          },
-          "from": {
-            "description": "",
-            "type": "string"
-          },
-          "hash": {
-            "description": "",
-            "type": "string"
-          },
-          "transactionFee": {
-            "description": "",
-            "type": "number"
-          },
-          "price": {
-            "description": "",
-            "type": "string"
-          },
-          "timestamp": {
-            "description": "",
+          "token": {
+            "description": "The smart contract address from where is intended to list the files",
             "type": "string"
           }
         }
       },
-      "listNftsRequest": {
+      "VaultFilesListResponse": {
         "type": "object",
         "properties": {
-          "walletAddress": {
-            "description": "",
-            "type": "string"
-          }
-        }
-      },
-      "transferNftsRequest": {
-        "type": "object",
-        "required": [
-          "ownerWallet",
-          "destinationWallet",
-          "tokenID",
-          "type",
-          "subType"
-        ],
-        "properties": {
-          "ownerWallet": {
-            "description": "The address of the wallet",
+          "chainId": {
+            "type": "integer"
+          },
+          "contractType": {
             "type": "string"
           },
-          "destinationWallet": {
-            "description": "The address of the destination wallet",
+          "tokenAddress": {
             "type": "string"
-          },
-          "tokenID": {
-            "type": "string",
-            "description": "The ID of your trustable file",
-            "example": null
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "rootkey"
-            ]
-          },
-          "subType": {
-            "type": "string",
-            "enum": [
-              "sec1"
-            ]
-          }
-        }
-      },
-      "CompareSmartContractRequest": {
-        "required": [
-          "file",
-          "ownerWallet",
-          "type",
-          "subType"
-        ],
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "example": "11ce9548-6548-4388-8efb-75716883239a"
-          },
-          "file": {
-            "type": "object"
-          },
-          "ownerWallet": {
-            "type": "string",
-            "example": "0xL2mn4B8id4PMU5DQZq4WZgjTDtuEKCGvn1389Kxz8b9Jqf9TaA56"
           },
           "tokenId": {
-            "type": "string",
-            "description": "Id of your trustable file",
-            "example": null
+            "type": "string"
           },
-          "type": {
-            "type": "string",
-            "example": "rootkey"
+          "uri": {
+            "type": "string"
           },
-          "subType": {
-            "type": "string",
-            "example": "sec1"
-          }
-        }
-      },
-      "CompareSmartContractResponse": {
-        "properties": {
-          "validation": {
-            "type": "object",
-            "properties": {
-              "ownership": {
-                "type": "boolean"
-              },
-              "integrity": {
-                "type": "boolean"
-              },
-              "validity": {
-                "type": "boolean"
-              }
-            }
-          }
-        }
-      },
-      "createAssetRequest": {
-        "type": "object",
-        "properties": {
-          "walletAddress": {
-            "description": "",
+          "name": {
             "type": "string"
-          }
-        }
-      },
-      "listAssetMainetenancesRequest": {
-        "type": "object",
-        "properties": {
-          "assetId": {
-            "description": "Asset Identifier",
-            "type": "string"
-          }
-        }
-      },
-      "createAssetMainetenancesRequest": {
-        "type": "object",
-        "properties": {
-          "hashFile": {
-            "description": "Asset Identifier",
-            "type": "string"
-          }
-        }
-      },
-      "deleteAssetMainetenanceRequest": {},
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
           },
-          "message": {
+          "symbol": {
+            "type": "string"
+          },
+          "owner": {
             "type": "string"
           }
         }
+      },
+      "VaultUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the wallet",
+            "type": "string"
+          },
+          "description": {
+            "description": "The description of the wallet to help you organize your data",
+            "type": "string"
+          }
+        }
+      },
+      "ListFileResponse": {
+        "type": "object"
       }
     },
     "securitySchemes": {

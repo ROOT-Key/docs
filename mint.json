@@ -100,13 +100,13 @@
             "group": "Platform API",
             "pages": [
                 "api-reference/platform/overview",
-                "api-reference/platform/endpoint/list-contracts",
-                "api-reference/platform/endpoint/list-transactions",
-                "api-reference/platform/endpoint/create-contract",
-                "api-reference/platform/endpoint/create-wallet",
-                "api-reference/platform/endpoint/transfer-contract",
-                "api-reference/platform/endpoint/validate-contract",
-                "api-reference/platform/endpoint/delete-wallet"
+                "api-reference/platform/endpoint/list-files",
+                "api-reference/platform/endpoint/fetch-file",
+                "api-reference/platform/endpoint/list-vaults-transactions",
+                "api-reference/platform/endpoint/create-vaults",
+                "api-reference/platform/endpoint/create-files",
+                "api-reference/platform/endpoint/update-vaults",
+                "api-reference/platform/endpoint/delete-vaults"
             ]
         },
         {
