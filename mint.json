@@ -35,11 +35,7 @@
             "url": "changelog"
         }
     ],
-    "anchors": [{
-            "name": "Community",
-            "icon": "whatsapp",
-            "url": "https://chat.whatsapp.com/IHM2Grue6sW4Wb6S8OLFNb"
-        },
+    "anchors": [
         {
             "name": "Github",
             "icon": "github",
