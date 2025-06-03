@@ -686,14 +686,25 @@
             }
           }
         ],
+        "requestBody": {
+          "description": "Validate integrity, authenticity and the ownership of a file",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateFileRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "File successfully retrieved",
+            "description": "File successfully validated",
             "content": {
               "application/json": {
                 "example": {},
                 "schema": {
-                  "$ref": "#/components/schemas/ListFileResponse"
+                  "$ref": "#/components/schemas/ValidateFileResponse"
                 }
               }
             }
@@ -708,56 +719,6 @@
                   "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
                   "timestamp": "2025-05-28T22:07:31.000Z",
                   "details": []
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/platform/vaults/reports": {
-      "post": {
-        "tags": [
-          "Platform",
-          "Vaults"
-        ],
-        "requestBody": {
-          "description": "",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/walletCreationRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Wallet created successfully",
-            "content": {
-              "application/json": {
-                "example": {
-                  "name": "My first wallet",
-                  "description": "First wallet created throught ROOTKey API",
-                  "walletAddress": ""
-                },
-                "schema": {
-                  "$ref": "#/components/schemas/NewWallet"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Wallet not found",
-            "content": {
-              "application/json": {
-                "example": {
-                  "error": 404,
-                  "message": "Wallet not found!"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -1015,6 +976,45 @@
           "destinationWallet": {
             "description": "The address of the destination vault",
             "type": "string"
+          }
+        }
+      },
+      "ValidateFileRequest": {
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "description": "The id of the file",
+            "type": "string"
+          },
+          "ownerWallet": {
+            "description": "The address of the current owner vault",
+            "type": "string"
+          },
+          "file": {
+            "description": "The file to be validated",
+            "type": "string",
+            "format": "binary"
+          },
+          "certificate": {
+            "description": "If true a certificate providing the results of the validation process will be issued and sent to the user email",
+            "type": "boolean"
+          }
+        }
+      },
+      "ValidateFileResponse": {
+        "type": "object",
+        "properties": {
+          "integrity": {
+            "description": "If true the file is intact and has not been tampered with",
+            "type": "boolean"
+          },
+          "authenticity": {
+            "description": "If true the file is authentic",
+            "type": "boolean"
+          },
+          "ownership": {
+            "description": "If true the file is owned by the owner wallet",
+            "type": "boolean"
           }
         }
       }
