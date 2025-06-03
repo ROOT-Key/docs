@@ -271,6 +271,23 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid Owner address",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "invalid_wallet_address",
+                  "message": "Invalid Address submitted!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#invalid-wallet-address",
+                  "timestamp": "2025-05-28T22:07:31.000Z",
+                  "details": []
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Vault not found",
             "content": {
@@ -432,6 +449,23 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid Owner address",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "invalid_wallet_address",
+                  "message": "Invalid Address submitted!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#invalid-wallet-address",
+                  "timestamp": "2025-05-28T22:07:31.000Z",
+                  "details": []
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Vault not found",
             "content": {
@@ -454,6 +488,188 @@
     },
     "/platform/files/{fileId}": {
       "get": {
+        "tags": [
+          "Platform",
+          "Files"
+        ],
+        "description": "List specific file stored in a vault",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileId",
+            "description": "The file id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File successfully retrieved",
+            "content": {
+              "application/json": {
+                "example": {},
+                "schema": {
+                  "$ref": "#/components/schemas/ListFileResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Vault not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "resource_not_found",
+                  "message": "Vault not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
+                  "timestamp": "2025-05-28T22:07:31.000Z",
+                  "details": []
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/files/{fileId}/history": {
+      "get": {
+        "tags": [
+          "Platform",
+          "Files"
+        ],
+        "description": "List specific file stored in a vault",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileId",
+            "description": "The file id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ownerWallet",
+            "description": "The address of the owner of the file",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File history successfully retrieved",
+            "content": {
+              "application/json": {
+                "example": {},
+                "schema": {
+                  "$ref": "#/components/schemas/ListFileHistoryResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "resource_not_found",
+                  "message": "File not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
+                  "timestamp": "2025-05-28T22:07:31.000Z",
+                  "details": []
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/files/{fileId}/transfer": {
+      "post": {
+        "tags": [
+          "Platform",
+          "Files"
+        ],
+        "description": "Transfer a file to another vault",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fileId",
+            "description": "The file id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Transfer file request payload",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferFileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File successfully transferred",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "400": {
+            "description": "Invalid Owner address",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "invalid_wallet_address",
+                  "message": "Invalid Address submitted!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#invalid-wallet-address",
+                  "timestamp": "2025-05-28T22:07:31.000Z",
+                  "details": []
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Owner vault not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "resource_not_found",
+                  "message": "Wallet not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
+                  "timestamp": "2025-05-28T22:07:31.000Z",
+                  "details": []
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/files/{fileId}/validate": {
+      "post": {
         "tags": [
           "Platform",
           "Files"
@@ -575,31 +791,6 @@
           }
         }
       },
-      "Wallet": {
-        "required": [
-          "walletAddress",
-          "privateKey"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of the wallet",
-            "type": "string"
-          },
-          "description": {
-            "description": "The description of the wallet to help you organize your data",
-            "type": "string"
-          },
-          "walletAddress": {
-            "description": "The address of the wallet",
-            "type": "string"
-          },
-          "privateKey": {
-            "description": "Private Key of the wallet to allow you create, delete and transfer data",
-            "type": "string"
-          }
-        }
-      },
       "NewWallet": {
         "type": "object",
         "properties": {
@@ -705,37 +896,6 @@
           }
         }
       },
-      "smartContractCreationRequest": {
-        "type": "object",
-        "properties": {
-          "ownerWallet": {
-            "description": "The name of the wallet",
-            "type": "string"
-          },
-          "type": {
-            "description": "The description of the wallet to help you organize your data",
-            "type": "string",
-            "enum": [
-              "rootkey"
-            ]
-          },
-          "subType": {
-            "description": "The description of the wallet to help you organize your data",
-            "type": "string",
-            "enum": [
-              "sec1"
-            ]
-          },
-          "privateKey": {
-            "description": "The description of the wallet to help you organize your data",
-            "type": "string"
-          },
-          "expirationDate": {
-            "description": "The description of the wallet to help you organize your data",
-            "type": "string"
-          }
-        }
-      },
       "VaultFilesListRequest": {
         "type": "object",
         "properties": {
@@ -797,6 +957,66 @@
       },
       "ListFileResponse": {
         "type": "object"
+      },
+      "ListFileHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "chainId": {
+            "description": "The chain id of the transaction",
+            "type": "integer"
+          },
+          "transferHistory": {
+            "description": "The transfer history of the file",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "tokenId": {
+                  "description": "The id of the file",
+                  "type": "string"
+                },
+                "blockNumber": {
+                  "description": "The block number of the transaction",
+                  "type": "number"
+                },
+                "transactionIndex": {
+                  "description": "The index of the transaction",
+                  "type": "integer"
+                },
+                "blockTimestamp": {
+                  "description": "The timestamp of the block where the transaction was included",
+                  "type": "string",
+                  "format": "date"
+                },
+                "from": {
+                  "description": "The address of the sender",
+                  "type": "string"
+                },
+                "to": {
+                  "description": "The address of the receiver",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "TransferFileRequest": {
+        "type": "object",
+        "properties": {
+          "tokenId": {
+            "description": "The id of the file",
+            "type": "string"
+          },
+          "ownerWallet": {
+            "description": "The address of the current owner vault",
+            "type": "string"
+          },
+          "destinationWallet": {
+            "description": "The address of the destination vault",
+            "type": "string"
+          }
+        }
       }
     },
     "securitySchemes": {
