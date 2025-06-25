@@ -104,8 +104,7 @@
                   "message": "You have exceeded your usage quota for one or more features.",
                   "docUrl": "https://docs.rootkey.ai/api-reference/errors#usage_limit_exceeded",
                   "errorCode": "usage_limit_exceeded",
-                  "timestamp": "2025-05-28T22:07:31.000Z",
-                  "details": []
+                  "timestamp": "2025-05-28T22:07:31.000Z"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -153,7 +152,7 @@
                 "example": {
                   "name": "My first wallet",
                   "description": "First wallet created throught ROOTKey API",
-                  "walletAddress": ""
+                  "walletAddress": "0x1234567890abcdef1234567890abcdef12345678"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/NewWallet"
@@ -162,12 +161,14 @@
             }
           },
           "404": {
-            "description": "Wallet not found",
+            "description": "Vault not found",
             "content": {
               "application/json": {
                 "example": {
-                  "error": 404,
-                  "message": "Wallet not found!"
+                  "errorCode": "resource_not_found",
+                  "message": "Vault not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2025-05-28T22:07:31.000Z"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -202,18 +203,20 @@
                 "example": {
                   "name": "My first wallet",
                   "description": "First wallet created throught ROOTKey API",
-                  "walletAddress": ""
+                  "walletAddress": "0x1234567890abcdef1234567890abcdef12345678"
                 }
               }
             }
           },
           "404": {
-            "description": "Wallet not found",
+            "description": "Vault not found",
             "content": {
               "application/json": {
                 "example": {
-                  "error": 404,
-                  "message": "Wallet not found!"
+                  "errorCode": "resource_not_found",
+                  "message": "Vault not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2025-05-28T22:07:31.000Z"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -277,7 +280,7 @@
               "application/json": {
                 "example": {
                   "errorCode": "invalid_wallet_address",
-                  "message": "Invalid Address submitted!",
+                  "message": "Invalid address submitted!",
                   "docUrl": "https://docs.rootkey.ai/api-reference/errors#invalid-wallet-address",
                   "timestamp": "2025-05-28T22:07:31.000Z",
                   "details": []
@@ -295,9 +298,8 @@
                 "example": {
                   "errorCode": "resource_not_found",
                   "message": "Vault not found!",
-                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
-                  "timestamp": "2025-05-28T22:07:31.000Z",
-                  "details": []
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2025-05-28T22:07:31.000Z"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -377,9 +379,8 @@
                 "example": {
                   "errorCode": "resource_not_found",
                   "message": "Vault not found!",
-                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
-                  "timestamp": "2025-05-28T22:07:31.000Z",
-                  "details": []
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2025-05-28T22:07:31.000Z"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -455,7 +456,7 @@
               "application/json": {
                 "example": {
                   "errorCode": "invalid_wallet_address",
-                  "message": "Invalid Address submitted!",
+                  "message": "Invalid address submitted!",
                   "docUrl": "https://docs.rootkey.ai/api-reference/errors#invalid-wallet-address",
                   "timestamp": "2025-05-28T22:07:31.000Z",
                   "details": []
@@ -473,9 +474,8 @@
                 "example": {
                   "errorCode": "resource_not_found",
                   "message": "Vault not found!",
-                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
-                  "timestamp": "2025-05-28T22:07:31.000Z",
-                  "details": []
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2025-05-28T22:07:31.000Z"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -509,7 +509,9 @@
             "description": "File successfully retrieved",
             "content": {
               "application/json": {
-                "example": {},
+                "example": {
+                  
+                },
                 "schema": {
                   "$ref": "#/components/schemas/ListFileResponse"
                 }
@@ -523,9 +525,8 @@
                 "example": {
                   "errorCode": "resource_not_found",
                   "message": "Vault not found!",
-                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
-                  "timestamp": "2025-05-28T22:07:31.000Z",
-                  "details": []
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2025-05-28T22:07:31.000Z"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -582,9 +583,8 @@
                 "example": {
                   "errorCode": "resource_not_found",
                   "message": "File not found!",
-                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
-                  "timestamp": "2025-05-28T22:07:31.000Z",
-                  "details": []
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2025-05-28T22:07:31.000Z"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -628,7 +628,12 @@
           "200": {
             "description": "File successfully transferred",
             "content": {
-              "application/json": {}
+              "application/json": {
+                "example": {
+                  "chainId": "137",
+                  "transactionHash": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+                }
+              }
             }
           },
           "400": {
@@ -637,7 +642,7 @@
               "application/json": {
                 "example": {
                   "errorCode": "invalid_wallet_address",
-                  "message": "Invalid Address submitted!",
+                  "message": "Invalid address submitted!",
                   "docUrl": "https://docs.rootkey.ai/api-reference/errors#invalid-wallet-address",
                   "timestamp": "2025-05-28T22:07:31.000Z",
                   "details": []
@@ -649,15 +654,14 @@
             }
           },
           "404": {
-            "description": "Owner vault not found",
+            "description": "Vault not found",
             "content": {
               "application/json": {
                 "example": {
                   "errorCode": "resource_not_found",
-                  "message": "Wallet not found!",
-                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
-                  "timestamp": "2025-05-28T22:07:31.000Z",
-                  "details": []
+                  "message": "Vault not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2025-05-28T22:07:31.000Z"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
@@ -716,9 +720,8 @@
                 "example": {
                   "errorCode": "resource_not_found",
                   "message": "Vault not found!",
-                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource_not_found",
-                  "timestamp": "2025-05-28T22:07:31.000Z",
-                  "details": []
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2025-05-28T22:07:31.000Z"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/Error"
