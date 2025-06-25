@@ -425,24 +425,12 @@
         },
         "responses": {
           "200": {
-            "description": "Files successfully retrieved",
+            "description": "File successfully created",
             "content": {
               "application/json": {
                 "example": {
-                  "files": [
-                    {
-                      "chain": "Ethereum",
-                      "tokenType": "ERC721",
-                      "tokenAddress": "0x1234567890123456789012345678901234567890",
-                      "tokenId": "1",
-                      "tokenUri": "https://example.com/token/1",
-                      "name": "My first NFT",
-                      "symbol": "NFT",
-                      "ownerOf": "0x1234567890123456789012345678901234567890",
-                      "tokenHash": "0x1234567890123456789012345678901234567890"
-                    }
-                  ],
-                  "nextCursor": ""
+                  "chainId": "137",
+                  "transactionHash": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/VaultFilesListResponse"
