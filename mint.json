@@ -2,8 +2,8 @@
     "$schema": "https://mintlify.com/schema.json",
     "name": "ROOTKey",
     "logo": {
-        "dark": "https://media.notcybersec.com/Logos_NCS/280x60_branco.png",
-        "light": "https://media.notcybersec.com/Logos_NCS/280x60_preto.png"
+        "dark": "https://media.rootkey.ai/logo_rootkey/png/280x60_branco.png",
+        "light": "https://media.rootkey.ai/logo_rootkey/png/280x60_preto.png"
     },
     "favicon": "/favicon.svg",
     "colors": {
