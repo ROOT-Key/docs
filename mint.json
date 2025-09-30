@@ -5,7 +5,7 @@
         "dark": "https://media.rootkey.ai/logo_rootkey/png/280x60_branco.png",
         "light": "https://media.rootkey.ai/logo_rootkey/png/280x60_preto.png"
     },
-    "favicon": "/favicon.svg",
+    "favicon": "/favicon.ico",
     "colors": {
         "primary": "#6100FF",
         "light": "#B800E6",
@@ -103,31 +103,6 @@
                 "api-reference/platform/endpoint/create-files",
                 "api-reference/platform/endpoint/update-vaults",
                 "api-reference/platform/endpoint/delete-vaults"
-            ]
-        },
-        {
-            "group": "DAMC API",
-            "pages": [
-                "api-reference/damc/overview",
-                "api-reference/damc/endpoint/list-assets",
-                "api-reference/damc/endpoint/list-workers",
-                "api-reference/damc/endpoint/list-asset-maintenances",
-                "api-reference/damc/endpoint/list-asset-maintenance-by-id",
-                "api-reference/damc/endpoint/total-asset-maintenances",
-                "api-reference/damc/endpoint/list-collectives",
-                "api-reference/damc/endpoint/verify-viewer",
-                "api-reference/damc/endpoint/create-asset",
-                "api-reference/damc/endpoint/create-worker",
-                "api-reference/damc/endpoint/create-collective",
-                "api-reference/damc/endpoint/add-workers-to-collective",
-                "api-reference/damc/endpoint/transfer-asset",
-                "api-reference/damc/endpoint/add-asset-viewers",
-                "api-reference/damc/endpoint/add-collective-to-asset",
-                "api-reference/damc/endpoint/create-maintenances",
-                "api-reference/damc/endpoint/update-asset-uri",
-                "api-reference/damc/endpoint/remove-asset-viewers",
-                "api-reference/damc/endpoint/remove-collective-of-workers",
-                "api-reference/damc/endpoint/remove-workers-from-collective"
             ]
         },
         {
