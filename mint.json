@@ -5,7 +5,7 @@
         "dark": "https://media.rootkey.ai/logo_rootkey/png/280x60_branco.png",
         "light": "https://media.rootkey.ai/logo_rootkey/png/280x60_preto.png"
     },
-    "favicon": "/favicon.ico",
+    "favicon": "/homescreen_72.png",
     "colors": {
         "primary": "#6100FF",
         "light": "#B800E6",
@@ -66,7 +66,6 @@
             "group": "Ecosystem Guides",
             "pages": [
                 "pages/environments",
-                "pages/funding",
                 "pages/concepts"
             ]
         },
