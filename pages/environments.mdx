@@ -1,45 +1,83 @@
 ---
 title: 'Environments'
-description: 'This page outlines the differences between our production and staging environments, detailing their respective uses, network connections, and key features for effective API deployment and testing.'
+description: 'This page explains how production and sandbox modes work within the same API endpoint, allowing seamless testing and live operation through platform configuration and API keys.'
 icon: seedling
 mode: "wide"
 ---
 
-## Production Environment
+## Unified Production Environment
 
-The production environment is where the APIs are used in real-world scenarios with live data. This environment must be extremely stable, secure, and optimized for performance.
+The Rootkey API operates through a single production endpoint that supports both **live** and **sandbox (test)** operations. This approach allows users to test and validate integrations without switching URLs or risking unintended costs.
 
 - **Base URL**: `https://api.rootkey.ai`
-- **Network**: [Polygon Mainnet](https://polygonscan.com/)
-- **Usage**: All data and operations in this environment are real and should be handled with care.
+- **Network**: Polygon (Mainnet or Testnet, depending on mode)
+- **Configuration**: Controlled directly from the Rootkey platform
 
-### Key Features
-- High availability and reliability.
-- Data is persistent and used in live applications.
-- Suitable for end-users and live integrations.
+Traffic routing (production vs. sandbox) is determined by:
+1. The **mode selected** in the platform (Test Mode or Live Mode)
+2. The **API key** associated with that mode
 
-## Staging Environment
+This design simplifies development workflows and reduces configuration errors.
 
-The staging environment is used for testing and development. It mirrors the production environment but uses test data and networks. This environment allows developers to test their changes before deploying them to production.
+---
 
-- **Base URL**: `https://dev-api.rootkey.ai`
+## Sandbox (Test Mode)
+
+Sandbox mode allows users to safely test their integrations using the same API endpoint, without generating real costs or affecting live data.
+
+### How it works
+1. Enable **Test Mode** in the Rootkey platform  
+2. Generate a **sandbox API key**  
+3. All requests made with this key are automatically routed to the sandbox environment
+
 - **Network**: [Polygon Testnet (Amoy)](https://amoy.polygonscan.com/)
-- **Get Test Tokens**: [Funding Wallets with Faucet](/pages/funding)
-- **Usage**: All data and operations in this environment are for testing purposes only and can be reset or modified without impacting real users.
+- **Data**: Test-only, non-persistent
+- **Costs**: None
 
-### Key Features
-- Simulates the production environment for thorough testing.
-- Data can be reset or modified frequently.
-- Ideal for developers and QA teams to test new features and fixes.
+### Key Characteristics
+- Identical API behaviour to production
+- No financial impact during testing
+- Ideal for development, QA, and pre-production validation
+- No URL changes required
 
-## Differences Between Production and Staging
+---
 
-| Feature       | Production                       | Staging                               |
-| ------------- | -------------------------------- | ------------------------------------- |
-| **Base URL**  | `https://api.rootkey.ai`    | `https://dev-api.rootkey.ai` |
-| **Network**   | Polygon Mainnet                  | Polygon Testnet (Amoy)              |
-| **Data**      | Real data                        | Test data                             |
-| **Usage**     | Live applications and users      | Development and testing               |
-| **Reliability** | High                            | Moderate                              |
+## Live Mode (Production Usage)
 
-By understanding these environments and their differences, developers can ensure that their changes are thoroughly tested in staging before being deployed to production, thereby minimizing risks and ensuring a stable, reliable experience for end users.
+Once testing is complete, moving to live usage is straightforward and requires no code changes.
+
+### Steps to go live
+1. Disable **Test Mode** in the platform  
+2. Generate a **new live API key**  
+3. Start sending requests using the same base URL
+
+- **Network**: [Polygon Mainnet](https://polygonscan.com/)
+- **Data**: Real, persistent
+- **Costs**: Applied according to the active pricing plan
+
+### Key Characteristics
+- High availability and reliability
+- Optimised for real-world workloads
+- Suitable for end-users and production integrations
+
+---
+
+## Sandbox vs Live Mode Overview
+
+| Feature            | Sandbox (Test Mode)            | Live Mode (Production)        |
+|--------------------|--------------------------------|-------------------------------|
+| **Base URL**       | `https://api.rootkey.ai`       | `https://api.rootkey.ai`      |
+| **API Key**        | Sandbox key                    | Live key                      |
+| **Network**        | Polygon Testnet (Amoy)         | Polygon Mainnet               |
+| **Data**           | Test data                      | Real data                     |
+| **Costs**          | None                           | Applied                       |
+| **Purpose**        | Testing and validation         | Live operation                |
+
+---
+
+## Summary
+
+By unifying production and sandbox access under a single endpoint, Rootkey enables a smoother transition from testing to live operation. Users can validate their cyber resilience solutions without unnecessary complexity, then move to production instantly by switching mode and API key.
+
+This approach minimises risk, avoids accidental costs, and accelerates time to value.
+
