@@ -1358,6 +1358,13 @@
           }
         }
       }
+    },
+    "securitySchemes": {
+      "x-api-key": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header"
+      }
     }
   }
 }
