@@ -1,0 +1,1363 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ROOTKey Documentation",
+    "description": "Your API of choice for creating, managing, and validating information easily and securely!",
+    "termsOfService": "https://www.rootkey.ai/legal/privacy-policy",
+    "contact": {
+      "name": "ROOTKey",
+      "url": "https://www.rootkey.ai/contact",
+      "email": "support@rootkey.ai"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "description": "Production",
+      "url": "https://api.rootkey.ai/api-v1/"
+    }
+  ],
+  "security": [
+    {
+      "x-api-key": []
+    }
+  ],
+  "paths": {
+    "/healthz": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "description": "Check the status of the API on the selected version",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "API status response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {
+                    "message": "[Auth service]: Status OK"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Version not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 404,
+                  "message": "Resource not found"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/vaults": {
+      "post": {
+        "tags": [
+          "Platform",
+          "Vaults"
+        ],
+        "description": "Create a new vault",
+        "requestBody": {
+          "description": "Vault creation request payload",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWalletRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Wallet created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "name": "My first wallet",
+                  "description": "First wallet created through ROOTKey API",
+                  "address": ""
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/NewWallet"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "You have exceeded your usage quota for one or more features.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": 400,
+                  "message": "You have exceeded your usage quota for one or more features.",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#usage_limit_exceeded",
+                  "errorCode": "usage_limit_exceeded",
+                  "timestamp": "2025-05-28T22:07:31.000Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/vaults/{vaultAddress}": {
+      "put": {
+        "tags": [
+          "Platform",
+          "Vaults"
+        ],
+        "description": "Update a vault",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vaultAddress",
+            "description": "The vault address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Vault update request payload",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWalletRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Vault updated successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "name": "My first wallet",
+                  "description": "First wallet created through ROOTKey API",
+                  "walletAddress": "0x1234567890abcdef1234567890abcdef12345678"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/NewWallet"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Vault not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "resource_not_found",
+                  "message": "Vault not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2025-05-28T22:07:31.000Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Platform",
+          "Vaults"
+        ],
+        "description": "Delete a vault",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vaultAddress",
+            "description": "The vault address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vault deleted successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "name": "My first wallet",
+                  "description": "First wallet created through ROOTKey API",
+                  "walletAddress": "0x1234567890abcdef1234567890abcdef12345678"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Vault not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "resource_not_found",
+                  "message": "Vault not found!",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2025-05-28T22:07:31.000Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/vaults/{vaultAddress}/deactivate": {
+      "patch": {
+        "tags": [
+          "Platform",
+          "Vaults"
+        ],
+        "description": "Deactivate a vault",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vaultAddress",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vault successfully deactivated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaultStatusResponse"
+                },
+                "example": {
+                  "address": "0x123...",
+                  "status": "inactive"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Vault not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/vaults/{vaultAddress}/reactivate": {
+      "patch": {
+        "tags": [
+          "Platform",
+          "Vaults"
+        ],
+        "description": "Reactivate a vault",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vaultAddress",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vault successfully reactivated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaultStatusResponse"
+                },
+                "example": {
+                  "address": "0x123...",
+                  "status": "active"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Vault not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/files": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "List files from a vault",
+        "parameters": [
+          {
+            "name": "walletAddress",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Vault address"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Cursor for pagination"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "registered",
+                "pending",
+                "error"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Files listed with pagination",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponseFile"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Vault not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Create a new file",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSmartContractRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "chainId": {
+                      "type": "integer"
+                    },
+                    "transactionHash": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error creating file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/files/{fileId}": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Get file by ID",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ownerWallet",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/File"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/files/{fileId}/history": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "File action history",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "History retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponseFileActivity"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/files/{fileId}/transfer": {
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Transfer file to another vault",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferFileRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File transferred successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockchainTransactionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Vault or file not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/files/{fileId}/validate": {
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "description": "Validate the integrity, authenticity and ownership of a file by comparing it with a trusted version",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareFilesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation performed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateFileResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Vault or file not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/files/{parentId}/versions": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "List file versions",
+        "parameters": [
+          {
+            "name": "parentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "walletAddress",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Versions listed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponseFile"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Create new file version",
+        "parameters": [
+          {
+            "name": "parentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSmartContractRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New version created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockchainTransactionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/files/{fileId}/validations": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "File validation history",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Validation history retrieved",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/analytics/files-x-validations": {
+      "get": {
+        "tags": [
+          "Platform",
+          "Analytics"
+        ],
+        "description": "Analytics relating files and validations",
+        "responses": {
+          "200": {
+            "description": "Analytics data retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilesXValidationsAnalyticsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/analytics/vaults-over-time": {
+      "get": {
+        "tags": [
+          "Platform",
+          "Analytics"
+        ],
+        "description": "Vaults creation over time",
+        "responses": {
+          "200": {
+            "description": "Vault analytics retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaultsOverTimeAnalyticsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": [
+          "errorCode",
+          "message",
+          "timestamp"
+        ],
+        "properties": {
+          "errorCode": {
+            "type": "string",
+            "example": "resource_not_found"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "docUrl": {
+            "type": "string",
+            "format": "uri"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "NewWallet": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the wallet",
+            "type": "string"
+          },
+          "description": {
+            "description": "The description of the wallet to help you organize your data",
+            "type": "string"
+          },
+          "address": {
+            "description": "The address of the wallet",
+            "type": "string"
+          }
+        }
+      },
+      "File": {
+        "type": "object",
+        "required": [
+          "id",
+          "versionsNumber",
+          "name",
+          "size",
+          "extension",
+          "status",
+          "integrity",
+          "url",
+          "createdAt",
+          "vault"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "string",
+            "nullable": true
+          },
+          "versionsNumber": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "size": {
+            "type": "string"
+          },
+          "extension": {
+            "type": "string"
+          },
+          "lastValidateAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "FAILED",
+              "REGISTERED"
+            ]
+          },
+          "integrity": {
+            "type": "number"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "vault": {
+            "type": "object",
+            "required": [
+              "name",
+              "address"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "address": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "FileActivity": {
+        "type": "object",
+        "required": [
+          "id",
+          "fileId",
+          "action",
+          "status",
+          "details",
+          "timestamp"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fileId": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateWalletRequest": {
+        "type": "object",
+        "required": [
+          "walletName"
+        ],
+        "properties": {
+          "walletName": {
+            "description": "The name of the wallet",
+            "type": "string"
+          },
+          "description": {
+            "description": "Optional description to help organize wallets",
+            "type": "string"
+          }
+        }
+      },
+      "UpdateWalletRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "New wallet name",
+            "type": "string"
+          },
+          "description": {
+            "description": "New wallet description",
+            "type": "string"
+          }
+        }
+      },
+      "ValidateFileResponse": {
+        "type": "object",
+        "properties": {
+          "integrity": {
+            "description": "If true the file is intact and has not been tampered with",
+            "type": "boolean"
+          },
+          "authenticity": {
+            "description": "If true the file is authentic",
+            "type": "boolean"
+          },
+          "ownership": {
+            "description": "If true the file is owned by the owner wallet",
+            "type": "boolean"
+          }
+        }
+      },
+      "VaultStatusResponse": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive"
+            ]
+          }
+        }
+      },
+      "FilesXValidationsAnalyticsResponse": {
+        "type": "object",
+        "properties": {
+          "totalFiles": {
+            "type": "integer"
+          },
+          "totalValidations": {
+            "type": "integer"
+          }
+        }
+      },
+      "VaultsOverTimeAnalyticsResponse": {
+        "type": "object",
+        "properties": {
+          "series": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "count": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CreateSmartContractRequest": {
+        "type": "object",
+        "required": [
+          "ownerWallet",
+          "file"
+        ],
+        "properties": {
+          "parentId": {
+            "type": "string",
+            "nullable": true
+          },
+          "ownerWallet": {
+            "type": "string"
+          },
+          "expirationDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "file": {
+            "type": "string",
+            "format": "binary"
+          },
+          "fileName": {
+            "type": "string"
+          }
+        }
+      },
+      "TransferFileRequest": {
+        "type": "object",
+        "required": [
+          "ownerWallet",
+          "destinationWallet"
+        ],
+        "properties": {
+          "ownerWallet": {
+            "type": "string"
+          },
+          "destinationWallet": {
+            "type": "string"
+          }
+        }
+      },
+      "BlockchainTransactionResponse": {
+        "type": "object",
+        "required": [
+          "chainId",
+          "transactionHash"
+        ],
+        "properties": {
+          "chainId": {
+            "type": "integer"
+          },
+          "transactionHash": {
+            "type": "string"
+          }
+        }
+      },
+      "CompareFilesRequest": {
+        "type": "object",
+        "required": [
+          "ownerWallet",
+          "tokenId",
+          "file"
+        ],
+        "properties": {
+          "ownerWallet": {
+            "type": "string",
+            "description": "Wallet address that owns the file"
+          },
+          "tokenId": {
+            "type": "string",
+            "description": "File token ID to be validated"
+          },
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "File to be compared against the stored version"
+          }
+        }
+      },
+      "PaginatedResponseFile": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/File"
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "previousCursor": {
+                "type": "string"
+              },
+              "nextCursor": {
+                "type": "string"
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "fetchedCount": {
+                "type": "integer"
+              },
+              "totalCount": {
+                "type": "integer"
+              },
+              "serverTimestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "type": "integer"
+                  },
+                  "cursor": {
+                    "type": "string"
+                  },
+                  "order": {
+                    "type": "string",
+                    "enum": [
+                      "asc",
+                      "desc"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "PaginatedResponseFileActivity": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FileActivity"
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "previousCursor": {
+                "type": "string"
+              },
+              "nextCursor": {
+                "type": "string"
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "fetchedCount": {
+                "type": "integer"
+              },
+              "totalCount": {
+                "type": "integer"
+              },
+              "serverTimestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "limit": {
+                    "type": "integer"
+                  },
+                  "cursor": {
+                    "type": "string"
+                  },
+                  "order": {
+                    "type": "string",
+                    "enum": [
+                      "asc",
+                      "desc"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

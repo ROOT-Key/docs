@@ -18,15 +18,18 @@
             "to": "#6100FF"
         }
     },
-    "topbarLinks": [{
-        "name": "Support",
-        "url": "mailto:support@rootkey.ai"
-    }],
+    "topbarLinks": [
+        {
+            "name": "Support",
+            "url": "mailto:support@rootkey.ai"
+        }
+    ],
     "topbarCtaButton": {
         "name": "Dashboard",
         "url": "https://app.rootkey.ai"
     },
-    "tabs": [{
+    "tabs": [
+        {
             "name": "API References",
             "url": "api-reference"
         },
@@ -47,7 +50,8 @@
             "url": "https://rootkey.ai/blog"
         }
     ],
-    "navigation": [{
+    "navigation": [
+        {
             "group": "Introduction",
             "pages": [
                 "introduction",
@@ -94,14 +98,37 @@
         {
             "group": "Platform API",
             "pages": [
-                "api-reference/platform/overview",
-                "api-reference/platform/endpoint/list-files",
-                "api-reference/platform/endpoint/fetch-file",
-                "api-reference/platform/endpoint/list-vaults-transactions",
-                "api-reference/platform/endpoint/create-vaults",
-                "api-reference/platform/endpoint/create-files",
-                "api-reference/platform/endpoint/update-vaults",
-                "api-reference/platform/endpoint/delete-vaults"
+                "api-reference/platform/overview"
+            ]
+        },
+        {
+            "group": "Status",
+            "pages": [
+                "api-reference/platform/endpoint/status/get-healthz"
+            ]
+        },
+        {
+            "group": "Files",
+            "pages": [
+                "api-reference/platform/endpoint/files/get-files",
+                "api-reference/platform/endpoint/files/get-file-by-id",
+                "api-reference/platform/endpoint/files/get-files-history",
+                "api-reference/platform/endpoint/files/get-file-versions",
+                "api-reference/platform/endpoint/files/get-files-validations",
+                "api-reference/platform/endpoint/files/create-file",
+                "api-reference/platform/endpoint/files/create-file-versions",
+                "api-reference/platform/endpoint/files/validate-file",
+                "api-reference/platform/endpoint/files/transfer-file"
+            ]
+        },
+        {
+            "group": "Vaults",
+            "pages": [
+                "api-reference/platform/endpoint/vaults/create-vault",
+                "api-reference/platform/endpoint/vaults/update-vault",
+                "api-reference/platform/endpoint/vaults/delete-vault",
+                "api-reference/platform/endpoint/vaults/deactivate-vault",
+                "api-reference/platform/endpoint/vaults/reactivate-vault"
             ]
         },
         {

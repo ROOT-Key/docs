@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "generate:docs": "npx @mintlify/scraping@latest openapi-file"
+    "generate:docs": "npx @mintlify/scraping@latest"
   },
   "dependencies": {
     "sharp": "^0.33.4"
