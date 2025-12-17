@@ -7,11 +7,11 @@ mode: "wide"
 
 ## Unified Production Environment
 
-The Rootkey API operates through a single production endpoint that supports both **live** and **sandbox (test)** operations. This approach allows users to test and validate integrations without switching URLs or risking unintended costs.
+The ROOTKey API operates through a single production endpoint that supports both **live** and **sandbox (test)** operations. This approach allows users to test and validate integrations without switching URLs or risking unintended costs.
 
 - **Base URL**: `https://api.rootkey.ai`
 - **Network**: Polygon (Mainnet or Testnet, depending on mode)
-- **Configuration**: Controlled directly from the Rootkey platform
+- **Configuration**: Controlled directly from the ROOTKey platform
 
 Traffic routing (production vs. sandbox) is determined by:
 1. The **mode selected** in the platform (Test Mode or Live Mode)
@@ -26,7 +26,7 @@ This design simplifies development workflows and reduces configuration errors.
 Sandbox mode allows users to safely test their integrations using the same API endpoint, without generating real costs or affecting live data.
 
 ### How it works
-1. Enable **Test Mode** in the Rootkey platform  
+1. Enable **Test Mode** in the ROOTKey platform  
 2. Generate a **sandbox API key**  
 3. All requests made with this key are automatically routed to the sandbox environment
 
@@ -77,7 +77,7 @@ Once testing is complete, moving to live usage is straightforward and requires n
 
 ## Summary
 
-By unifying production and sandbox access under a single endpoint, Rootkey enables a smoother transition from testing to live operation. Users can validate their cyber resilience solutions without unnecessary complexity, then move to production instantly by switching mode and API key.
+By unifying production and sandbox access under a single endpoint, ROOTKey enables a smoother transition from testing to live operation. Users can validate their cyber resilience solutions without unnecessary complexity, then move to production instantly by switching mode and API key.
 
 This approach minimises risk, avoids accidental costs, and accelerates time to value.
 
