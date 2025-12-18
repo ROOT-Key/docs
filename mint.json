@@ -26,7 +26,7 @@
     ],
     "topbarCtaButton": {
         "name": "Dashboard",
-        "url": "https://app.rootkey.ai"
+        "url": "https://app.rootkey.ai?utm_source=api_docs&utm_medium=navBar&utm_content=dashboard"
     },
     "tabs": [
         {
@@ -47,7 +47,7 @@
         {
             "name": "Blog",
             "icon": "newspaper",
-            "url": "https://rootkey.ai/blog"
+            "url": "https://rootkey.ai/blog?utm_source=api_docs&utm_medium=side_bar_anchors&utm_content=blog"
         }
     ],
     "navigation": [
@@ -144,5 +144,10 @@
         "linkedin": "https://www.linkedin.com/company/rootkey",
         "instagram": "https://instagram.com/_rootkey/",
         "x": "https://x.com/__rootkey/"
+    },
+    "integrations": {
+        "ga4": {
+            "measurementId": "G-04LTNBVCFB"
+        }
     }
 }
