@@ -1,0 +1,166 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "ROOTKey",
+  "colors": {
+    "primary": "#6100FF",
+    "light": "#B800E6",
+    "dark": "#6100FF"
+  },
+  "favicon": "/homescreen_72.png",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Introduction",
+            "pages": [
+              "introduction",
+              "api",
+              "pages/pricing"
+            ]
+          },
+          {
+            "group": "Quickstart",
+            "pages": [
+              "pages/overview",
+              "pages/api-keys"
+            ]
+          },
+          {
+            "group": "Ecosystem Guides",
+            "pages": [
+              "pages/environments",
+              "pages/concepts"
+            ]
+          },
+          {
+            "group": "Additional Resources",
+            "pages": [
+              "pages/security-and-compliance",
+              "pages/faq",
+              "pages/support"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API References",
+        "groups": [
+          {
+            "group": "API Documentation",
+            "pages": [
+              "api-reference/overview",
+              "api-reference/auth",
+              "api-reference/errors"
+            ]
+          },
+          {
+            "group": "Status",
+            "pages": [
+              "api-reference/status"
+            ]
+          },
+          {
+            "group": "Platform API",
+            "pages": [
+              "api-reference/platform/overview"
+            ]
+          },
+          {
+            "group": "Status",
+            "pages": [
+              "api-reference/platform/endpoint/status/get-healthz"
+            ]
+          },
+          {
+            "group": "Files",
+            "pages": [
+              "api-reference/platform/endpoint/files/get-files",
+              "api-reference/platform/endpoint/files/get-file-by-id",
+              "api-reference/platform/endpoint/files/get-files-history",
+              "api-reference/platform/endpoint/files/get-file-versions",
+              "api-reference/platform/endpoint/files/get-files-validations",
+              "api-reference/platform/endpoint/files/create-file",
+              "api-reference/platform/endpoint/files/create-file-versions",
+              "api-reference/platform/endpoint/files/validate-file",
+              "api-reference/platform/endpoint/files/transfer-file"
+            ]
+          },
+          {
+            "group": "Vaults",
+            "pages": [
+              "api-reference/platform/endpoint/vaults/create-vault",
+              "api-reference/platform/endpoint/vaults/update-vault",
+              "api-reference/platform/endpoint/vaults/delete-vault",
+              "api-reference/platform/endpoint/vaults/deactivate-vault",
+              "api-reference/platform/endpoint/vaults/reactivate-vault"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Changelog",
+        "groups": [
+          {
+            "group": "Changelog",
+            "pages": [
+              "changelog/2025/overview",
+              "changelog/2024/overview"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Github",
+          "href": "https://github.com/ROOT-Key",
+          "icon": "github"
+        },
+        {
+          "anchor": "Blog",
+          "href": "https://rootkey.ai/blog?utm_source=api_docs&utm_medium=side_bar_anchors&utm_content=blog",
+          "icon": "newspaper"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "https://media.rootkey.ai/logo_rootkey/png/280x60_preto.png",
+    "dark": "https://media.rootkey.ai/logo_rootkey/png/280x60_branco.png"
+  },
+  "background": {
+    "color": {
+      "dark": "#0a090d"
+    }
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:support@rootkey.ai"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://app.rootkey.ai?utm_source=api_docs&utm_medium=navBar&utm_content=dashboard"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/ROOT-Key",
+      "linkedin": "https://www.linkedin.com/company/rootkey",
+      "instagram": "https://instagram.com/_rootkey/",
+      "x": "https://x.com/__rootkey/"
+    }
+  },
+  "integrations": {
+    "ga4": {
+      "measurementId": "G-04LTNBVCFB"
+    }
+  }
+}
