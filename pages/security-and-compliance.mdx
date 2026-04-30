@@ -1,39 +1,156 @@
 ---
-title: Security and Compliance
-description: Information regarding security measures, compliance standards, and policies.
-icon: gavel
-mode: "wide"
+title: Security & Trust
+description: ROOTKey's security architecture, data handling practices, compliance posture, and responsible disclosure process.
+icon: shield-halved
+mode: wide
 ---
 
-This section outlines the security measures, compliance standards, and policies followed by our APIs to ensure secure and reliable operations.
+ROOTKey is infrastructure for critical data integrity. Security is not a feature - it is the foundation of the product. This page documents the technical security controls, data handling practices, and compliance posture that underpin the platform.
 
-<Warning>
-  By using our APIs, you agree to our [Terms and
-  Conditions](https://rootkey.ai/legal/terms-conditions?utm_source=api_docs&utm_medium=security_compliance_page&utm_content=terms_and_conditions). We disclaim all
-  responsibility for individual use of our technologies.
-</Warning>
+---
+
+## Transport Security
+
+All API communication is encrypted in transit using **TLS 1.2 or higher**. Connections using older TLS versions or plain HTTP are rejected at the network boundary.
+
+| Control | Implementation |
+|---------|---------------|
+| Protocol | TLS 1.2+ |
+| Certificate authority | Publicly trusted CA |
+| HSTS | Enforced |
+| HTTP → HTTPS redirect | Enforced |
+
+---
+
+## Authentication and API Key Security
+
+API keys are the authentication primitive for the ROOTKey API. Each key is:
+
+- Scoped to a specific workspace and environment (sandbox or live)
+- Non-recoverable after generation - store securely at creation time
+- Revocable at any time from the ROOTKey platform dashboard
+- Not transmitted in URLs - always sent as an HTTP header (`x-api-key`)
+
+**Recommendations for key management:**
+- Store API keys as environment secrets or in a secrets manager (HashiCorp Vault, AWS Secrets Manager, Azure Key Vault)
+- Never commit API keys to version control
+- Rotate keys on a defined schedule and immediately after any suspected exposure
+- Use separate keys for sandbox and production environments
+- Restrict key access to services that require it - do not share keys across applications
+
+---
+
+## Data Security
+
+### Cryptographic integrity
+
+Every data asset anchored through ROOTKey receives a **SHA-256 hash** of its content. This hash is written to the Polygon blockchain as part of the operation record. The hash is:
+
+- Computed on the original payload before any processing
+- Immutably recorded on-chain with a block timestamp
+- Independently verifiable by any party with access to the original data and blockchain
+
+### Data at rest
+
+Off-chain data (used in RKP-2 and RKP-3) is stored with encryption at rest. Encryption keys are managed by ROOTKey's key management infrastructure and are not accessible to end users or third parties.
+
+### Data residency
+
+By default, ROOTKey's cloud infrastructure processes and stores data within defined geographic regions. Enterprise clients with data residency requirements can select regional deployments or opt for [on-premise deployment](/pages/deployment/on-premise) to retain full control over data location.
+
+### Personal data
+
+ROOTKey's API does not require personal data as part of its core operations. If personal data is submitted as part of a payload:
+
+- It is handled in accordance with the [Privacy Policy](https://rootkey.ai/legal?tab=privacy&utm_source=api_docs&utm_medium=security_page&utm_content=privacy_policy)
+- Clients are responsible for ensuring that personal data submitted via the API complies with applicable data protection regulations (GDPR, etc.)
+- For [RKP-1 (Full On-Chain)](/pages/protocols/rkp-1-on-chain), personal data should **not** be written directly to the blockchain - use hashing patterns to ensure GDPR erasure compatibility
+
+---
+
+## Blockchain Security
+
+ROOTKey anchors records to the **Polygon blockchain (Mainnet)** - a public, permissionless blockchain secured by a distributed validator network.
+
+| Property | Value |
+|----------|-------|
+| Blockchain | Polygon (Mainnet) |
+| Consensus | Proof of Stake |
+| Record immutability | Guaranteed by blockchain consensus |
+| Third-party verifiability | Any party can verify via Polygonscan |
+| Single point of failure | None - decentralised validator network |
+
+Records written to the blockchain cannot be altered, deleted, or suppressed by ROOTKey or any third party. Verification does not require trust in ROOTKey.
+
+---
+
+## Zero-Trust Architecture
+
+ROOTKey operates on a zero-trust model at the data layer:
+
+- **Neither the data owner nor ROOTKey** can alter a record once it has been anchored
+- Validation is performed against the on-chain proof - not against ROOTKey's internal systems
+- For [RKP-1](/pages/protocols/rkp-1-on-chain), verification requires no ROOTKey infrastructure at all
+
+This means ROOTKey's availability, continuity, or trustworthiness does not affect the verifiability of previously anchored records.
+
+---
+
+## Compliance Posture
+
+| Framework | Status |
+|-----------|--------|
+| **NIS2 Directive** | Alignment in progress |
+| **ISO 27001** | Certification in progress |
+| **GDPR** | Compliant - see [Privacy Policy](https://rootkey.ai/legal?tab=privacy&utm_source=api_docs&utm_medium=security_page&utm_content=privacy_policy) |
+| **eIDAS** | Applicable for qualified electronic evidence workflows |
+
+<Note>
+  ROOTKey is actively pursuing NIS2 alignment and ISO 27001 certification. Compliance documentation, architecture diagrams, and security questionnaire responses are available to enterprise clients under NDA. Contact [contact@rootkey.ai](mailto:contact@rootkey.ai) to request security documentation.
+</Note>
+
+---
+
+## Penetration Testing and Security Reviews
+
+ROOTKey conducts regular internal security reviews. Enterprise clients may request security documentation including:
+
+- Architecture diagrams and data flow maps
+- Security questionnaire responses (SIG Lite, CAIQ, or custom)
+- Evidence of security controls for vendor risk assessments
+
+Contact [contact@rootkey.ai](mailto:contact@rootkey.ai) to initiate a security review.
+
+---
+
+## Responsible Disclosure
+
+If you discover a security vulnerability in ROOTKey's platform or API, please report it responsibly:
+
+**Email**: [security@rootkey.ai](mailto:security@rootkey.ai)
+
+We ask that you:
+- Report vulnerabilities privately before public disclosure
+- Allow reasonable time for investigation and remediation
+- Avoid accessing, modifying, or exfiltrating data beyond what is necessary to demonstrate the vulnerability
+
+We commit to acknowledging reports within 5 business days and providing a resolution timeline within 15 business days.
+
+---
+
+## Legal and Policy Documents
 
 <CardGroup cols={2}>
-  <Card title="Privacy Policy" icon="shield-halved">
-    Our [Privacy Policy](https://rootkey.ai/legal?utm_source=api_docs&utm_medium=security_compliance_page&utm_content=privacy_policy) governs how we
-    collect, use, and protect your personal information.
+  <Card title="Privacy Policy" icon="shield-halved" href="https://rootkey.ai/legal?tab=privacy&utm_source=api_docs&utm_medium=security_page&utm_content=privacy_policy">
+    How ROOTKey collects, uses, and protects personal information.
   </Card>
-  <Card title="Disclaimer" icon="file-contract">
-    The [Disclaimer](https://rootkey.ai/legal/disclamer?utm_source=api_docs&utm_medium=security_compliance_page&utm_content=disclaimer) outlines the
-    limitations of liability and use of our APIs.
+  <Card title="Terms and Conditions" icon="scale-unbalanced-flip" href="https://rootkey.ai/legal?tab=terms-conditions&utm_source=api_docs&utm_medium=security_page&utm_content=terms">
+    Terms governing use of ROOTKey products and APIs.
   </Card>
-  <Card title="Terms of Conditions" icon="scale-unbalanced-flip">
-    Our [Terms of Conditions](https://rootkey.ai/legal/terms-conditions?utm_source=api_docs&utm_medium=security_compliance_page&utm_content=terms_of_conditions) define
-    the terms and conditions for using our APIs.
+  <Card title="Disclaimer" icon="file-contract" href="https://rootkey.ai/legal?tab=disclamer&utm_source=api_docs&utm_medium=security_page&utm_content=disclaimer">
+    Limitations of liability and permitted use.
   </Card>
-  <Card title="Cookies Policy" icon="cookie-bite">
-    Our [Cookies Policy](https://rootkey.ai/legal/cookies-policy?utm_source=api_docs&utm_medium=security_compliance_page&utm_content=cookies_policy) outlines how
-    we use cookies and similar technologies.
+  <Card title="Cookies Policy" icon="cookie-bite" href="https://rootkey.ai/legal?tab=cookies-policy&utm_source=api_docs&utm_medium=security_page&utm_content=cookies">
+    How ROOTKey uses cookies and similar technologies.
   </Card>
 </CardGroup>
-
-<Info>
-  By adhering to these security measures, compliance standards, and policies, we
-  ensure that our APIs maintain high levels of security and meet regulatory
-  requirements.
-</Info>

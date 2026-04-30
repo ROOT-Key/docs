@@ -1,0 +1,105 @@
+---
+title: "RKP-3 Enhanced EU - Hybrid, EU Cloud"
+description: Hybrid on-chain/off-chain anchoring on Polygon with all processing and storage on OVH - EU cloud sovereignty for mixed enterprise workloads that combine high-frequency telemetry with audit-grade on-chain records.
+sidebarTitle: "RKP-3 Enhanced EU"
+icon: earth-europe
+mode: wide
+---
+
+<Note>
+  This is a sovereignty variant of [RKP-3 (Hybrid)](/pages/protocols/rkp-3-hybrid). The anchoring mechanics are identical - the difference is that all cloud processing and storage runs on OVH rather than Azure or AWS.
+</Note>
+
+## Sovereignty Profile
+
+| Component | Provider | Jurisdiction | Notes |
+|-----------|----------|-------------|-------|
+| **Blockchain (on-chain path)** | Polygon (PoS) | Global | Distributed network - no single jurisdiction |
+| **Cloud / API processing** | OVH | EU (France) | No US parent; no CLOUD Act exposure; SecNumCloud certified |
+| **Off-chain storage** | OVH | EU | All off-chain data in EU jurisdiction |
+| **Sovereignty level** | **Partial EU** | EU cloud + global blockchain | Cloud sovereign; blockchain global |
+
+**When to choose this variant:** You need the throughput efficiency of the hybrid model - off-chain for bulk data, on-chain for critical events - and require that all data processing and storage occur on EU-incorporated infrastructure, while the on-chain anchoring layer (Polygon) is acceptable as a global public network.
+
+---
+
+## How It Differs from RKP-3 Standard and RKP-3 Sovereign EU
+
+| Property | RKP-3 Standard | RKP-3 Enhanced EU | RKP-3 Sovereign EU |
+|----------|---------------|------------------|-------------------|
+| Blockchain | Polygon | Polygon | **EBSI** |
+| Cloud provider | Azure / AWS | **OVH** | **OVH** |
+| Cloud jurisdiction | US-incorporated | **EU** | **EU** |
+| CLOUD Act exposure | Yes | **No** | **No** |
+| Blockchain jurisdiction | Global | Global | **EU** |
+| Full EU sovereignty | No | No | **Yes** |
+| SecNumCloud | No | **Yes** | **Yes** |
+
+---
+
+## Architecture
+
+```
+Your applications / devices
+        │
+        ▼
+ROOTKey API (OVH - EU jurisdiction)
+        │
+        ├──► High-frequency path:
+        │    Off-chain integrity records (OVH - EU jurisdiction)
+        │    SHA-256 hash + timestamp + source ID
+        │
+        └──► Critical event path:
+             Blockchain anchor → Polygon Mainnet (global network)
+             └── On-chain for: alarms, incidents, approvals,
+                 regulatory measurements, threshold breaches
+
+  Cloud components: EU jurisdiction (OVH)
+  Blockchain: global public network (Polygon)
+```
+
+---
+
+## Which Records Go On-Chain vs. Off-Chain
+
+RKP-3 Enhanced EU follows the same routing logic as RKP-3 Standard - the customer configures which event types are elevated to on-chain anchoring:
+
+| Record type | Recommended path | Rationale |
+|-------------|-----------------|-----------|
+| Routine telemetry / sensor readings | Off-chain (OVH) | High volume; verification on-demand is sufficient |
+| Threshold breach events | On-chain (Polygon) | Likely to face regulatory scrutiny; on-chain timestamp is stronger |
+| Alarm and safety events | On-chain (Polygon) | Incident investigation requires blockchain-grade evidence |
+| Audit records and compliance events | On-chain (Polygon) | Regulators verifying without accessing your systems |
+| Document approvals and signatures | On-chain (Polygon) | eIDAS-aligned timestamp evidence |
+| Configuration changes | Off-chain with on-chain snapshot | Routine changes off-chain; periodic state snapshot on-chain |
+
+---
+
+## Regulatory Frameworks Addressed
+
+| Framework | How RKP-3 Enhanced EU helps |
+|-----------|------------------------------|
+| **GDPR** | All off-chain processing on OVH - no US-controlled infrastructure in data pipeline |
+| **NIS2** | EU cloud for critical entity operators; on-chain for the highest-stakes events |
+| **DORA** | OVH removes CLOUD Act exposure; hybrid throughput suits financial data volumes |
+| **IEC 62443** | EU cloud for OT event processing; Polygon anchoring for alarm and incident records |
+| **SecNumCloud (ANSSI)** | OVH certification for processing sensitive operational data |
+| **ISO 27001** | EU-resident log processing and storage with on-chain integrity for critical events |
+
+---
+
+## Configuration
+
+RKP-3 Enhanced EU is available as a workspace configuration option. Your API integration is unchanged - the routing logic (on-chain vs. off-chain) is configured the same way as RKP-3 Standard.
+
+Contact our team to configure your workspace for OVH-backed processing.
+
+→ [Request EU cloud configuration](https://rootkey.ai/contact?utm_source=api_docs&utm_medium=rkp3_eu&utm_content=demo_cta)
+
+---
+
+## When to Use RKP-3 Sovereign EU Instead
+
+If you require that **the on-chain anchoring layer itself** be under EU jurisdiction - not just the cloud processing - use [RKP-3 Sovereign EU](/pages/protocols/rkp-3-sovereign) (EBSI + OVH).
+
+→ [RKP-3 Sovereign EU](/pages/protocols/rkp-3-sovereign)

@@ -1,0 +1,85 @@
+---
+title: Protocols
+description: ROOTKey data processing protocols - understand the architecture, performance profile, sovereignty level, and compliance alignment of every integration model.
+sidebarTitle: Overview
+icon: network-wired
+mode: wide
+---
+
+ROOTKey processes and anchors data through a set of formally defined protocols. Each protocol defines **how** data is anchored (on-chain vs. off-chain vs. hybrid) and **where** it is processed (sovereignty tier). These two dimensions together determine the auditability, throughput, cost, and regulatory fit of an integration.
+
+---
+
+## Protocol Naming - RKP
+
+All ROOTKey protocols follow a standardised naming convention:
+
+> **RKP-N** - base protocol · **RKP-N Enhanced EU** - EU cloud sovereignty · **RKP-N Sovereign EU** - full EU sovereignty
+
+| Protocol | Architecture | Sovereignty |
+|----------|-------------|------------|
+| **RKP-1** | Full On-Chain | Standard (Azure/AWS + Polygon) |
+| **RKP-1 Enhanced EU** | Full On-Chain | Partial EU (OVH + Polygon) |
+| **RKP-1 Sovereign EU** | Full On-Chain | Full EU (OVH + EBSI) |
+| **RKP-2** | Off-Chain | Standard (Azure/AWS) |
+| **RKP-2 Enhanced EU** | Off-Chain | Full EU cloud (OVH) |
+| **RKP-2 Sovereign EU** | Off-Chain | Full EU - on-premise / air-gap |
+| **RKP-3** | Hybrid | Standard (Azure/AWS + Polygon) |
+| **RKP-3 Enhanced EU** | Hybrid | Partial EU (OVH + Polygon) |
+| **RKP-3 Sovereign EU** | Hybrid | Full EU (OVH + EBSI) |
+
+---
+
+## Architecture Comparison
+
+| Capability | RKP-1 | RKP-2 | RKP-3 |
+|------------|-------|-------|-------|
+| On-chain record | Full | None | Selective |
+| Blockchain used | Polygon / EBSI | None | Polygon / EBSI |
+| Third-party verifiability | Independent (Polygonscan / EBSI) | Hash-based | Dual-path |
+| Throughput | Lower | Highest | Balanced |
+| Cost per operation | Higher | Lowest | Moderate |
+| GDPR erasure compatibility | Yes (off-chain data only) | Yes | Yes |
+| Best for | Legal / regulatory critical records | IoT / high-frequency | Enterprise mixed workloads |
+
+---
+
+## Sovereignty Comparison
+
+| Sovereignty level | Cloud | Blockchain | Protocols |
+|------------------|-------|-----------|-----------|
+| **None (Standard)** | Azure / AWS | Polygon | RKP-1, RKP-2, RKP-3 |
+| **Partial EU** | OVH | Polygon | RKP-1 Enhanced EU, RKP-3 Enhanced EU |
+| **Full EU (cloud)** | OVH | None | RKP-2 Enhanced EU |
+| **Full EU** | OVH | EBSI | RKP-1 Sovereign EU, RKP-3 Sovereign EU |
+| **Full EU - air-gap** | On-premise | EBSI (optional) | RKP-2 Sovereign EU |
+
+→ See [Data Sovereignty](/pages/data-sovereignty) for infrastructure details and regulatory context.
+
+---
+
+## Decision Guide
+
+| Your requirement | Recommended protocol |
+|-----------------|---------------------|
+| Maximum on-chain auditability, no sovereignty requirement | [RKP-1](/pages/protocols/rkp-1-on-chain) |
+| Maximum on-chain auditability, EU cloud required | [RKP-1 Enhanced EU](/pages/protocols/rkp-1-eu) |
+| Full EU sovereignty on every layer | [RKP-1 Sovereign EU](/pages/protocols/rkp-1-sovereign) or [RKP-3 Sovereign EU](/pages/protocols/rkp-3-sovereign) |
+| High-volume IoT / sensor data, no sovereignty requirement | [RKP-2](/pages/protocols/rkp-2-off-chain) |
+| High-volume IoT / sensor data, EU cloud required | [RKP-2 Enhanced EU](/pages/protocols/rkp-2-eu) |
+| High-volume data, on-premise / air-gapped | [RKP-2 Sovereign EU](/pages/protocols/rkp-2-sovereign) |
+| Mixed workloads (bulk + critical events), no sovereignty requirement | [RKP-3](/pages/protocols/rkp-3-hybrid) |
+| Mixed workloads, EU cloud required | [RKP-3 Enhanced EU](/pages/protocols/rkp-3-eu) |
+| Mixed workloads, full EU sovereignty | [RKP-3 Sovereign EU](/pages/protocols/rkp-3-sovereign) |
+| GDPR data requiring potential erasure | Any RKP-2 or RKP-3 variant |
+| EUDIW / EU Digital Identity Wallet | Any Sovereign EU variant |
+
+---
+
+<Card
+  title="Not sure which protocol fits your architecture?"
+  icon="calendar"
+  href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=protocols_overview&utm_content=briefing_cta"
+>
+  Our engineering team is available for technical briefings. We'll assess your data classification, throughput requirements, sovereignty obligations, and regulatory framework - and recommend the right protocol configuration.
+</Card>

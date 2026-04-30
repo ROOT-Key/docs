@@ -1,19 +1,80 @@
 ---
-title: Overview
+title: API Overview
 icon: book
-description: Leverage the power of the ROOTKey API to create, manage and validate your most valuable asset
+description: Everything you need to integrate with ROOTKey - base URL, authentication, versioning, and where to find what.
 mode: "wide"
 ---
 
-The ROOTKey API lets you take control, allowing you to create, manage and verify information seamlessly across your systems. With this robust tool, you can create new information, list information across several portfolios and do much more, all with ease.
+The ROOTKey API is a REST API that gives you programmatic access to vault management, file integrity anchoring, validation, and analytics. All communication happens over HTTPS with JSON request and response bodies.
 
-Whether you want to improve access control mechanisms within your organisation or initiate significant transformations in the flow of information output, ROOTKey's API gives you the flexibility and power you need to drive progress. Unlock the full potential of your digital initiatives and embrace the future with confidence.
+## Base URLs
 
-Should you encounter any questions or challenges while using the ROOTKey API, our dedicated Support Team is here to assist you every step of the way. Your success is our priority, and we're committed to providing the guidance and solutions you require.
+| Environment | Base URL |
+|-------------|----------|
+| **Development** | `https://dev-api.rootkey.ai` |
+| **Production** | `https://api.rootkey.ai` |
 
-## Base URL
-All the features provided by ROOTKey's API can be access throught the next base URL:
+All endpoints are relative to the base URL for the target environment. See [Environments](/pages/environments) for details on switching between them.
 
-```shell Terminal
-https://api.rootkey.ai
+---
+
+## Authentication
+
+Every request must include your API key in the `x-api-key` header:
+
+```shell
+x-api-key: your_api_key_here
 ```
+
+API keys are scoped to an environment (sandbox or live) and a workspace. Generate and manage your keys from the ROOTKey platform dashboard. See [API Keys](/pages/api-keys) for step-by-step instructions.
+
+<Warning>
+  Never expose API keys in client-side code, public repositories, or logs. Rotate keys immediately if you suspect a compromise.
+</Warning>
+
+---
+
+## Request Format
+
+All request bodies must be sent as JSON with the `Content-Type: application/json` header.
+
+```shell
+Content-Type: application/json
+```
+
+---
+
+## Response Format
+
+Responses are JSON objects. Successful responses return a `2xx` status code. Errors return a structured object with a machine-readable code and a human-readable message. See [Error Reference](/api-reference/errors) for the full error schema.
+
+---
+
+## Rate Limits
+
+API requests are rate-limited per API key based on your active plan. Exceeded limits return `429 Too Many Requests`. See [Rate Limits](/pages/rate-limits) for plan-specific limits and retry guidance.
+
+---
+
+## Versioning
+
+The API is versioned. Breaking changes are introduced only in new major versions with advance notice. See [API Versioning](/pages/api-versioning) for the full versioning policy and deprecation timelines.
+
+---
+
+## What's Available
+
+| Resource | Description |
+|----------|-------------|
+| [Vaults](/api-reference/platform/endpoint/vaults/create-vault) | Create and manage vaults - the containers for your data assets |
+| [Files](/api-reference/platform/endpoint/files/get-files) | Upload, version, validate, and transfer files with integrity anchoring |
+| [Tables](/api-reference/platform/endpoint/tables/overview) | Structured data tables with record-level integrity anchoring |
+| [Records](/api-reference/platform/endpoint/records/overview) | Individual records within tables |
+| [Analytics](/api-reference/platform/endpoint/analytics/analyse-creation-of-vaults-over-time) | Usage and activity analytics for your workspace |
+| [Status](/api-reference/platform/endpoint/status/get-healthz) | API health check endpoint |
+
+---
+
+## Support
+
+If you encounter issues or have questions about the API, contact our team at [support@rootkey.ai](mailto:support@rootkey.ai) or visit the [Support](/pages/support) page.

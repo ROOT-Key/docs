@@ -1,0 +1,149 @@
+---
+title: IoT & Industrial Data Integrity
+description: Protect sensor data, SCADA events, and OT telemetry at source. High-frequency integrity anchoring over MQTT without disrupting existing OT network architecture.
+sidebarTitle: IoT & Industrial
+icon: microchip
+mode: wide
+---
+
+## The Problem
+
+Industrial and IoT environments generate vast amounts of operational data - sensor readings, PLC outputs, SCADA events, energy measurements, environmental conditions. This data drives automated decisions, feeds regulatory reporting, and provides the evidence base for operational accountability.
+
+The problem is that most OT data pipelines were designed for availability and performance, not for integrity. Data travels from sensor to historian to reporting system through a chain that is mutable at every stage - values can be corrected, smoothed, or overwritten without trace. When a dispute arises - over a regulatory measurement, an insurance claim, a contractual obligation, or an incident investigation - the data in the historian is what the system says it is. There is no way to prove it hasn't been altered.
+
+For critical infrastructure operators facing NIS2 obligations, this is increasingly a compliance gap, not just a technical inconvenience.
+
+---
+
+## How ROOTKey Solves It
+
+ROOTKey anchors sensor readings and OT events at the point of generation - before they enter any mutable storage or processing pipeline. Anchoring happens over MQTT, the native protocol of most IoT and industrial environments, which means:
+
+- **No changes to device firmware** - devices publish to their existing MQTT topics
+- **No HTTP stack required** - devices that cannot run REST clients can still participate
+- **No latency impact** - anchoring is asynchronous; device operation is unaffected
+- **No OT network redesign** - MQTT bridging keeps anchor traffic contained within defined network boundaries
+
+The result is a stream of tamper-evident data points, each with a blockchain-anchored cryptographic proof, that can be verified by regulators, auditors, or counterparties independently.
+
+---
+
+## Architecture
+
+```
+Field Devices (sensors, PLCs, meters, RTUs)
+        │
+        ▼ MQTT Publish (existing topics)
+  MQTT Broker
+  (client-hosted within OT network)
+        │
+        ▼
+  ROOTKey MQTT Bridge
+  (deployed at OT/IT boundary or within OT zone)
+        │
+        ├──► Off-Chain Storage (raw event archive)
+        │
+        └──► Blockchain Anchoring (Polygon Mainnet)
+               └── hash + timestamp + device/topic ID
+                        │
+                        ▼
+              Independently verifiable by
+              regulators or auditors
+```
+
+The MQTT bridge subscribes to device topics and forwards payloads through ROOTKey's integrity pipeline. Devices are unaware of ROOTKey - they continue to publish as they always have.
+
+---
+
+## Implementation
+
+<Steps>
+  <Step title="Configure the MQTT bridge">
+    Deploy the ROOTKey MQTT bridge at the boundary between your OT and IT networks, or within the OT zone if network policy allows. Configure the bridge with your broker address, credentials, and the topic patterns to monitor.
+
+    → [MQTT Deployment Guide](/pages/deployment/mqtt) · Contact [contact@rootkey.ai](mailto:contact@rootkey.ai) for bridge configuration documentation.
+  </Step>
+
+  <Step title="Create vaults per device class or data category">
+    Organise vaults by device type, measurement category, or regulatory obligation. This enables granular access control and allows you to provide regulators with scoped evidence for specific systems.
+
+    → [Create Vault](/api-reference/platform/endpoint/vaults/create-vault)
+  </Step>
+
+  <Step title="Map MQTT topics to vault and asset identifiers">
+    Configure the bridge to map each MQTT topic to a specific vault and logical asset. Each topic becomes a traceable data stream with its own integrity history.
+
+    → [MQTT Deployment Guide](/pages/deployment/mqtt)
+  </Step>
+
+  <Step title="Validate readings on demand">
+    At any point - during a regulatory inspection, an incident investigation, or a routine audit - retrieve the on-chain anchor for any reading and validate it against the archived value.
+
+    → [Validate File](/api-reference/platform/endpoint/files/validate-file) · [Get File History](/api-reference/platform/endpoint/files/get-files-history)
+  </Step>
+
+  <Step title="Monitor anchoring coverage with Analytics">
+    Use the Analytics API to verify that anchoring is continuous and complete - detect gaps that might indicate device downtime, network issues, or tampering with the bridge.
+
+    → [Analytics - Vault Creation Over Time](/api-reference/platform/endpoint/analytics/analyse-creation-of-vaults-over-time) · [Analytics - Files vs Validations](/api-reference/platform/endpoint/analytics/analyse-files-x-validations)
+  </Step>
+</Steps>
+
+---
+
+## Recommended Configuration
+
+| Parameter | Recommendation |
+|-----------|---------------|
+| **Protocol** | [RKP-2 (Off-Chain)](/pages/protocols/rkp-2-off-chain) for high-frequency telemetry; [RKP-3 (Hybrid)](/pages/protocols/rkp-3-hybrid) for mixed workloads where alarms and threshold breaches require full on-chain anchoring |
+| **Deployment** | [MQTT](/pages/deployment/mqtt) - native fit for OT environments; [Container](/pages/deployment/container) for bridge deployment in Kubernetes-based IT/OT integration platforms |
+| **Broker model** | Client-hosted broker within OT network, bridging to ROOTKey at the OT/IT boundary - preserves OT network isolation |
+| **Anchor granularity** | Anchor individual readings for measurement-level evidence; batch for archiving at reduced frequency if cost is a constraint |
+| **Critical events** | Configure alarm events, threshold breaches, and emergency shutdowns to use RKP-1 or the on-chain path of RKP-3 - these are the events most likely to be scrutinised in an incident investigation |
+
+---
+
+## Key API Endpoints and Resources
+
+| Resource | Purpose |
+|----------|---------|
+| [MQTT Deployment Guide](/pages/deployment/mqtt) | Bridge configuration and OT/IT integration architecture |
+| [Create Vault](/api-reference/platform/endpoint/vaults/create-vault) | Create vaults per device class or data category |
+| [Validate File](/api-reference/platform/endpoint/files/validate-file) | Validate individual readings on demand |
+| [Get File History](/api-reference/platform/endpoint/files/get-files-history) | Full event history for a device or sensor |
+| [Analytics - Files vs Validations](/api-reference/platform/endpoint/analytics/analyse-files-x-validations) | Monitor anchoring coverage and validation activity |
+| [RKP-2 Protocol](/pages/protocols/rkp-2-off-chain) | High-throughput anchoring for sensor data |
+| [RKP-3 Protocol](/pages/protocols/rkp-3-hybrid) | Mixed critical/telemetry event anchoring |
+
+---
+
+## Compliance Alignment
+
+| Framework | How this use case addresses it |
+|-----------|-------------------------------|
+| **NIS2 - Critical Entities** | Integrity and auditability of data from critical infrastructure systems (energy, water, transport, digital infrastructure) |
+| **IEC 62443** | Data integrity requirements for Industrial Automation and Control Systems (IACS) |
+| **ISO 27001** *(in progress)* | A.8.15 (logging), A.5.36 (compliance), applied to OT environments |
+| **EU Energy Regulation** | Tamper-evident smart meter data for regulatory reporting and dispute resolution |
+| **ISO 50001** | Energy measurement data integrity for energy management system compliance |
+| **Environmental Monitoring** | Cryptographically verifiable sensor records for regulatory reporting (air quality, water, emissions) |
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request an OT integration consultation"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=uc_iot&utm_content=demo_cta"
+  >
+    Our team will assess your OT network topology, MQTT infrastructure, and data classification requirements - and design a bridge architecture that fits without disruption.
+  </Card>
+  <Card
+    title="Get started with the API"
+    icon="rocket"
+    href="https://app.rootkey.ai?utm_source=api_docs&utm_medium=uc_iot&utm_content=signup_cta"
+  >
+    Create a sandbox vault and simulate sensor data anchoring before touching your production OT environment.
+  </Card>
+</CardGroup>

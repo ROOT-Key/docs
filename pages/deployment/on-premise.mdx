@@ -1,0 +1,123 @@
+---
+title: On-Premise Deployment
+description: ROOTKey deployed within your own infrastructure. Full data sovereignty, network isolation, and compliance with the strictest regulatory requirements - without sacrificing platform capability.
+sidebarTitle: On-Premise
+icon: building
+mode: wide
+---
+
+## Overview
+
+ROOTKey's on-premise deployment model is designed for organisations operating under strict data sovereignty requirements, air-gapped network policies, or sector-specific regulations that prohibit or restrict cloud-hosted processing of sensitive data.
+
+In this model, ROOTKey's core infrastructure is deployed within the client's own environment - whether a private data centre, a government-grade secure facility, or a hybrid cloud architecture. The platform adapts to the client's existing infrastructure rather than requiring the client to adapt to a fixed cloud topology.
+
+The full API contract, all data processing protocols, and all platform capabilities remain identical to the cloud-hosted model. The deployment footprint is what changes - not the product.
+
+---
+
+## Architecture Overview
+
+```
+Client Network Perimeter
+┌──────────────────────────────────────────────────────┐
+│                                                      │
+│   Client Application                                 │
+│         │                                            │
+│         ▼ Internal network / HTTPS                   │
+│   ROOTKey API (on-premise instance)                  │
+│         │                                            │
+│         ├──► Protocol Processing Layer               │
+│         │                                            │
+│         ├──► Local or Air-Gapped Storage             │
+│         │                                            │
+│         └──► Blockchain Anchoring                    │
+│               (via controlled outbound or            │
+│                private node, depending on model)     │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+```
+
+Blockchain anchoring options in on-premise deployments:
+
+- **Controlled outbound** - ROOTKey communicates with the Polygon network through a defined, auditable outbound channel
+- **Private node** - a dedicated Polygon node is operated within the client's perimeter, eliminating external dependencies for anchoring
+
+The anchoring model is scoped during the deployment design phase based on the client's network policy and regulatory requirements.
+
+---
+
+## Deployment Characteristics
+
+| Property | Value |
+|----------|-------|
+| Infrastructure location | Client-owned or client-managed |
+| Network exposure | Configurable - isolated, private, or with controlled egress |
+| API contract | Identical to cloud-hosted |
+| Data residency | Fully within client perimeter |
+| Protocol support | RKP-1, RKP-2, RKP-3 |
+| Blockchain anchoring | Controlled outbound or private node |
+| Update model | Coordinated with client operations team |
+
+---
+
+## Typical Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Defence and Government" icon="shield-halved">
+    Classified or sensitive operational systems requiring full air-gap capability and data residency within sovereign infrastructure.
+  </Card>
+  <Card title="Critical Infrastructure Operators" icon="tower-cell">
+    Energy, water, and telecommunications operators subject to NIS2 critical entity obligations with strict data handling requirements.
+  </Card>
+  <Card title="Financial Institutions" icon="building-columns">
+    Banks and financial services firms operating under regulatory requirements that mandate on-premise processing of certain data classes.
+  </Card>
+  <Card title="Healthcare Providers" icon="hospital">
+    Hospitals and healthcare networks managing patient data under GDPR, HIPAA, or national health data regulations requiring local data residency.
+  </Card>
+  <Card title="Industrial and OT Environments" icon="industry">
+    Manufacturing and industrial organisations operating Operational Technology networks that are physically or logically isolated from external networks.
+  </Card>
+  <Card title="Legal and Professional Services" icon="scale-balanced">
+    Law firms and professional services organisations handling privileged client data that must remain within a controlled perimeter.
+  </Card>
+</CardGroup>
+
+---
+
+## Integration Considerations
+
+**Infrastructure scoping**
+On-premise deployments are scoped on a per-client basis. ROOTKey's solutions engineering team conducts an infrastructure assessment to define resource requirements, network topology, and anchoring model before deployment begins.
+
+**Data residency and sovereignty**
+All data processed by the on-premise instance remains within the client's perimeter. No data is transmitted to ROOTKey's cloud infrastructure unless explicitly configured for hybrid operations.
+
+**Maintenance and updates**
+Software updates are coordinated with the client's operations team and applied through agreed maintenance windows. ROOTKey provides release notes and migration guidance for each update cycle.
+
+**Support model**
+On-premise deployments include dedicated support channels. SLA terms are defined in the enterprise agreement. Contact [contact@rootkey.ai](mailto:contact@rootkey.ai) for enterprise support options.
+
+**Compliance documentation**
+ROOTKey provides technical documentation, architecture diagrams, and security artefacts to support client compliance assessments, audits, and certifications.
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request a deployment consultation"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=on_premise&utm_content=demo_cta"
+  >
+    Our solutions engineering team will assess your infrastructure requirements and design a deployment architecture that fits your environment and compliance obligations.
+  </Card>
+  <Card
+    title="Contact enterprise sales"
+    icon="envelope"
+    href="mailto:contact@rootkey.ai"
+  >
+    Discuss pricing, SLAs, and enterprise agreement terms for on-premise deployments.
+  </Card>
+</CardGroup>

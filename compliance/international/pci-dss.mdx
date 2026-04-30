@@ -1,0 +1,103 @@
+---
+title: PCI-DSS v4.0
+description: How ROOTKey addresses the audit log integrity and tamper-evidence requirements of PCI-DSS v4.0 - protecting the cardholder data environment from undetected log manipulation.
+sidebarTitle: PCI-DSS
+icon: credit-card
+mode: wide
+---
+
+## Overview
+
+**PCI-DSS** (Payment Card Industry Data Security Standard) v4.0 applies to all entities that store, process, or transmit cardholder data. Requirement 10 mandates comprehensive audit logging of all access to system components and cardholder data - and critically, that those logs be **protected from modification**.
+
+The challenge is structural: the systems that administrators use to manage infrastructure are the same systems that house the audit logs. A malicious insider, or an attacker with elevated access, can modify logs to conceal their activity - leaving no evidence of the compromise.
+
+ROOTKey anchors log entries to the blockchain at emission, before they reach any mutable storage. This creates a tamper-evident record that is verifiable independently of the cardholder data environment.
+
+---
+
+## Requirement 10 - Log and Monitor All Access
+
+### Requirement 10.2 - Audit Log Capture
+
+| Sub-requirement | Description | ROOTKey capability |
+|----------------|-------------|-------------------|
+| 10.2.1.1 | Log all individual user access to cardholder data | Anchor access event records at emission - tamper-evident evidence of who accessed what |
+| 10.2.1.2 | Log all actions taken by individuals with root or administrative privileges | Anchor privileged action records at emission - cannot be removed retroactively |
+| 10.2.1.3 | Log all access to audit logs | Meta-logging - anchor audit log access events to detect log inspection or tampering attempts |
+| 10.2.1.4 | Log invalid logical access attempts | Anchor failed authentication events - tamper-evident record of access attempts |
+| 10.2.1.5 | Log use of and changes to identification and authentication mechanisms | Anchor credential and MFA change events at occurrence |
+| 10.2.1.6 | Log initialisation, stopping, or pausing of audit logs | Anchor log system lifecycle events - detect gaps that might indicate log suppression |
+| 10.2.1.7 | Log creation and deletion of system-level objects | Anchor object creation/deletion events - tamper-evident evidence |
+
+### Requirement 10.3 - Protect Audit Logs from Destruction and Modifications
+
+This is where ROOTKey provides direct, structural compliance:
+
+| Sub-requirement | Description | ROOTKey capability |
+|----------------|-------------|-------------------|
+| **10.3.1** | Read access to audit logs limited to those with a job-related need | Vault access controlled by scoped API keys - granular access control |
+| **10.3.2** | Audit log files protected from unauthorised modifications via access control and/or use of change-detection technology | Blockchain anchoring - **any modification to a log after anchoring is detectable by hash comparison**, regardless of who performed the modification |
+| **10.3.3** | Audit log files, including those for external-facing technologies, are promptly backed up to a centralised log server or media difficult to alter | On-chain anchors are permanent - not subject to storage failure, deletion, or backup policy lapses |
+
+<Info>
+  PCI-DSS Requirement 10.3.2 specifically calls for "change-detection technology" for audit log files. Blockchain anchoring is the strongest available implementation of change-detection: any modification produces a hash mismatch that is verifiable by any party with the transaction ID, including the QSA.
+</Info>
+
+### Requirement 10.5 - Retain Audit Logs
+
+| Sub-requirement | Description | ROOTKey capability |
+|----------------|-------------|-------------------|
+| 10.5.1 | Retain audit logs for at least 12 months, with the most recent three months available for immediate analysis | On-chain anchors are permanent - ROOTKey API provides immediate retrieval for the configured retention window |
+
+---
+
+## QSA Verification
+
+PCI-DSS assessments are conducted by Qualified Security Assessors (QSAs) who must verify that controls are operating effectively. ROOTKey anchors provide QSA-verifiable evidence:
+
+| Evidence type | How QSA verifies |
+|--------------|-----------------|
+| Log integrity | QSA computes hash of a log entry and compares to the blockchain anchor - any tampering is immediately apparent |
+| Log continuity | QSA can inspect the anchor timeline - gaps indicate potential log suppression |
+| Privileged access records | QSA verifies specific privileged actions appear in anchored records |
+| Independent verification | QSA can verify anchors directly on Polygonscan - no cooperation from the assessed entity required |
+
+---
+
+## Architecture for CDE Log Protection
+
+```
+Cardholder Data Environment (CDE)
+  Applications, databases, network devices, access control systems
+        │
+        │  On each auditable event, before writing to SIEM:
+        ▼
+  ROOTKey API ──► Blockchain anchor (Polygon / EBSI)
+        │                │
+        ▼                └─► QSA-verifiable, tamper-evident
+  SIEM / log management        integrity proof
+  (mutable - for operational
+   queries and alerting)
+```
+
+Log management systems remain in place for operational use. ROOTKey adds the tamper-evidence layer required by PCI-DSS 10.3.2 without replacing existing logging infrastructure.
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request a PCI-DSS architecture review"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=compliance_pcidss&utm_content=demo_cta"
+  >
+    We'll design a ROOTKey log anchoring implementation that satisfies Requirement 10 and produces QSA-verifiable evidence.
+  </Card>
+  <Card
+    title="Regulatory audit trails use case"
+    icon="scale-balanced"
+    href="/use-cases/regulatory-audit-trails"
+  >
+    Full implementation guide for tamper-evident audit logging.
+  </Card>
+</CardGroup>

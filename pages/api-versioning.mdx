@@ -1,0 +1,88 @@
+---
+title: API Versioning
+description: ROOTKey's API versioning policy, deprecation timelines, and guidance for staying current with platform evolution.
+icon: code-branch
+mode: wide
+---
+
+ROOTKey is actively developed infrastructure. This page documents how API versions are managed, how breaking changes are communicated, and what clients should expect when the API evolves.
+
+---
+
+## Versioning Policy
+
+The ROOTKey API follows **semantic versioning** principles applied to the API surface:
+
+| Change type | How it's released |
+|-------------|-------------------|
+| New endpoints | Additive - no version bump required |
+| New optional fields in requests | Additive - backwards compatible |
+| New fields in responses | Additive - backwards compatible |
+| Changes to existing endpoint behaviour | Minor version bump with deprecation notice |
+| Removal of endpoints or fields | Major version bump with migration window |
+| Breaking changes to authentication or core contracts | Major version bump with extended notice period |
+
+**Additive changes** - new endpoints, new optional parameters, new response fields - are deployed without a version bump and do not require changes to existing integrations.
+
+**Breaking changes** - removal of endpoints, changes to required parameters, or modifications to response schemas - are introduced only in new major versions, with advance notice and a defined migration window.
+
+---
+
+## Deprecation Process
+
+When an endpoint or feature is deprecated:
+
+1. **Advance notice** - deprecation is announced in release notes and communicated directly to affected clients
+2. **Deprecation header** - deprecated endpoints return a `Deprecation` response header indicating the sunset date
+3. **Migration window** - deprecated features remain available for a minimum of **90 days** from the deprecation announcement
+4. **Sunset** - after the migration window, the deprecated endpoint is removed
+
+```
+Deprecation: true
+Sunset: Sat, 01 Nov 2025 00:00:00 GMT
+Link: <https://docs.rootkey.ai/pages/api-versioning>; rel="deprecation"
+```
+
+---
+
+## Staying Current
+
+**Monitor release notes**
+Breaking changes and deprecations are documented in the release notes distributed to enterprise clients. If you are not receiving release communications, contact [support@rootkey.ai](mailto:support@rootkey.ai).
+
+**Handle unknown fields gracefully**
+Design your integration to ignore unknown fields in API responses. ROOTKey may add new fields to existing responses at any time - integrations that fail on unexpected fields will break unnecessarily.
+
+**Test against the development environment**
+New API versions are available at `dev-api.rootkey.ai` before production deployment. Validate your integration against upcoming changes before they affect production traffic.
+
+**Treat version headers as signals**
+If your HTTP client exposes response headers, monitor for `Deprecation` headers on any endpoint you rely on. Receiving this header means a migration is required before the sunset date.
+
+---
+
+## Version History
+
+Detailed release notes are distributed directly to enterprise clients. For a summary of platform evolution, contact [support@rootkey.ai](mailto:support@rootkey.ai).
+
+---
+
+## Breaking Change Policy for Enterprise Clients
+
+Enterprise clients on SLA agreements receive:
+
+- **Direct notification** of breaking changes via email, at minimum 90 days before sunset
+- **Extended migration windows** (by negotiation) for clients requiring additional time
+- **Migration support** from the ROOTKey engineering team for major version upgrades
+
+If you have concerns about an upcoming change, contact [contact@rootkey.ai](mailto:contact@rootkey.ai) to discuss your migration timeline.
+
+---
+
+<Card
+  title="Questions about an upcoming API change?"
+  icon="envelope"
+  href="mailto:support@rootkey.ai"
+>
+  Contact our team at support@rootkey.ai - we'll provide migration guidance and assess whether an extended window is appropriate for your deployment.
+</Card>

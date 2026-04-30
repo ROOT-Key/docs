@@ -1,0 +1,124 @@
+---
+title: CSDDD - EU Supply Chain Due Diligence
+description: How ROOTKey helps companies meet the supply chain provenance, traceability, and due diligence documentation requirements of the Corporate Sustainability Due Diligence Directive.
+sidebarTitle: CSDDD
+icon: route
+mode: wide
+---
+
+## Overview
+
+The **Corporate Sustainability Due Diligence Directive** (CSDDD, EU 2024/1760) requires large companies operating in the EU to identify, prevent, mitigate, and account for adverse human rights and environmental impacts across their entire supply chain - not just their direct suppliers.
+
+The operative word is **account for**: companies must document that due diligence was conducted, that suppliers were assessed, and that the supply chain can be traced to its origin. That documentation must be audit-ready.
+
+ROOTKey provides the cryptographic traceability infrastructure that makes that documentation tamper-evident, multi-party verifiable, and independently auditable.
+
+---
+
+## Scope
+
+| Phase | Timeline | Applies to |
+|-------|----------|------------|
+| Phase 1 | From 2027 | Companies with >5,000 employees and >€1.5bn global net turnover |
+| Phase 2 | From 2028 | Companies with >3,000 employees and >€900m global net turnover |
+| Phase 3 | From 2029 | Companies with >1,000 employees and >€450m global net turnover |
+| Non-EU companies | Same phased timeline | Non-EU companies meeting turnover thresholds in the EU market |
+
+---
+
+## CSDDD Due Diligence Obligations and ROOTKey
+
+### Obligation 1 - Integrating Due Diligence into Policy
+
+CSDDD requires companies to have a due diligence policy that is updated annually and describes the approach to supply chain assessment. ROOTKey anchors:
+- Policy documents at each version approval - tamper-evident proof that the policy existed and was approved at the stated time
+- Supplier code of conduct documents - verifiable proof of the terms communicated to suppliers
+
+### Obligation 2 - Mapping the Supply Chain and Identifying Risks
+
+Companies must identify actual and potential adverse impacts across operations, subsidiaries, and business partners. ROOTKey supports:
+- Anchoring supplier assessment records - proof that assessments were conducted and when
+- Multi-tier supply chain mapping - vaults that span multiple supply chain parties, creating a shared tamper-evident record of the supply chain structure
+
+### Obligation 3 - Preventing and Mitigating Adverse Impacts
+
+Where impacts are identified, companies must take preventative and corrective actions and document them. ROOTKey provides:
+- Anchored corrective action plans - proof of what was committed and when
+- Follow-up audit records - immutable evidence that remediation was conducted and its outcome
+
+### Obligation 4 - Establishing a Complaints Procedure
+
+Companies must provide a complaints mechanism for affected parties and business partners. ROOTKey can anchor:
+- Complaint receipt records - independently timestamped, preventing dispute over whether a complaint was received
+- Response and resolution records - complete audit trail of the complaints lifecycle
+
+### Obligation 5 - Monitoring the Due Diligence Framework
+
+Companies must monitor the effectiveness of their due diligence measures. ROOTKey's Analytics API supports continuous monitoring of anchoring activity - detecting gaps in coverage that might indicate lapses in due diligence documentation.
+
+---
+
+## Multi-Party Supply Chain Architecture
+
+CSDDD compliance requires documentation that crosses organisational boundaries - your Tier 1 suppliers, their Tier 2 suppliers, and beyond. Traditional documentation systems require trust in each party's records.
+
+ROOTKey vaults can accept anchors from multiple parties, building a shared, tamper-evident chain of custody that no single participant controls:
+
+```
+Your organisation    Tier 1 Supplier    Tier 2 Supplier    Origin Producer
+       │                    │                  │                   │
+       │ Anchor policy &    │ Anchor assess-   │ Anchor own        │ Anchor
+       │ onboarding docs    │ ment & audit     │ compliance docs   │ origin cert
+       ▼                    ▼                  ▼                   ▼
+       ─────────────────────────────────────────────────────────────────►
+                           Shared Vault (Polygon / EBSI)
+                     Full chain verifiable by auditors and regulators
+```
+
+→ See also: [Supply Chain Traceability use case](/use-cases/supply-chain)
+
+---
+
+## Compliance Mapping
+
+| CSDDD Obligation | ROOTKey capability |
+|------------------|--------------------|
+| Policy documentation | Anchored policy versions - tamper-evident, timestamped |
+| Supplier assessment records | Anchored assessment documents per supplier |
+| Corrective action plans | Anchored commitments with verifiable timeline |
+| Complaints procedure evidence | Timestamped complaint receipt and resolution records |
+| Supply chain traceability | Multi-party vault - custody chain verifiable by auditors |
+| Annual reporting evidence | Full audit trail of due diligence activity for the reporting period |
+
+---
+
+## Connection to Other EU Frameworks
+
+CSDDD overlaps with other EU supply chain and sustainability obligations:
+
+| Framework | Connection to CSDDD |
+|-----------|---------------------|
+| **EU Deforestation Regulation (EUDR)** | Supply chain traceability to point of production required - same ROOTKey architecture applies |
+| **EU Batteries Regulation** | Due diligence and carbon footprint documentation for battery supply chains |
+| **CSRD** | Corporate Sustainability Reporting Directive - CSDDD due diligence feeds CSRD sustainability disclosures; anchored evidence supports CSRD audit |
+| **NIS2** | ICT supply chain security (Art. 21(2)(d)) - CSDDD adds human rights and environmental dimensions to the same supply chain |
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request a CSDDD implementation review"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=compliance_csddd&utm_content=demo_cta"
+  >
+    We'll design a multi-party vault architecture tailored to your supply chain topology and CSDDD documentation obligations.
+  </Card>
+  <Card
+    title="Supply chain traceability use case"
+    icon="route"
+    href="/use-cases/supply-chain"
+  >
+    Full implementation guide for CSDDD-ready multi-party supply chain traceability.
+  </Card>
+</CardGroup>

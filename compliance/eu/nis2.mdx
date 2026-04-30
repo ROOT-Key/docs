@@ -1,0 +1,117 @@
+---
+title: NIS2 Directive
+description: How ROOTKey helps Essential and Important entities meet the cybersecurity risk management, audit, and incident reporting requirements of the NIS2 Directive (EU 2022/2555).
+sidebarTitle: NIS2 Directive
+icon: shield-halved
+mode: wide
+---
+
+## Overview
+
+The **Network and Information Security Directive 2** (NIS2, EU 2022/2555) entered into force in October 2024 and applies to **Essential** and **Important** entities across 18 sectors - including energy, transport, banking, health, water, digital infrastructure, and public administration.
+
+NIS2 significantly raises the bar on cybersecurity governance: entities must implement risk management measures, maintain auditable records, and be able to produce tamper-evident evidence for regulators and incident response authorities.
+
+The core challenge is not implementing controls - it is **proving those controls were applied, when, and by whom**, under adversarial scrutiny.
+
+---
+
+## Article-Level Coverage
+
+### Article 21 - Cybersecurity Risk-Management Measures
+
+<CardGroup cols={2}>
+  <Card title="Art. 21(2)(b) - Incident Handling" icon="triangle-exclamation">
+    Entities must maintain procedures for handling and reporting security incidents. ROOTKey anchors incident records at the moment of creation - logs, response actions, containment decisions - making them tamper-evident and independently verifiable.
+  </Card>
+  <Card title="Art. 21(2)(d) - Supply Chain Security" icon="link">
+    Entities must address security risks in supply chains and vendor relationships. ROOTKey provides immutable, multi-party provenance records for software, hardware, and service procurement across organisational boundaries.
+  </Card>
+  <Card title="Art. 21(2)(h) - Cryptography" icon="key">
+    Entities must use cryptography and, where appropriate, encryption. ROOTKey applies SHA-256 hashing and blockchain anchoring to all integrity records - providing cryptographic proof that satisfies this requirement directly.
+  </Card>
+  <Card title="Art. 21(2)(a) - Risk Analysis & IS Security Policies" icon="file-shield">
+    Entities must maintain policies on risk analysis and information system security. ROOTKey anchors policy documents, configuration records, and change logs - creating a verifiable history of security governance decisions.
+  </Card>
+  <Card title="Art. 21(2)(f) - Access Control" icon="lock">
+    Entities must implement access control policies. ROOTKey anchors access grant and revocation events, creating an immutable record of who had access to which systems, and when that access was modified.
+  </Card>
+  <Card title="Art. 21(2)(g) - Asset Management" icon="database">
+    Entities must maintain asset management processes. ROOTKey records can anchor asset inventories, configuration baselines, and software bill of materials - with tamper-evident version history.
+  </Card>
+</CardGroup>
+
+---
+
+### Article 23 - Reporting Obligations
+
+NIS2 Article 23 requires significant incidents to be reported to national authorities within strict time windows:
+
+| Stage | Deadline | ROOTKey role |
+|-------|----------|--------------|
+| Early warning | Within 24 hours of awareness | Incident record anchored at time of detection - blockchain timestamp proves awareness time |
+| Incident notification | Within 72 hours | Anchored incident detail record provides tamper-evident evidence of what was known and when |
+| Final report | Within 1 month | Full anchored audit trail of incident timeline, containment, and resolution - independently verifiable by authority |
+
+Regulators examining an incident are scrutinising the organisation that produced the incident record. ROOTKey's anchoring ensures that record cannot have been altered before submission.
+
+---
+
+## Compliance Mapping Table
+
+| NIS2 Requirement | ROOTKey Capability | Protocol |
+|------------------|--------------------|----------|
+| Tamper-evident audit logs | Blockchain-anchored events at emission | [RKP-1](/pages/protocols/rkp-1-on-chain) |
+| Incident timeline evidence | Timestamped record per incident event | [RKP-1](/pages/protocols/rkp-1-on-chain) |
+| Supply chain integrity | Multi-party custody records per file/batch | [RKP-3](/pages/protocols/rkp-3-hybrid) |
+| Cryptographic controls | SHA-256 hash anchoring on Polygon | [RKP-1](/pages/protocols/rkp-1-on-chain) |
+| Configuration management | Versioned, anchored configuration records | [RKP-3](/pages/protocols/rkp-3-hybrid) |
+| Access event logging | Immutable access grant/revocation records | [RKP-1](/pages/protocols/rkp-1-on-chain) |
+| Independent regulator verification | Polygonscan-verifiable anchors, no cooperation required | All |
+
+---
+
+## Deployment Considerations
+
+For NIS2-regulated entities with OT/SCADA infrastructure:
+
+- Use [MQTT deployment](/pages/deployment/mqtt) for anchoring data from industrial control systems without disrupting OT network architecture
+- Use [On-Premise deployment](/pages/deployment/on-premise) for air-gapped regulated environments where controlled outbound connections are required
+- Consider [EU-sovereign deployment](/pages/data-sovereignty) (EBSI + OVH) for entities with national security classification requirements
+
+---
+
+## Sectors Covered by NIS2
+
+| Sector | NIS2 Classification | Example ROOTKey application |
+|--------|--------------------|-----------------------------|
+| Energy (electricity, gas, oil) | Essential | SCADA event anchoring, smart meter data integrity |
+| Transport (air, rail, maritime, road) | Essential | Operational data integrity, incident records |
+| Banking and financial market infrastructure | Essential | Transaction audit trails, incident reporting |
+| Health (hospitals, labs, pharma) | Essential | Clinical record integrity, device event logs |
+| Drinking water and wastewater | Essential | Sensor data integrity, treatment event logs |
+| Digital infrastructure (cloud, DNS, CDN) | Essential | Configuration audit trails, access event logs |
+| Postal and courier services | Important | Custody chain records |
+| Waste management | Important | Compliance measurement anchoring |
+| Manufacturing (critical sectors) | Important | Quality certification, production record integrity |
+| Food production and distribution | Important | Supply chain provenance, safety record anchoring |
+| Digital providers (SaaS, marketplaces) | Important | Audit trail and change log integrity |
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request a NIS2 architecture review"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=compliance_nis2&utm_content=demo_cta"
+  >
+    We'll map your NIS2 obligations by sector and entity classification to a concrete ROOTKey implementation - including evidence package design for national authorities.
+  </Card>
+  <Card
+    title="See the regulatory audit trail use case"
+    icon="scale-balanced"
+    href="/use-cases/regulatory-audit-trails"
+  >
+    Full implementation guide for building NIS2-compliant audit trails with ROOTKey.
+  </Card>
+</CardGroup>

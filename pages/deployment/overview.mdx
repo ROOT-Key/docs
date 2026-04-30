@@ -1,0 +1,90 @@
+---
+title: Deployment Methods
+description: ROOTKey integration and deployment models - from standard REST API to on-premise, containerised, MQTT, and native integrations. Every architecture is supported.
+sidebarTitle: Overview
+icon: server
+mode: wide
+---
+
+ROOTKey is designed to integrate into enterprise environments without requiring organisations to restructure their existing infrastructure. Whether your systems run in the cloud, on-premise, within containerised environments, or over industrial protocols, ROOTKey provides a deployment model that fits.
+
+All deployment models expose the same API contract, support the same [data processing protocols](/pages/protocols/overview), and operate identically across sandbox and production environments.
+
+---
+
+## Available Deployment Models
+
+<CardGroup cols={2}>
+  <Card
+    title="API Integration"
+    icon="plug"
+    href="/pages/deployment/api-integration"
+  >
+    Standard REST API over HTTPS. The fastest path to integration for web applications, SaaS platforms, and microservices architectures.
+  </Card>
+  <Card
+    title="On-Premise"
+    icon="building"
+    href="/pages/deployment/on-premise"
+  >
+    ROOTKey deployed within your own data centre or private cloud. Full infrastructure control, network isolation, and data sovereignty.
+  </Card>
+  <Card
+    title="Container"
+    icon="docker"
+    href="/pages/deployment/container"
+  >
+    Docker and Kubernetes-native deployment. Designed for cloud-native environments and DevOps teams operating at scale.
+  </Card>
+  <Card
+    title="MQTT"
+    icon="tower-broadcast"
+    href="/pages/deployment/mqtt"
+  >
+    Event-driven integration over the MQTT protocol. Purpose-built for IoT, industrial systems, and real-time data pipelines.
+  </Card>
+  <Card
+    title="Native Integrations"
+    icon="puzzle-piece"
+    href="/pages/deployment/native"
+  >
+    CRM, ERP, and enterprise platform integrations. Built to specification through ROOTKey's engineering team or partner ecosystem.
+  </Card>
+</CardGroup>
+
+---
+
+## Model Comparison
+
+| Model | Best For | Infrastructure Requirement | Time to First Integration |
+|-------|----------|---------------------------|--------------------------|
+| **API** | Web apps, SaaS, microservices | None - cloud-hosted | Minutes |
+| **On-Premise** | Air-gapped, regulated, data-sovereign environments | Client infrastructure | Scoped per project |
+| **Container** | Cloud-native, Kubernetes, multi-cloud | Container runtime | Hours to days |
+| **MQTT** | IoT, OT, industrial, real-time pipelines | MQTT broker | Days |
+| **Native** | CRM / ERP embedded workflows | Partner or custom build | Scoped per project |
+
+---
+
+## Choosing a Deployment Model
+
+All deployment models support the full ROOTKey feature set. The choice is driven by your infrastructure constraints, security posture, and integration context - not by capability limitations.
+
+| If your environment is... | Recommended model |
+|---------------------------|-------------------|
+| Cloud-first, no infrastructure constraints | API Integration |
+| Regulated industry requiring data sovereignty | On-Premise |
+| Kubernetes-native with CI/CD pipelines | Container |
+| Industrial IoT or OT/IT convergence | MQTT |
+| Already operating a CRM or ERP at scale | Native Integration |
+| Air-gapped or disconnected environments | On-Premise or Container |
+
+---
+
+<Card
+  title="Need guidance on the right deployment model for your environment?"
+  icon="calendar"
+  href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=deployment_overview&utm_content=demo_cta"
+>
+  Our solutions engineering team works with enterprise teams to evaluate infrastructure constraints, security requirements, and integration complexity - and recommend the right deployment architecture.
+</Card>

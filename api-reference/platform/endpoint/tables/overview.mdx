@@ -1,0 +1,48 @@
+---
+title: Tables
+description: Structured data table management within ROOTKey vaults. Create, query, and manage schema-defined tables with integrity anchoring at the record level.
+sidebarTitle: Overview
+icon: table
+---
+
+<Warning>
+  This section is under active development. Full endpoint documentation will be published shortly. Contact [support@rootkey.ai](mailto:support@rootkey.ai) if you need early access or technical specifications.
+</Warning>
+
+## Overview
+
+The Tables API allows you to create and manage structured, schema-defined data tables within ROOTKey vaults. Each table provides a typed record store with integrity anchoring - every write operation is processed through the configured data processing protocol, producing a cryptographically verifiable audit trail at the record level.
+
+Tables are designed for use cases where data has a defined structure (columns, types, constraints) and where individual records must be independently verifiable - regulatory datasets, operational logs, inventory records, or any structured data requiring tamper-evidence.
+
+---
+
+## Key Capabilities
+
+- Define typed schemas for structured data storage within a vault
+- Create, update, and query records with integrity anchoring per operation
+- Access full record history and version lineage
+- Validate individual records against their on-chain proof
+- Control table-level access and permissions through vault configuration
+
+---
+
+## Endpoints
+
+Documentation for the following endpoints is in progress:
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/tables` | Create a new table within a vault |
+| `GET` | `/tables` | List tables in a vault |
+| `GET` | `/tables/:id` | Get table metadata and schema |
+| `PUT` | `/tables/:id` | Update table configuration |
+| `DELETE` | `/tables/:id` | Delete a table |
+
+---
+
+## Related
+
+- [Records API](/api-reference/platform/endpoint/records/overview) - manage individual records within a table
+- [Vaults](/api-reference/platform/endpoint/vaults/create-vault) - tables are scoped to a vault
+- [Files](/api-reference/platform/endpoint/files/get-files) - for unstructured document management

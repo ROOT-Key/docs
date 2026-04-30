@@ -1,0 +1,107 @@
+---
+title: SOX - Sarbanes-Oxley Act
+description: How ROOTKey supports SOX Section 302 and 404 internal control evidence requirements - providing tamper-evident, independently verifiable financial record-keeping audit trails.
+sidebarTitle: SOX
+icon: landmark
+mode: wide
+---
+
+## Overview
+
+The **Sarbanes-Oxley Act of 2002** (SOX) applies to public companies listed on US stock exchanges and their subsidiaries, as well as accounting firms auditing those companies. It imposes requirements on the accuracy and integrity of financial reporting - and on the internal controls that produce that reporting.
+
+SOX created significant personal liability for CFOs and CEOs who certify the accuracy of financial statements. As a result, internal control frameworks have become critical corporate infrastructure - and the audit evidence supporting those controls must be verifiable.
+
+ROOTKey addresses the audit trail and evidence integrity requirements that underpin SOX Section 302 and 404 compliance.
+
+---
+
+## Section-Level Coverage
+
+### Section 302 - Corporate Responsibility for Financial Reports
+
+Section 302 requires the principal executive officer and principal financial officer to personally certify the accuracy of financial reports and the effectiveness of internal controls - every quarter. The certification covers:
+
+| Certification requirement | ROOTKey capability |
+|--------------------------|-------------------|
+| Internal controls are designed to ensure material information flows to certifying officers | Anchor information flow records - tamper-evident evidence that material information was available when claimed |
+| Material weaknesses in internal controls are disclosed | Anchor deficiency records at identification - blockchain timestamp proves when weaknesses were identified, not when they were disclosed |
+| Changes to internal controls that materially affect financial reporting are reported | Anchor change records - immutable evidence of when and what changed |
+
+### Section 404 - Management Assessment of Internal Controls
+
+Section 404 requires management to annually assess and report on the effectiveness of internal controls over financial reporting (ICFR). External auditors must then attest to that assessment.
+
+| ICFR requirement | ROOTKey capability |
+|-----------------|-------------------|
+| Controls are operating effectively | Anchor control operation evidence - each control event is timestamped and tamper-evident |
+| Control testing records are maintained | Anchor testing records at completion - verifiable by external auditor without relying on management assurance |
+| Exceptions and deviations are documented | Anchor exception records at identification - cannot be retroactively removed |
+| Remediation of deficiencies is documented | Anchor remediation records - evidence of action timing and outcome |
+
+### Section 409 - Real-Time Disclosure
+
+Section 409 requires companies to disclose material changes in financial condition or operations on a rapid and current basis. ROOTKey anchors disclosure records at submission - providing independently verifiable proof of timing.
+
+---
+
+## IT General Controls (ITGC) and SOX
+
+SOX compliance increasingly depends on IT General Controls - the controls over the IT systems that produce financial data. External auditors and their IT auditors examine:
+
+| ITGC domain | Common requirement | ROOTKey capability |
+|-------------|-------------------|--------------------|
+| Access to programs and data | Log and monitor privileged access | Anchor privileged access events - tamper-evident access audit trail |
+| Change management | Document and control changes to financial systems | Anchor change approval and deployment records |
+| Computer operations | Log and protect operational events | Anchor SIEM events at emission - independently verifiable |
+| Program development | Control and evidence software development changes | Anchor build artifacts and release records in CI/CD |
+
+---
+
+## PCAOB Standards and Audit Evidence
+
+The Public Company Accounting Oversight Board (PCAOB) sets standards for external auditors. Auditors examining ICFR must evaluate whether:
+
+1. Evidence of control operation is authentic - not created after the fact
+2. Evidence of exception handling is complete - not selectively disclosed
+3. Evidence of IT controls is technically sound
+
+ROOTKey blockchain anchors provide audit evidence that auditors can verify independently:
+
+| Auditor concern | ROOTKey response |
+|----------------|-----------------|
+| Evidence created retroactively | Blockchain timestamp cannot be backdated - set by network consensus |
+| Evidence selectively disclosed | Full anchor history is queryable - gaps are visible |
+| Evidence tampered after creation | Hash mismatch is detectable by auditor independently |
+| Reliance on management assurance | Verification via Polygonscan requires no management cooperation |
+
+---
+
+## Applicability
+
+| Entity type | SOX applicability |
+|-------------|------------------|
+| US-listed public companies | Section 302 and 404 - directly applicable |
+| Foreign private issuers (FPI) listed on US exchanges | Section 302 applicable; Section 404 with some differences |
+| Subsidiaries of public companies | In-scope if they are part of the consolidated financial statements |
+| Private companies with public debt | Some SOX provisions apply |
+| Accounting firms (PCAOB-registered) | Subject to PCAOB oversight of audit quality |
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request a SOX compliance review"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=compliance_sox&utm_content=demo_cta"
+  >
+    We'll design a ROOTKey implementation for your ICFR audit trail that satisfies both management and external auditor requirements.
+  </Card>
+  <Card
+    title="Regulatory audit trails use case"
+    icon="scale-balanced"
+    href="/use-cases/regulatory-audit-trails"
+  >
+    Full implementation guide for SOX-compliant audit trail infrastructure.
+  </Card>
+</CardGroup>
