@@ -129,7 +129,8 @@
               "use-cases/supply-chain",
               "use-cases/iot-industrial",
               "use-cases/software-integrity",
-              "use-cases/healthcare"
+              "use-cases/healthcare",
+              "use-cases/ai-integrity"
             ]
           }
         ]
@@ -150,7 +151,8 @@
               "compliance/eu/dora",
               "compliance/eu/gdpr",
               "compliance/eu/eidas",
-              "compliance/eu/csddd"
+              "compliance/eu/csddd",
+              "compliance/eu/ai-act"
             ]
           },
           {
