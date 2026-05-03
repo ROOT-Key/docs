@@ -42,19 +42,12 @@ mode: wide
 
 ## Anchoring Architecture
 
-```
-Your application
-        │
-        ▼
-ROOTKey API  ─────────────────────────────────────────────────────
-(OVH - EU jurisdiction)
-        │
-        ├──► Off-chain metadata storage (OVH - EU jurisdiction)
-        │
-        └──► Blockchain anchor → Polygon Mainnet (global network)
-                    │
-                    └──► Independently verifiable by anyone
-                         (Polygonscan, no ROOTKey cooperation needed)
+```mermaid
+flowchart TD
+    A([Your Application]) --> B[ROOTKey API\nOVH · EU Jurisdiction]
+    B --> C[Off-Chain Storage\nOVH · EU Jurisdiction]
+    B --> D[(Polygon Mainnet\nGlobal Network)]
+    D --> E[Independent Verification\nPolygonscan · No cooperation needed]
 ```
 
 The only component outside EU legal jurisdiction is the Polygon blockchain itself - which is a permissionless, distributed network operated by no single entity and subject to no single national law.

@@ -191,12 +191,6 @@
             ]
           },
           {
-            "group": "Platform API",
-            "pages": [
-              "api-reference/platform/overview"
-            ]
-          },
-          {
             "group": "Health",
             "pages": [
               "api-reference/platform/endpoint/status/get-healthz"
@@ -227,15 +221,19 @@
             ]
           },
           {
-            "group": "Tables",
-            "pages": [
-              "api-reference/platform/endpoint/tables/overview"
-            ]
-          },
-          {
             "group": "Records",
             "pages": [
               "api-reference/platform/endpoint/records/overview"
+            ]
+          },
+          {
+            "group": "Data Recovery",
+            "pages": [
+              "api-reference/platform/endpoint/recovery/list-recoverable-items",
+              "api-reference/platform/endpoint/recovery/recover-vault",
+              "api-reference/platform/endpoint/recovery/recover-file",
+              "api-reference/platform/endpoint/recovery/get-recovery-details",
+              "api-reference/platform/endpoint/recovery/get-recovery-history"
             ]
           },
           {

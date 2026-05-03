@@ -39,25 +39,13 @@ mode: wide
 
 ## Architecture
 
-```
-Customer on-premise infrastructure (EU)
-┌──────────────────────────────────────────────────────────────┐
-│                                                              │
-│  Field devices / applications                               │
-│        │                                                    │
-│        ▼ (MQTT or REST - internal only)                     │
-│  ROOTKey Container (deployed on-premise)                    │
-│        │                                                    │
-│        ├──► Off-chain integrity records (on-premise storage) │
-│        │    └── SHA-256 hash + timestamp + device ID        │
-│        │                                                    │
-│        └──► Selective EBSI anchoring (outbound, optional)   │
-│             └── For audit-grade records: alarms, incidents, │
-│                 threshold breaches, regulatory measurements │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-  All data remains within customer perimeter.
-  EBSI connection is the only external dependency (optional).
+```mermaid
+flowchart TD
+    subgraph premise[Customer On-Premise Infrastructure · EU]
+        A([Field Devices / Apps]) -->|MQTT or REST · Internal only| B[ROOTKey Container\nOn-Premise]
+        B --> C[Off-Chain Integrity Records\nOn-Premise Storage\nSHA-256 · Timestamp · Device ID]
+        B -->|Optional · Audit-grade records only| D[(EBSI\nAlarms · Incidents · Thresholds)]
+    end
 ```
 
 ---

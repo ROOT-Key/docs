@@ -18,22 +18,12 @@ This model is the recommended choice for Operational Technology (OT) environment
 
 ## Architecture Overview
 
-```
-IoT Devices / Industrial Systems / Edge Nodes
-        │
-        ▼ MQTT Publish
-  MQTT Broker
-  (managed by ROOTKey or client-hosted)
-        │
-        ▼ Internal subscription
-  ROOTKey MQTT Bridge
-        │
-        ├──► Protocol Processing (RKP-2 / RKP-3)
-        │
-        └──► Blockchain Anchoring
-               │
-               ▼
-         Polygon Blockchain
+```mermaid
+flowchart TD
+    A([IoT Devices · Industrial\nSystems · Edge Nodes]) -->|MQTT Publish| B[MQTT Broker\nROOTKey-managed or client-hosted]
+    B -->|Internal subscription| C[ROOTKey MQTT Bridge]
+    C --> D[Protocol Processing\nRKP-2 / RKP-3]
+    D --> E[(Polygon Blockchain\nAnchor)]
 ```
 
 Devices publish messages to defined MQTT topics. ROOTKey's MQTT bridge subscribes to those topics, processes incoming payloads through the configured data processing protocol, and anchors the integrity proof to the blockchain.

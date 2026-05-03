@@ -31,25 +31,13 @@ The result is a supply chain record where trust is mathematical, not contractual
 
 ## Architecture
 
-```
-Manufacturer          Logistics           Distributor         Retailer
-     │                    │                    │                  │
-     │ POST /files         │ POST /files        │ POST /files      │ POST /files
-     │ (production cert)   │ (pickup event)     │ (receipt)        │ (delivery)
-     ▼                    ▼                    ▼                  ▼
-ROOTKey API ─────────────────────────────────────────────────────────────────►
-                                    │
-                                    ▼
-                        Shared Vault (Polygon Mainnet)
-                        ┌─────────────────────────────┐
-                        │  event 1: production cert   │
-                        │  event 2: logistics pickup  │
-                        │  event 3: distributor recv  │
-                        │  event 4: retail delivery   │
-                        └─────────────────────────────┘
-                                    │
-                        Any party (incl. regulators)
-                        can verify the full chain
+```mermaid
+flowchart LR
+    M[Manufacturer\nProduction cert] -->|POST /files| V
+    L[Logistics\nPickup event] -->|POST /files| V
+    D[Distributor\nReceipt] -->|POST /files| V
+    R[Retailer\nDelivery] -->|POST /files| V
+    V[(Shared Vault\nPolygon Mainnet)] --> VE[Full Chain Verifiable\nAny Party · Regulators\nNo intermediary needed]
 ```
 
 Each party in the supply chain writes to the same vault using their own scoped API key. The vault accumulates an immutable, multi-party chain of custody - owned by no single participant.

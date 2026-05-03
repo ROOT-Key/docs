@@ -18,24 +18,13 @@ Native integrations are built to specification through ROOTKey's engineering tea
 
 ## Architecture Overview
 
-```
-Enterprise Platform (CRM / ERP / DMS / Operational Tool)
-┌──────────────────────────────────────────────────────┐
-│                                                      │
-│   Platform Workflow / Event Trigger                  │
-│   (record created, document approved, data modified) │
-│         │                                            │
-│         ▼                                            │
-│   ROOTKey Integration Layer                          │
-│   (native plugin / webhook / embedded connector)     │
-│         │                                            │
-└─────────┼────────────────────────────────────────────┘
-          │ API call (internal or outbound)
-          ▼
-    ROOTKey REST API
-          │
-          ▼
-    Protocol Processing + Blockchain Anchoring
+```mermaid
+flowchart TD
+    subgraph platform[Enterprise Platform · CRM / ERP / DMS]
+        A[Platform Workflow\nEvent Trigger] --> B[ROOTKey Integration Layer\nNative plugin · Webhook · Connector]
+    end
+    B -->|API call| C[ROOTKey REST API]
+    C --> D[Protocol Processing\n+ Blockchain Anchoring]
 ```
 
 The integration layer is implemented at the platform level - as a native plugin, a workflow automation connector, or an embedded API wrapper - depending on the extensibility model of the target platform. ROOTKey's data integrity layer operates transparently behind the existing UI and workflow.

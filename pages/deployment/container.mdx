@@ -18,27 +18,17 @@ This model is the recommended choice for teams that already operate containerise
 
 ## Architecture Overview
 
-```
-Container Orchestration Layer (Kubernetes)
-┌──────────────────────────────────────────────────────┐
-│                                                      │
-│   Ingress Controller                                 │
-│         │                                            │
-│         ▼                                            │
-│   ROOTKey API Service (Pod)                          │
-│         │                                            │
-│         ├──► Protocol Processing Pods               │
-│         │                                            │
-│         ├──► Persistent Volume (storage)             │
-│         │                                            │
-│         └──► Blockchain Anchoring Service            │
-│               (internal or external endpoint)        │
-│                                                      │
-│   Horizontal Pod Autoscaler                          │
-│   Secret Management (e.g. Vault, K8s Secrets)       │
-│   Monitoring (Prometheus / Grafana / OpenTelemetry)  │
-│                                                      │
-└──────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph k8s[Kubernetes Cluster]
+        I[Ingress Controller] --> API[ROOTKey API Service\nPod]
+        API --> PP[Protocol Processing Pods]
+        API --> PV[Persistent Volume\nStorage]
+        API --> BAS[(Blockchain Anchoring\nService)]
+        HPA[Horizontal Pod Autoscaler] -.-> API
+        SM[Secret Management\nVault · K8s Secrets] -.-> API
+        MON[Monitoring\nPrometheus · Grafana · OTel] -.-> API
+    end
 ```
 
 All components are deployed as Kubernetes workloads. The architecture supports horizontal scaling, rolling updates, and zero-downtime deployments through standard Kubernetes primitives.

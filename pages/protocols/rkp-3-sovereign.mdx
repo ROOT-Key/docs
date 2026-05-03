@@ -41,24 +41,12 @@ mode: wide
 
 ## Architecture
 
-```
-Your applications / devices
-        │
-        ▼
-ROOTKey API (OVH - EU jurisdiction)
-        │
-        ├──► High-frequency path:
-        │    Off-chain integrity records (OVH - EU jurisdiction)
-        │    SHA-256 hash + timestamp + source ID
-        │
-        └──► Critical event path:
-             Blockchain anchor → EBSI
-             └── Operated by European Commission + EU member states
-             └── EU legal jurisdiction
-             └── Verifiable via EBSI explorer
-
-  All components within EU legal jurisdiction.
-  No data or proof subject to non-EU law at any stage.
+```mermaid
+flowchart TD
+    A([Your Apps / Devices]) --> B[ROOTKey API\nOVH · EU Jurisdiction]
+    B -->|High-frequency| C[Off-Chain Records\nOVH · EU Jurisdiction\nSHA-256 · Timestamp · Source ID]
+    B -->|Critical events| D[(EBSI\nEuropean Commission + EU Member States\nEU Legal Jurisdiction)]
+    D --> E[EBSI Explorer\nIndependent Verification]
 ```
 
 ---

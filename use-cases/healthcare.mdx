@@ -33,29 +33,12 @@ This means:
 
 ## Architecture
 
-```
-Clinical System / EDC / LIMS / EHR
-        │
-        │  On record creation, amendment, or submission:
-        ▼
-  ROOTKey API (RKP-3 Hybrid)
-        │
-        ├──► Off-Chain Storage
-        │    (within client perimeter or GDPR-compliant region)
-        │    - full record content
-        │    - personal data
-        │    - erasable on request
-        │
-        └──► Blockchain Anchor (Polygon Mainnet)
-             - SHA-256 hash of record
-             - timestamp (blockchain-set)
-             - record and vault identifiers
-             - NO personal data
-                  │
-                  ▼
-         Regulators / auditors verify
-         integrity independently - no access
-         to personal data required
+```mermaid
+flowchart TD
+    A([Clinical System\nEDC · LIMS · EHR]) -->|Create · Amend · Submit| B[ROOTKey API\nRKP-3 Hybrid]
+    B --> C[Off-Chain Storage\nClient perimeter · GDPR region\nFull record · Personal data\nErasable on request]
+    B --> D[(Blockchain Anchor\nPolygon Mainnet\nSHA-256 hash · Timestamp\nNo personal data)]
+    D --> E[Regulators · Auditors\nVerify integrity independently\nNo access to personal data]
 ```
 
 ---

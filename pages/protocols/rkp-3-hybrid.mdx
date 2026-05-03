@@ -18,28 +18,14 @@ This protocol is the default recommendation for enterprise document management, 
 
 ## Architecture Overview
 
-```
-Client Application
-        │
-        ▼ HTTPS / JSON
-  ROOTKey REST API
-        │
-        ├──► Data Classification Layer
-        │         │
-        │         ├──► On-Chain Path
-        │         │     (critical metadata, proof-of-existence, audit events)
-        │         │           │
-        │         │           ▼
-        │         │     Polygon Blockchain
-        │         │
-        │         └──► Off-Chain Path
-        │               (large payloads, high-frequency records, sensitive content)
-        │                     │
-        │                     ▼
-        │               Off-Chain Storage
-        │               + Cryptographic Binding to On-Chain Record
-        │
-        └──► Unified API Response
+```mermaid
+flowchart TD
+    A([Client Application]) -->|HTTPS / JSON| B[ROOTKey REST API]
+    B --> C{Data Classification}
+    C -->|Critical metadata · audit events| D[(Polygon Blockchain\nOn-Chain)]
+    C -->|Large payloads · high-frequency| E[Off-Chain Storage\n+ Cryptographic Binding\nto On-Chain Record]
+    D & E --> F[Unified API Response]
+    F --> A
 ```
 
 The classification layer determines routing based on vault configuration, operation type, and payload characteristics. Both paths are cryptographically linked - the on-chain record contains a hash binding to the off-chain record, ensuring end-to-end integrity across both paths.

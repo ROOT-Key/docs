@@ -52,12 +52,13 @@ ISO 27001 A.8.15 requires audit logs that capture user activities, exceptions, a
 
 ROOTKey anchors each log entry at emission - before it reaches the log management system. This creates an independent integrity proof that is verifiable regardless of what happens to the log storage.
 
-```
-Event occurs (login, config change, access grant)
-        │
-        ├──► Log management system (mutable - queryable)
-        │
-        └──► ROOTKey API ──► Blockchain anchor (immutable - verifiable)
+```mermaid
+flowchart LR
+    E([Event\nLogin · Config · Access]) --> L[Log Management System\nMutable · Queryable]
+    E --> RK[ROOTKey API]
+    RK --> BC[(Blockchain Anchor\nImmutable · Verifiable)]
+    L --> SO[Security Operations]
+    BC --> AU[Auditors · Regulators\nIndependent verification]
 ```
 
 The log management system retains logs for operational queries. The blockchain anchor retains the integrity proof for audit purposes. The two are independent.

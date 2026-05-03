@@ -55,22 +55,13 @@ mode: wide
 
 ## Anchoring Architecture
 
-```
-Your application
-        │
-        ▼
-ROOTKey API  ─────────────────────────────────────────────────────
-(OVH - EU jurisdiction)
-        │
-        ├──► Off-chain metadata storage (OVH - EU jurisdiction)
-        │
-        └──► Blockchain anchor → EBSI (European Blockchain Services Infrastructure)
-                    │                └── Operated by EU member states
-                    │                └── EU jurisdiction
-                    └──► Independently verifiable via EBSI explorer
-                         (no ROOTKey cooperation required)
-
-  No component outside EU legal jurisdiction.
+```mermaid
+flowchart TD
+    A([Your Application]) --> B[ROOTKey API\nOVH · EU Jurisdiction]
+    B --> C[Off-Chain Storage\nOVH · EU Jurisdiction]
+    B --> D[(EBSI\nEuropean Blockchain Services Infrastructure\nOperated by EU Member States)]
+    D --> E[Independent Verification\nEBSI Explorer · No cooperation needed]
+    note[No component outside\nEU legal jurisdiction] -.-> B
 ```
 
 ---

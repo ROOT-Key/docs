@@ -31,25 +31,13 @@ The result is a stream of tamper-evident data points, each with a blockchain-anc
 
 ## Architecture
 
-```
-Field Devices (sensors, PLCs, meters, RTUs)
-        │
-        ▼ MQTT Publish (existing topics)
-  MQTT Broker
-  (client-hosted within OT network)
-        │
-        ▼
-  ROOTKey MQTT Bridge
-  (deployed at OT/IT boundary or within OT zone)
-        │
-        ├──► Off-Chain Storage (raw event archive)
-        │
-        └──► Blockchain Anchoring (Polygon Mainnet)
-               └── hash + timestamp + device/topic ID
-                        │
-                        ▼
-              Independently verifiable by
-              regulators or auditors
+```mermaid
+flowchart TD
+    A([Field Devices\nSensors · PLCs · Meters · RTUs]) -->|MQTT Publish| B[MQTT Broker\nOT Network]
+    B --> C[ROOTKey MQTT Bridge\nOT/IT Boundary]
+    C --> D[Off-Chain Storage\nRaw Event Archive]
+    C --> E[(Polygon Blockchain\nHash · Timestamp · Device ID)]
+    E --> F[Independent Verification\nRegulators · Auditors]
 ```
 
 The MQTT bridge subscribes to device topics and forwards payloads through ROOTKey's integrity pipeline. Devices are unaware of ROOTKey - they continue to publish as they always have.

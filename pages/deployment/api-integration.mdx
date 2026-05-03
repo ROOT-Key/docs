@@ -18,17 +18,12 @@ This model is appropriate for any team building web-native, cloud-native, or ser
 
 ## Architecture Overview
 
-```
-Client Application (web / mobile / backend service)
-        │
-        ▼ HTTPS · JSON · API Key
-  https://api.rootkey.ai
-        │
-        ├──► Authentication & Rate Limiting Layer
-        │
-        ├──► Protocol Routing (RKP-1 / RKP-2 / RKP-3)
-        │
-        └──► Blockchain Anchoring / Off-Chain Processing
+```mermaid
+flowchart TD
+    A([Client Application\nWeb · Mobile · Backend]) -->|HTTPS · JSON · API Key| B[api.rootkey.ai]
+    B --> C[Authentication &\nRate Limiting]
+    B --> D[Protocol Routing\nRKP-1 / RKP-2 / RKP-3]
+    D --> E[(Blockchain Anchoring\n/ Off-Chain Processing)]
 ```
 
 All API calls are authenticated using an `x-api-key` header. Development and production use separate base URLs and separate API keys. See [Environments](/pages/environments) for details.

@@ -39,23 +39,11 @@ mode: wide
 
 ## Architecture
 
-```
-Your applications / devices
-        │
-        ▼
-ROOTKey API (OVH - EU jurisdiction)
-        │
-        ├──► High-frequency path:
-        │    Off-chain integrity records (OVH - EU jurisdiction)
-        │    SHA-256 hash + timestamp + source ID
-        │
-        └──► Critical event path:
-             Blockchain anchor → Polygon Mainnet (global network)
-             └── On-chain for: alarms, incidents, approvals,
-                 regulatory measurements, threshold breaches
-
-  Cloud components: EU jurisdiction (OVH)
-  Blockchain: global public network (Polygon)
+```mermaid
+flowchart TD
+    A([Your Apps / Devices]) --> B[ROOTKey API\nOVH · EU Jurisdiction]
+    B -->|High-frequency| C[Off-Chain Records\nOVH · EU Jurisdiction\nSHA-256 · Timestamp · Source ID]
+    B -->|Critical events| D[(Polygon Mainnet\nAlarms · Incidents · Approvals\nRegulatory measurements)]
 ```
 
 ---

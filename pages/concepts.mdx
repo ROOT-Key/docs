@@ -11,14 +11,14 @@ This page defines the key concepts, data model primitives, and terminology used 
 
 ## Data Model
 
-```
-Workspace
-└── Vault (protocol-configured)
-    ├── Files
-    │   └── Versions → Blockchain Anchors
-    ├── Tables
-    │   └── Records → Blockchain Anchors
-    └── Analytics
+```mermaid
+flowchart TD
+    WS[Workspace] --> V[Vault\nProtocol-configured]
+    V --> F[Files]
+    V --> T[Tables]
+    V --> AN[Analytics]
+    F --> FA[(Blockchain Anchors\nPer version)]
+    T --> TA[(Blockchain Anchors\nPer record)]
 ```
 
 ---

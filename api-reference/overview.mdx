@@ -5,7 +5,59 @@ description: Everything you need to integrate with ROOTKey - base URL, authentic
 mode: "wide"
 ---
 
-The ROOTKey API is a REST API that gives you programmatic access to vault management, file integrity anchoring, validation, and analytics. All communication happens over HTTPS with JSON request and response bodies.
+The ROOTKey API is a REST API that gives you programmatic access to vault management, file integrity anchoring, validation, and analytics. All communication happens over HTTPS with JSON request and response bodies. Every write operation is anchored to the Polygon blockchain according to the configured [data processing protocol](/pages/protocols/overview).
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TD
+    App([Your Application]) -->|REST API · HTTPS / JSON| API[ROOTKey Platform API]
+    API --> VM[Vault Management]
+    API --> FI[File Integrity & Versioning]
+    API --> RM[Record Management]
+    API --> AN[Analytics]
+    API --> DR[Data Recovery]
+    VM & FI & RM & AN & DR --> PL[Protocol Layer · RKP-1 / RKP-2 / RKP-3]
+    PL --> BC[(Polygon Blockchain · Mainnet)]
+```
+
+The blockchain anchor is written synchronously (RKP-1) or asynchronously (RKP-2, RKP-3) depending on your vault configuration.
+
+---
+
+## Core Resources
+
+<CardGroup cols={2}>
+  <Card title="Vaults" icon="vault" href="/api-reference/platform/endpoint/vaults/create-vault">
+    Vaults are the top-level containers for your data assets. Each vault has its own protocol configuration, access controls, and lifecycle management.
+  </Card>
+  <Card title="Files" icon="file" href="/api-reference/platform/endpoint/files/get-files">
+    Files are the primary asset type within a vault. Each file supports versioning, validation, history traversal, and ownership transfer - all with integrity anchoring.
+  </Card>
+  <Card title="Records" icon="rows" href="/api-reference/platform/endpoint/records/overview">
+    Individual records within a table, with full version history and per-record integrity validation.
+  </Card>
+  <Card title="Data Recovery" icon="rotate-left" href="/api-reference/platform/endpoint/recovery/list-recoverable-items">
+    Restore soft-deleted vaults and files within the recovery window. Blockchain anchors are unaffected — on-chain proofs remain valid regardless of deletion state.
+  </Card>
+</CardGroup>
+
+---
+
+## Key Capabilities
+
+| Capability | Description |
+|------------|-------------|
+| **Integrity anchoring** | Every write operation produces a cryptographic proof anchored to the Polygon blockchain |
+| **Version history** | Full lineage tracking for files and records - every version is independently verifiable |
+| **Validation** | On-demand integrity validation against the on-chain proof - detect tampering at any point in the asset lifecycle |
+| **Ownership transfer** | Transfer custody of assets between vaults or accounts with an immutable chain-of-custody record |
+| **Analytics** | Usage and activity metrics for monitoring workloads, adoption, and operational patterns |
+| **Data Recovery** | Restore soft-deleted vaults and files within the retention window before permanent deletion |
+
+---
 
 ## Base URLs
 
@@ -34,6 +86,18 @@ API keys are scoped to an environment (sandbox or live) and a workspace. Generat
 
 ---
 
+## Protocol Configuration
+
+Each vault is configured with a data processing protocol that determines how writes are anchored:
+
+| Protocol | Anchoring | Throughput | Use for |
+|----------|-----------|------------|---------|
+| [RKP-1](/pages/protocols/rkp-1-on-chain) | Full on-chain | Lower | Regulatory-critical, legal, financial |
+| [RKP-2](/pages/protocols/rkp-2-off-chain) | Off-chain + proof | Higher | IoT, high-volume, real-time |
+| [RKP-3](/pages/protocols/rkp-3-hybrid) | Hybrid | Balanced | Enterprise document management |
+
+---
+
 ## Request Format
 
 All request bodies must be sent as JSON with the `Content-Type: application/json` header.
@@ -59,19 +123,6 @@ API requests are rate-limited per API key based on your active plan. Exceeded li
 ## Versioning
 
 The API is versioned. Breaking changes are introduced only in new major versions with advance notice. See [API Versioning](/pages/api-versioning) for the full versioning policy and deprecation timelines.
-
----
-
-## What's Available
-
-| Resource | Description |
-|----------|-------------|
-| [Vaults](/api-reference/platform/endpoint/vaults/create-vault) | Create and manage vaults - the containers for your data assets |
-| [Files](/api-reference/platform/endpoint/files/get-files) | Upload, version, validate, and transfer files with integrity anchoring |
-| [Tables](/api-reference/platform/endpoint/tables/overview) | Structured data tables with record-level integrity anchoring |
-| [Records](/api-reference/platform/endpoint/records/overview) | Individual records within tables |
-| [Analytics](/api-reference/platform/endpoint/analytics/analyse-creation-of-vaults-over-time) | Usage and activity analytics for your workspace |
-| [Status](/api-reference/platform/endpoint/status/get-healthz) | API health check endpoint |
 
 ---
 

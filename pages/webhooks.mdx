@@ -13,15 +13,15 @@ Webhooks are the recommended pattern for integrations using [RKP-2](/pages/proto
 
 ## How It Works
 
-```
-Your Application                ROOTKey API
-      │                               │
-      │── POST /files (create) ──────►│
-      │◄── 202 Accepted ──────────────│
-      │                               │  (async anchoring in progress)
-      │                               │
-      │◄── POST /your-webhook ────────│  (anchor confirmed)
-      │    { event, data, timestamp } │
+```mermaid
+sequenceDiagram
+    participant App as Your Application
+    participant RK as ROOTKey API
+    App->>RK: POST /files (create)
+    RK-->>App: 202 Accepted
+    Note over RK: Async anchoring in progress
+    RK->>App: POST /your-webhook
+    Note over App,RK: { event, data, timestamp }
 ```
 
 1. You call the ROOTKey API - the response is immediate

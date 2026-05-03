@@ -18,24 +18,14 @@ The full API contract, all data processing protocols, and all platform capabilit
 
 ## Architecture Overview
 
-```
-Client Network Perimeter
-┌──────────────────────────────────────────────────────┐
-│                                                      │
-│   Client Application                                 │
-│         │                                            │
-│         ▼ Internal network / HTTPS                   │
-│   ROOTKey API (on-premise instance)                  │
-│         │                                            │
-│         ├──► Protocol Processing Layer               │
-│         │                                            │
-│         ├──► Local or Air-Gapped Storage             │
-│         │                                            │
-│         └──► Blockchain Anchoring                    │
-│               (via controlled outbound or            │
-│                private node, depending on model)     │
-│                                                      │
-└──────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph premise[Client Network Perimeter]
+        A([Client Application]) -->|Internal HTTPS| B[ROOTKey API\nOn-Premise Instance]
+        B --> C[Protocol Processing Layer]
+        B --> D[Local / Air-Gapped Storage]
+        B --> E[(Blockchain Anchoring\nControlled outbound\nor private node)]
+    end
 ```
 
 Blockchain anchoring options in on-premise deployments:

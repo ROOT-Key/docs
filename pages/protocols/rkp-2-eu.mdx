@@ -45,20 +45,11 @@ mode: wide
 
 ## Architecture
 
-```
-Field devices / applications
-        │
-        ▼ (MQTT or REST)
-ROOTKey Ingestion Layer  ──────────────────────────────────────────
-(OVH - EU jurisdiction)
-        │
-        ├──► Off-chain integrity record (OVH - EU jurisdiction)
-        │    └── SHA-256 hash + timestamp + device/source ID
-        │
-        └──► No blockchain transaction - high-frequency operation
-             maintained at scale
-
-  All components within EU legal jurisdiction.
+```mermaid
+flowchart TD
+    A([Field Devices / Applications]) -->|MQTT or REST| B[ROOTKey Ingestion Layer\nOVH · EU Jurisdiction]
+    B --> C[Off-Chain Integrity Record\nOVH · EU Jurisdiction\nSHA-256 · Timestamp · Source ID]
+    note[All components within\nEU legal jurisdiction] -.-> B
 ```
 
 ---

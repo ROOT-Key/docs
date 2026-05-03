@@ -65,15 +65,13 @@ CSDDD compliance requires documentation that crosses organisational boundaries -
 
 ROOTKey vaults can accept anchors from multiple parties, building a shared, tamper-evident chain of custody that no single participant controls:
 
-```
-Your organisation    Tier 1 Supplier    Tier 2 Supplier    Origin Producer
-       │                    │                  │                   │
-       │ Anchor policy &    │ Anchor assess-   │ Anchor own        │ Anchor
-       │ onboarding docs    │ ment & audit     │ compliance docs   │ origin cert
-       ▼                    ▼                  ▼                   ▼
-       ─────────────────────────────────────────────────────────────────►
-                           Shared Vault (Polygon / EBSI)
-                     Full chain verifiable by auditors and regulators
+```mermaid
+flowchart LR
+    A[Your Organisation\nPolicy & onboarding] -->|Anchor| V
+    B[Tier 1 Supplier\nAssessment & audit] -->|Anchor| V
+    C[Tier 2 Supplier\nCompliance docs] -->|Anchor| V
+    D[Origin Producer\nOrigin certificate] -->|Anchor| V
+    V[(Shared Vault\nPolygon / EBSI)] --> E[Auditors & Regulators\nFull chain independently verifiable]
 ```
 
 → See also: [Supply Chain Traceability use case](/use-cases/supply-chain)

@@ -30,21 +30,11 @@ If a document is altered after anchoring - even by a single character - the hash
 
 ## Architecture
 
-```
-Document Management System / Workflow
-        │
-        │  On creation, approval, or signature event:
-        ▼
-  ROOTKey API  ──── POST /files (create or version)
-        │
-        ▼
-  Blockchain Anchor (Polygon Mainnet)
-        │
-        ▼
-  On-chain record: hash + timestamp + vault/file ID
-        │
-        ▼
-  Independently verifiable via Polygonscan or ROOTKey API
+```mermaid
+flowchart TD
+    A([Document Management\nSystem / Workflow]) -->|Create · Approve · Sign| B[ROOTKey API\nPOST /files]
+    B --> C[(Blockchain Anchor\nPolygon Mainnet\nHash · Timestamp · Vault & File ID)]
+    C --> D[Independent Verification\nPolygonscan · ROOTKey API]
 ```
 
 ROOTKey fits alongside your existing DMS - it does not replace it. Your document storage, access controls, and workflows remain unchanged. ROOTKey adds the cryptographic trust layer on top.

@@ -30,24 +30,11 @@ This transforms your audit trail from a log that you assure is accurate into a r
 
 ## Architecture
 
-```
-Systems under audit (SIEM, ITSM, application events)
-        │
-        │  On each auditable event:
-        ▼
-  ROOTKey API  ──── POST /files or /records
-        │
-        ▼
-  Blockchain Anchor (Polygon Mainnet)
-  ┌──────────────────────────────────┐
-  │  event hash + timestamp          │
-  │  + system / operation identifier │
-  │  + vault ID                      │
-  └──────────────────────────────────┘
-        │
-        ▼
-  Audit log: tamper-evident, third-party verifiable
-  ← queryable at any time via ROOTKey API or Polygonscan
+```mermaid
+flowchart TD
+    A([Systems Under Audit\nSIEM · ITSM · Apps]) -->|Auditable event| B[ROOTKey API\nPOST /files or /records]
+    B --> C[(Blockchain Anchor\nPolygon Mainnet\nEvent hash · Timestamp\nSystem & vault identifier)]
+    C --> D[Tamper-Evident Audit Log\nQueryable · Third-party verifiable\nPolygonscan · ROOTKey API]
 ```
 
 ROOTKey integrates alongside your existing SIEM, ITSM, or logging infrastructure. You do not replace your log systems - you add a cryptographic integrity layer that makes each log entry independently verifiable.

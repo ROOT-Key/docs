@@ -917,6 +917,388 @@
           }
         }
       }
+    },
+    "/platform/recovery": {
+      "get": {
+        "tags": [
+          "Platform",
+          "Recovery"
+        ],
+        "summary": "List recoverable items",
+        "description": "Returns all soft-deleted vaults and files within the workspace that are eligible for recovery. Items are retained in a recoverable state for a configurable retention window before permanent deletion.",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by asset type",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["vault", "file"]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recoverable items listed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponseRecoverableItem"
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": "rec_01j9z8k2m4n6p8q0r2s4t6v8",
+                      "type": "file",
+                      "name": "audit-report-q3-2025.pdf",
+                      "deletedAt": "2025-10-01T14:22:00Z",
+                      "expiresAt": "2025-10-31T14:22:00Z",
+                      "vaultAddress": "0x1234567890abcdef1234567890abcdef12345678",
+                      "vaultName": "Compliance Vault"
+                    },
+                    {
+                      "id": "rec_02k0a9l3n5o7q9r1s3t5u7w9",
+                      "type": "vault",
+                      "name": "Archive Vault Q2",
+                      "deletedAt": "2025-09-28T09:11:00Z",
+                      "expiresAt": "2025-10-28T09:11:00Z",
+                      "vaultAddress": "0xabcdef1234567890abcdef1234567890abcdef12",
+                      "vaultName": null
+                    }
+                  ],
+                  "pagination": {
+                    "previousCursor": null,
+                    "nextCursor": "eyJpZCI6InJlY18wMmswYTlsMy4uLiJ9"
+                  },
+                  "metadata": {
+                    "fetchedCount": 2,
+                    "totalCount": 2,
+                    "serverTimestamp": "2025-10-05T08:00:00Z",
+                    "parameters": {
+                      "limit": 20,
+                      "order": "desc"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/recovery/history": {
+      "get": {
+        "tags": [
+          "Platform",
+          "Recovery"
+        ],
+        "summary": "Recovery audit log",
+        "description": "Returns the full audit log of recovery operations performed within the workspace — who requested each recovery, when, and the outcome.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 20
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recovery history retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponseRecoveryOperation"
+                },
+                "example": {
+                  "data": [
+                    {
+                      "id": "rop_01j9z8k2m4n6p8q0r2s4t6v8",
+                      "type": "file",
+                      "assetId": "rec_01j9z8k2m4n6p8q0r2s4t6v8",
+                      "assetName": "audit-report-q3-2025.pdf",
+                      "status": "completed",
+                      "requestedBy": "api_key_prod_finance",
+                      "requestedAt": "2025-10-02T10:15:00Z",
+                      "completedAt": "2025-10-02T10:15:03Z"
+                    }
+                  ],
+                  "pagination": {
+                    "previousCursor": null,
+                    "nextCursor": null
+                  },
+                  "metadata": {
+                    "fetchedCount": 1,
+                    "totalCount": 1,
+                    "serverTimestamp": "2025-10-05T08:00:00Z",
+                    "parameters": {
+                      "limit": 20,
+                      "order": "desc"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/recovery/vaults/{vaultAddress}": {
+      "post": {
+        "tags": [
+          "Platform",
+          "Recovery"
+        ],
+        "summary": "Recover a vault",
+        "description": "Restores a soft-deleted vault to active status. All files and records within the vault are restored. The vault's blockchain anchors and integrity proofs are unaffected — blockchain records are immutable and were never deleted.",
+        "parameters": [
+          {
+            "name": "vaultAddress",
+            "in": "path",
+            "description": "The blockchain address of the vault to recover",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "0xabcdef1234567890abcdef1234567890abcdef12"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vault recovered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryOperationResponse"
+                },
+                "example": {
+                  "recoveryId": "rop_02k0a9l3n5o7q9r1s3t5u7w9",
+                  "type": "vault",
+                  "assetId": "rec_02k0a9l3n5o7q9r1s3t5u7w9",
+                  "status": "completed",
+                  "vaultAddress": "0xabcdef1234567890abcdef1234567890abcdef12",
+                  "restoredAt": "2025-10-05T08:00:00Z"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Vault not found or not in a recoverable state",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "resource_not_found",
+                  "message": "Vault not found or not eligible for recovery",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2025-10-05T08:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Recovery window expired — the vault has been permanently deleted",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "recovery_window_expired",
+                  "message": "The recovery window for this vault has expired. The asset has been permanently deleted.",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#recovery-window-expired",
+                  "timestamp": "2025-10-05T08:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/recovery/files/{fileId}": {
+      "post": {
+        "tags": [
+          "Platform",
+          "Recovery"
+        ],
+        "summary": "Recover a file",
+        "description": "Restores a soft-deleted file to its vault. All versions of the file are restored. The file's blockchain anchors remain valid — the on-chain integrity proofs were not affected by deletion.",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "description": "The ID of the file to recover",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "rec_01j9z8k2m4n6p8q0r2s4t6v8"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File recovered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryOperationResponse"
+                },
+                "example": {
+                  "recoveryId": "rop_03l1b0m4o6p8r0s2t4u6v8x0",
+                  "type": "file",
+                  "assetId": "rec_01j9z8k2m4n6p8q0r2s4t6v8",
+                  "status": "completed",
+                  "fileId": "f_01j9z8k2m4n6p8q0r2s4t6v8",
+                  "fileName": "audit-report-q3-2025.pdf",
+                  "vaultAddress": "0x1234567890abcdef1234567890abcdef12345678",
+                  "restoredAt": "2025-10-05T08:00:00Z"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "File not found or not in a recoverable state",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "resource_not_found",
+                  "message": "File not found or not eligible for recovery",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2025-10-05T08:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Recovery window expired — the file has been permanently deleted",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "recovery_window_expired",
+                  "message": "The recovery window for this file has expired. The asset has been permanently deleted.",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#recovery-window-expired",
+                  "timestamp": "2025-10-05T08:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/platform/recovery/{recoveryId}": {
+      "get": {
+        "tags": [
+          "Platform",
+          "Recovery"
+        ],
+        "summary": "Get recovery operation",
+        "description": "Returns the details and current status of a specific recovery operation.",
+        "parameters": [
+          {
+            "name": "recoveryId",
+            "in": "path",
+            "description": "The ID of the recovery operation",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "rop_01j9z8k2m4n6p8q0r2s4t6v8"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recovery operation details retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryOperationResponse"
+                },
+                "example": {
+                  "recoveryId": "rop_01j9z8k2m4n6p8q0r2s4t6v8",
+                  "type": "file",
+                  "assetId": "rec_01j9z8k2m4n6p8q0r2s4t6v8",
+                  "status": "completed",
+                  "fileId": "f_01j9z8k2m4n6p8q0r2s4t6v8",
+                  "fileName": "audit-report-q3-2025.pdf",
+                  "vaultAddress": "0x1234567890abcdef1234567890abcdef12345678",
+                  "restoredAt": "2025-10-02T10:15:03Z"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recovery operation not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "errorCode": "resource_not_found",
+                  "message": "Recovery operation not found",
+                  "docUrl": "https://docs.rootkey.ai/api-reference/errors#resource-not-found",
+                  "timestamp": "2025-10-05T08:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1352,6 +1734,197 @@
                       "desc"
                     ]
                   }
+                }
+              }
+            }
+          }
+        }
+      },
+      "RecoverableItem": {
+        "type": "object",
+        "required": ["id", "type", "name", "deletedAt", "expiresAt"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the recoverable item",
+            "example": "rec_01j9z8k2m4n6p8q0r2s4t6v8"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["vault", "file"],
+            "description": "Asset type"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the asset at the time of deletion"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the asset was deleted"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the recovery window closes and the asset is permanently deleted"
+          },
+          "vaultAddress": {
+            "type": "string",
+            "nullable": true,
+            "description": "Vault blockchain address — null for vault-type items"
+          },
+          "vaultName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Vault name — null for vault-type items"
+          }
+        }
+      },
+      "RecoveryOperationResponse": {
+        "type": "object",
+        "required": ["recoveryId", "type", "assetId", "status"],
+        "properties": {
+          "recoveryId": {
+            "type": "string",
+            "description": "Unique ID of this recovery operation",
+            "example": "rop_01j9z8k2m4n6p8q0r2s4t6v8"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["vault", "file"],
+            "description": "Asset type that was recovered"
+          },
+          "assetId": {
+            "type": "string",
+            "description": "ID of the recoverable item that was restored"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "completed", "failed"],
+            "description": "Current status of the recovery operation"
+          },
+          "fileId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Restored file ID — only present for file recoveries"
+          },
+          "fileName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Restored file name — only present for file recoveries"
+          },
+          "vaultAddress": {
+            "type": "string",
+            "nullable": true,
+            "description": "Vault blockchain address"
+          },
+          "restoredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the asset was restored"
+          }
+        }
+      },
+      "RecoveryAuditEntry": {
+        "type": "object",
+        "required": ["id", "type", "assetId", "assetName", "status", "requestedAt"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Recovery operation ID",
+            "example": "rop_01j9z8k2m4n6p8q0r2s4t6v8"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["vault", "file"]
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "assetName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "completed", "failed"]
+          },
+          "requestedBy": {
+            "type": "string",
+            "description": "API key label that triggered the recovery"
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "PaginatedResponseRecoverableItem": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecoverableItem"
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "previousCursor": { "type": "string", "nullable": true },
+              "nextCursor": { "type": "string", "nullable": true }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "fetchedCount": { "type": "integer" },
+              "totalCount": { "type": "integer" },
+              "serverTimestamp": { "type": "string", "format": "date-time" },
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "limit": { "type": "integer" },
+                  "cursor": { "type": "string" },
+                  "order": { "type": "string", "enum": ["asc", "desc"] }
+                }
+              }
+            }
+          }
+        }
+      },
+      "PaginatedResponseRecoveryOperation": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecoveryAuditEntry"
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "previousCursor": { "type": "string", "nullable": true },
+              "nextCursor": { "type": "string", "nullable": true }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "fetchedCount": { "type": "integer" },
+              "totalCount": { "type": "integer" },
+              "serverTimestamp": { "type": "string", "format": "date-time" },
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "limit": { "type": "integer" },
+                  "cursor": { "type": "string" },
+                  "order": { "type": "string", "enum": ["asc", "desc"] }
                 }
               }
             }

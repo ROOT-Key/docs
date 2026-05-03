@@ -32,26 +32,15 @@ If an artifact is tampered with after anchoring - in the registry, in transit, o
 
 ## Architecture
 
-```
-CI/CD Pipeline
-┌─────────────────────────────────────────────────────┐
-│                                                     │
-│  1. Build   ──► 2. Test   ──► 3. Anchor ──► 4. Push │
-│                               │                     │
-│                               ▼                     │
-│                         ROOTKey API                 │
-│                         POST /files                 │
-│                               │                     │
-└───────────────────────────────┼─────────────────────┘
-                                ▼
-                   Blockchain Anchor (Polygon Mainnet)
-                   hash + build metadata + timestamp
-                                │
-                   ┌────────────┼────────────┐
-                   ▼            ▼            ▼
-            Deployment    Customer      Auditor
-            (verify        (verify       (verify
-            before run)    download)     release)
+```mermaid
+flowchart LR
+    B[Build] --> T[Test]
+    T --> AN[Anchor\nROOTKey API\nPOST /files]
+    AN --> P[Push]
+    AN --> BC[(Polygon Blockchain\nHash · Build metadata · Timestamp)]
+    BC --> D[Deployment\nVerify before run]
+    BC --> C[Customer\nVerify download]
+    BC --> AU[Auditor\nVerify release]
 ```
 
 Anchoring is a single API call inserted into the CI pipeline after the build step.

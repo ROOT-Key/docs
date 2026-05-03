@@ -18,20 +18,12 @@ This protocol is designed for high-frequency write workloads, IoT and sensor dat
 
 ## Architecture Overview
 
-```
-Client Application
-        │
-        ▼ HTTPS / JSON
-  ROOTKey REST API
-        │
-        ├──► Off-Chain Processing & Storage
-        │         (near real-time response)
-        │
-        └──► Async Blockchain Anchoring
-                  │
-                  ▼
-            Polygon Blockchain
-            (proof hash on-chain)
+```mermaid
+flowchart TD
+    A([Client Application]) -->|HTTPS / JSON| B[ROOTKey REST API]
+    B --> C[Off-Chain Processing\n& Storage]
+    B -->|Async| D[(Polygon Blockchain\nProof hash on-chain)]
+    C -->|Near real-time response| A
 ```
 
 The API returns a response immediately after off-chain processing completes. Blockchain anchoring occurs asynchronously within a defined window. This design decouples response latency from block confirmation time while preserving the integrity guarantee.
