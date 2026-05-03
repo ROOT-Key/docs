@@ -1020,7 +1020,7 @@
           "Recovery"
         ],
         "summary": "Recovery audit log",
-        "description": "Returns the full audit log of recovery operations performed within the workspace — who requested each recovery, when, and the outcome.",
+        "description": "Returns the full audit log of recovery operations performed within the workspace - who requested each recovery, when, and the outcome.",
         "parameters": [
           {
             "name": "limit",
@@ -1097,7 +1097,7 @@
           "Recovery"
         ],
         "summary": "Recover a vault",
-        "description": "Restores a soft-deleted vault to active status. All files and records within the vault are restored. The vault's blockchain anchors and integrity proofs are unaffected — blockchain records are immutable and were never deleted.",
+        "description": "Restores a soft-deleted vault to active status. All files and records within the vault are restored. The vault's blockchain anchors and integrity proofs are unaffected - blockchain records are immutable and were never deleted.",
         "parameters": [
           {
             "name": "vaultAddress",
@@ -1146,7 +1146,7 @@
             }
           },
           "410": {
-            "description": "Recovery window expired — the vault has been permanently deleted",
+            "description": "Recovery window expired - the vault has been permanently deleted",
             "content": {
               "application/json": {
                 "example": {
@@ -1171,7 +1171,7 @@
           "Recovery"
         ],
         "summary": "Recover a file",
-        "description": "Restores a soft-deleted file to its vault. All versions of the file are restored. The file's blockchain anchors remain valid — the on-chain integrity proofs were not affected by deletion.",
+        "description": "Restores a soft-deleted file to its vault. All versions of the file are restored. The file's blockchain anchors remain valid - the on-chain integrity proofs were not affected by deletion.",
         "parameters": [
           {
             "name": "fileId",
@@ -1222,7 +1222,7 @@
             }
           },
           "410": {
-            "description": "Recovery window expired — the file has been permanently deleted",
+            "description": "Recovery window expired - the file has been permanently deleted",
             "content": {
               "application/json": {
                 "example": {
@@ -1771,12 +1771,12 @@
           "vaultAddress": {
             "type": "string",
             "nullable": true,
-            "description": "Vault blockchain address — null for vault-type items"
+            "description": "Vault blockchain address - null for vault-type items"
           },
           "vaultName": {
             "type": "string",
             "nullable": true,
-            "description": "Vault name — null for vault-type items"
+            "description": "Vault name - null for vault-type items"
           }
         }
       },
@@ -1806,12 +1806,12 @@
           "fileId": {
             "type": "string",
             "nullable": true,
-            "description": "Restored file ID — only present for file recoveries"
+            "description": "Restored file ID - only present for file recoveries"
           },
           "fileName": {
             "type": "string",
             "nullable": true,
-            "description": "Restored file name — only present for file recoveries"
+            "description": "Restored file name - only present for file recoveries"
           },
           "vaultAddress": {
             "type": "string",
