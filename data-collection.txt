@@ -1,0 +1,153 @@
+ROOTKey Docs - XXX Data Collection
+====================================
+Values to be provided by the CTO / technical team before publishing.
+Each item includes the file path and the context for the placeholder.
+
+----------------------------------------------------------------------
+PROTOCOLS - RKP-1 (Full On-Chain)
+File: pages/protocols/rkp-1-on-chain.mdx
+----------------------------------------------------------------------
+
+[ ] Maximum requests per second (RKP-1)
+    Context: Request Limits table - "Maximum requests per second"
+
+[ ] Maximum concurrent operations (RKP-1)
+    Context: Request Limits table - "Maximum concurrent operations"
+
+[ ] Maximum payload size per request (RKP-1)
+    Context: Request Limits table - "Maximum payload size per request"
+
+[ ] Burst allowance (RKP-1)
+    Context: Request Limits table - "Burst allowance"
+
+[ ] Average end-to-end latency (RKP-1)
+    Context: Performance Indicators table - "Average end-to-end latency" (in ms)
+
+[ ] P95 end-to-end latency (RKP-1)
+    Context: Performance Indicators table - "P95 end-to-end latency" (in ms)
+
+[ ] Polygon block confirmation time
+    Context: Performance Indicators table - "Polygon block confirmation time" (in seconds)
+    Note: This may vary by network conditions - consider providing a range or typical value.
+
+[ ] Recovery time objective - RTO (RKP-1)
+    Context: Performance Indicators table - "Recovery time objective (RTO)"
+
+[ ] Recovery point objective - RPO (RKP-1)
+    Context: Performance Indicators table - "Recovery point objective (RPO)"
+
+----------------------------------------------------------------------
+PROTOCOLS - RKP-2 (Off-Chain)
+File: pages/protocols/rkp-2-off-chain.mdx
+----------------------------------------------------------------------
+
+[ ] Maximum requests per second (RKP-2)
+    Context: Request Limits table - "Maximum requests per second"
+
+[ ] Maximum concurrent operations (RKP-2)
+    Context: Request Limits table - "Maximum concurrent operations"
+
+[ ] Maximum payload size per request (RKP-2)
+    Context: Request Limits table - "Maximum payload size per request"
+
+[ ] Burst allowance (RKP-2)
+    Context: Request Limits table - "Burst allowance"
+
+[ ] Average API response latency (RKP-2)
+    Context: Performance Indicators table - "Average API response latency" (in ms)
+
+[ ] P95 API response latency (RKP-2)
+    Context: Performance Indicators table - "P95 API response latency" (in ms)
+
+[ ] Async blockchain anchoring window (RKP-2)
+    Context: Performance Indicators table - "Async blockchain anchoring window"
+    Note: This is the guaranteed window after API response within which the on-chain anchor is written.
+
+[ ] Recovery time objective - RTO (RKP-2)
+    Context: Performance Indicators table - "Recovery time objective (RTO)"
+
+[ ] Recovery point objective - RPO (RKP-2)
+    Context: Performance Indicators table - "Recovery point objective (RPO)"
+
+----------------------------------------------------------------------
+PROTOCOLS - RKP-3 (Hybrid)
+File: pages/protocols/rkp-3-hybrid.mdx
+----------------------------------------------------------------------
+
+[ ] Maximum requests per second (RKP-3)
+    Context: Request Limits table - "Maximum requests per second"
+
+[ ] Maximum concurrent operations (RKP-3)
+    Context: Request Limits table - "Maximum concurrent operations"
+
+[ ] Maximum payload size - on-chain path (RKP-3)
+    Context: Request Limits table - "Maximum payload size - on-chain path"
+
+[ ] Maximum payload size - off-chain path (RKP-3)
+    Context: Request Limits table - "Maximum payload size - off-chain path"
+
+[ ] Burst allowance (RKP-3)
+    Context: Request Limits table - "Burst allowance"
+
+[ ] Average latency - on-chain path (RKP-3)
+    Context: Performance Indicators table - "Average latency - on-chain path" (in ms)
+
+[ ] Average latency - off-chain path (RKP-3)
+    Context: Performance Indicators table - "Average latency - off-chain path" (in ms)
+
+[ ] P95 latency (RKP-3)
+    Context: Performance Indicators table - "P95 latency" (in ms)
+
+[ ] On-chain anchoring frequency (RKP-3)
+    Context: Performance Indicators table - "On-chain anchoring frequency"
+    Note: e.g. "per operation" or "batched every Xs"
+
+[ ] Recovery time objective - RTO (RKP-3)
+    Context: Performance Indicators table - "Recovery time objective (RTO)"
+
+[ ] Recovery point objective - RPO (RKP-3)
+    Context: Performance Indicators table - "Recovery point objective (RPO)"
+
+----------------------------------------------------------------------
+DEPLOYMENT - Container
+File: pages/deployment/container.mdx
+----------------------------------------------------------------------
+
+[ ] Docker image registry URL and tag format
+    Context: Deployment Characteristics table - "Image registry"
+
+[ ] Minimum supported Kubernetes version
+    Context: Deployment Characteristics table - "Minimum Kubernetes version"
+
+[ ] Minimum CPU per node
+    Context: Deployment Characteristics table - "Minimum CPU (per node)"
+
+[ ] Minimum RAM per node
+    Context: Deployment Characteristics table - "Minimum RAM (per node)"
+
+[ ] Storage requirement (persistent volume minimum size)
+    Context: Deployment Characteristics table - "Storage requirement"
+
+----------------------------------------------------------------------
+DEPLOYMENT - MQTT
+File: pages/deployment/mqtt.mdx
+----------------------------------------------------------------------
+
+[ ] Supported MQTT protocol version(s)
+    Context: Integration Characteristics table - "Protocol version"
+    Note: e.g. MQTT 3.1.1, MQTT 5.0, or both
+
+[ ] Supported QoS levels
+    Context: Integration Characteristics table - "Supported QoS levels"
+    Note: e.g. QoS 0, 1, 2 - and any restrictions
+
+[ ] Maximum message payload size
+    Context: Integration Characteristics table - "Maximum message payload size"
+
+[ ] Broker authentication method
+    Context: Integration Characteristics table - "Authentication"
+    Note: e.g. username/password, client certificates, token-based
+
+----------------------------------------------------------------------
+END OF DATA COLLECTION FILE
+----------------------------------------------------------------------

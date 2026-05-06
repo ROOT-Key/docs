@@ -1,21 +1,169 @@
 ---
 title: Concepts
-description: Understand every piece of our docs following this guide
+description: Core terminology and data model for the ROOTKey platform - understand the building blocks before integrating.
 icon: arrows-to-circle
+mode: wide
 ---
 
-Throughout the ROOTKey documentation, there are different concepts, variables and terms used as you continue to explore. Below, you can find more information about these concepts and where to find them in the ROOTkey apis.
+This page defines the key concepts, data model primitives, and terminology used throughout the ROOTKey platform and documentation. Understanding these concepts is the foundation for a correct integration.
 
-### Wallet
-Blockchain component used to store and group all the assets belonging to a specific user. For our systems it is similar to a computer folder, used to store and organize all the user's assets.
+---
 
-A wallet consists of a blockchain address and a private key used to handle the wallet.
+## Data Model
 
-### Owner Wallet
-The wallet to which the asset you are validating or trying to transfer belongs.
+```mermaid
+flowchart TD
+    WS[Workspace] --> V[Vault\nProtocol-configured]
+    V --> F[Files]
+    V --> T[Tables]
+    V --> AN[Analytics]
+    F --> FA[(Blockchain Anchors\nPer version)]
+    T --> TA[(Blockchain Anchors\nPer record)]
+```
 
-### Private Key
-A 64-digit hexadecimal code from which the wallet address was generated, used to manage the wallet.
+---
 
-### Identity
-Data object used to identify yourself in digital space based on your real identity issued by the government.
+## Workspace
+
+A **Workspace** is the top-level organisational unit in ROOTKey. It corresponds to your organisation or project. All API keys, vaults, and usage metrics are scoped to a workspace.
+
+A single account can manage multiple workspaces (e.g. one per environment, product line, or client).
+
+---
+
+## Vault
+
+A **Vault** is the primary container for data assets within ROOTKey. Every file and table belongs to a vault.
+
+Vaults are configured with:
+- A **data processing protocol** (RKP-1, RKP-2, or RKP-3) - determines how assets are anchored
+- **Access controls** - which API keys can read or write
+- **Lifecycle state** - active, deactivated, or deleted
+
+The vault is the unit of protocol configuration. You cannot mix protocols within a single vault - design your vault architecture around your data classification requirements.
+
+See: [Protocols](/pages/protocols/overview)
+
+---
+
+## File
+
+A **File** is the primary asset type within a vault. In ROOTKey's model, a "file" is not limited to a literal document - it is a versioned, integrity-anchored data asset that can represent any content: a document, a record, a dataset export, a configuration, or any other payload.
+
+Each file has:
+- A unique identifier
+- A creation timestamp and blockchain anchor
+- A version history (every update creates a new version)
+- A validation state (valid, invalid, or not yet validated)
+- An owner (the wallet that anchored it)
+
+---
+
+## Version
+
+A **Version** is an immutable snapshot of a file at a point in time. Every write to a file creates a new version - the previous version is never modified or deleted.
+
+Each version has:
+- Its own blockchain anchor
+- Its own integrity hash
+- A timestamp and sequence number
+- A link to the previous version (lineage)
+
+This allows any version of a file to be independently validated at any point in its lifecycle - including versions from years in the past.
+
+---
+
+## Validation
+
+**Validation** is the process of verifying that a file or record has not been tampered with since it was anchored.
+
+Validation works by:
+1. Re-computing the SHA-256 hash of the current content
+2. Comparing it against the hash stored in the on-chain anchor
+3. Returning a **valid** or **invalid** result
+
+A validation result is itself a blockchain operation - the result is anchored, creating an immutable audit record of when the validation was performed and by whom.
+
+---
+
+## Table
+
+A **Table** is a structured, schema-defined data store within a vault. Tables allow you to store and manage datasets with defined column types, rather than arbitrary file payloads.
+
+Each write to a table (create or update record) is anchored individually, providing row-level integrity and auditability for structured data.
+
+---
+
+## Record
+
+A **Record** is an individual row within a table. Like files, records are versioned - every update creates a new version with its own blockchain anchor. Records can be validated, transferred, and queried through their full history.
+
+---
+
+## Protocol (RKP)
+
+A **Protocol** defines how data is processed and anchored. ROOTKey uses a standardised naming convention - **RKP-N** - to identify each protocol:
+
+| Protocol | Name | Summary |
+|----------|------|---------|
+| RKP-1 | Full On-Chain | Every operation written directly to the blockchain |
+| RKP-2 | Off-Chain | High-throughput processing; proof anchored asynchronously |
+| RKP-3 | Hybrid | On-chain for critical events; off-chain for volume |
+
+The protocol is configured at the vault level and applies to all assets within that vault.
+
+See: [Protocols](/pages/protocols/overview)
+
+---
+
+## Blockchain Anchor
+
+A **Blockchain Anchor** is the on-chain record produced by a write operation. It contains:
+
+- **SHA-256 hash** of the data payload
+- **Block timestamp** - the moment the anchor was written
+- **Operation type** - create, update, validate, transfer
+- **Asset identifiers** - vault and file/record IDs
+- **Originating wallet address**
+
+Anchors are permanent and publicly queryable on Polygon. They are the cryptographic root of trust for every integrity guarantee ROOTKey provides.
+
+---
+
+## Wallet
+
+A **Wallet** is a blockchain identity - a public/private key pair used to sign and own on-chain operations. In ROOTKey, your workspace is associated with a managed wallet that signs all blockchain transactions on your behalf.
+
+For advanced use cases, clients can configure their own wallet for signing operations, maintaining direct blockchain ownership of all anchored assets.
+
+---
+
+## API Key
+
+An **API Key** is the credential used to authenticate requests to the ROOTKey API. Each key is:
+
+- Scoped to a workspace
+- Bound to an environment (sandbox or production)
+- Revocable at any time
+
+Development keys are used with `https://dev-api.rootkey.ai`. Production keys are used with `https://api.rootkey.ai`. Switching environments requires updating both the base URL and the API key.
+
+See: [API Keys](/pages/api-keys) · [Environments](/pages/environments)
+
+---
+
+## Credit
+
+A **Credit** is the unit of consumption used by ROOTKey's billing model. Each operation consumes a defined number of credits depending on the operation type and the active protocol. Credits are purchased as part of a subscription plan.
+
+See: [Pricing](/pages/pricing)
+
+---
+
+## Webhook
+
+A **Webhook** is an HTTP callback that ROOTKey sends to a client-defined endpoint when an asynchronous event completes - such as blockchain anchoring in RKP-2 or RKP-3, or a validation result.
+
+Webhooks allow integrations to react to ROOTKey events in real time without polling the API.
+
+See: [Webhooks](/pages/webhooks)

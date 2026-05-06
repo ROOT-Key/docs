@@ -1,0 +1,50 @@
+---
+title: Records
+description: Individual record management within ROOTKey tables. Create, validate, and retrieve records with full integrity anchoring and version history.
+sidebarTitle: Overview
+icon: rows
+---
+
+<Warning>
+  This section is under active development. Full endpoint documentation will be published shortly. Contact [support@rootkey.ai](mailto:support@rootkey.ai) if you need early access or technical specifications.
+</Warning>
+
+## Overview
+
+The Records API allows you to create and manage individual records within ROOTKey tables. Each record operation - creation, update, or deletion - is processed through the configured data processing protocol, generating a cryptographic proof that is anchored to the blockchain.
+
+Records provide row-level auditability within structured datasets. Every write produces an immutable, verifiable history entry, enabling full record-level traceability for compliance, forensic, and operational purposes.
+
+---
+
+## Key Capabilities
+
+- Create individual records within a defined table schema
+- Update records with full version history and integrity anchoring per version
+- Retrieve record history and validate any version against its on-chain proof
+- Query records with filtering and pagination
+- Transfer record ownership within or across vaults
+
+---
+
+## Endpoints
+
+Documentation for the following endpoints is in progress:
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/tables/:tableId/records` | Create a new record |
+| `GET` | `/tables/:tableId/records` | List records in a table |
+| `GET` | `/tables/:tableId/records/:id` | Get a specific record |
+| `PUT` | `/tables/:tableId/records/:id` | Update a record |
+| `DELETE` | `/tables/:tableId/records/:id` | Delete a record |
+| `GET` | `/tables/:tableId/records/:id/history` | Get record version history |
+| `POST` | `/tables/:tableId/records/:id/validate` | Validate record integrity |
+
+---
+
+## Related
+
+- [Tables API](/api-reference/platform/endpoint/tables/overview) - manage the table structure that contains records
+- [Files](/api-reference/platform/endpoint/files/get-files) - for unstructured document management
+- [Protocols](/pages/protocols/overview) - understand how records are anchored based on the active protocol

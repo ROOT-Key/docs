@@ -1,0 +1,197 @@
+---
+title: EU AI Act
+description: How ROOTKey helps AI providers and deployers meet the record-keeping, logging, conformity documentation, and audit trail requirements of the EU Artificial Intelligence Act (EU 2024/1689).
+sidebarTitle: EU AI Act
+icon: brain
+mode: wide
+---
+
+## Overview
+
+The **EU Artificial Intelligence Act** (EU 2024/1689) is the world's first comprehensive legal framework for artificial intelligence. It entered into force in August 2024 and applies a tiered, risk-based approach - imposing the most stringent requirements on AI systems used in high-stakes contexts.
+
+For providers and deployers of high-risk AI systems, the Act creates extensive **documentation, logging, and audit obligations** that must be met before deployment and maintained throughout the system's operational lifetime.
+
+ROOTKey addresses the core evidentiary challenge of the AI Act: the requirement to demonstrate, with verifiable evidence, that an AI system was developed, assessed, deployed, and monitored in accordance with the regulation - and that the records supporting that demonstration have not been altered after the fact.
+
+---
+
+## Risk Classification
+
+| Risk tier | Scope | ROOTKey relevance |
+|-----------|-------|------------------|
+| **Unacceptable risk** | Prohibited systems (social scoring, real-time biometrics in public spaces, etc.) | Prohibition compliance evidence |
+| **High risk** | Biometrics, critical infrastructure, education, employment, essential services, law enforcement, migration, justice | Full logging, conformity, and audit obligations - primary ROOTKey target |
+| **Limited risk** | Chatbots, deepfake generators - transparency obligations | Interaction logs, disclosure records |
+| **Minimal risk** | Spam filters, AI-enabled games | No mandatory obligations |
+
+High-risk AI systems are listed in Annex III of the Act, including:
+- Biometric identification and categorisation systems
+- AI used in critical infrastructure management
+- AI in education (student assessment, admission)
+- AI in employment (recruitment, performance evaluation)
+- AI in access to essential services (credit scoring, insurance)
+- AI in law enforcement (crime prediction, evidence evaluation)
+- AI in border control and migration
+- AI in administration of justice
+
+---
+
+## Article-Level Coverage
+
+### Article 9 - Risk Management System
+
+Article 9 requires providers to establish and maintain a documented risk management system throughout the AI system's lifecycle.
+
+| Requirement | ROOTKey capability |
+|-------------|-------------------|
+| Risk identification and analysis documented | Anchor risk assessment documents at each review - tamper-evident proof of what was assessed and concluded |
+| Risk management measures recorded | Anchor mitigation decisions - blockchain timestamp proves when measures were adopted |
+| Residual risk evaluation documented | Anchor residual risk acceptance records at approval |
+| System updated post-deployment | Anchor post-deployment risk review records - continuity of the risk management lifecycle |
+
+---
+
+### Article 10 - Data and Data Governance
+
+Article 10 requires training, validation, and testing data to be subject to documented governance practices.
+
+| Requirement | ROOTKey capability |
+|-------------|-------------------|
+| Training data provenance documented | Anchor dataset manifests at approval - tamper-evident record of what data was used |
+| Data quality assessment conducted | Anchor data quality assessment records and outcomes |
+| Known biases documented | Anchor bias assessment records - independently timestamped evidence of governance diligence |
+| Data governance practices maintained | Anchor data governance policy versions - verifiable history of which policy was in force at each training cycle |
+
+---
+
+### Article 11 - Technical Documentation
+
+Article 11 requires providers to draw up technical documentation before placing a high-risk AI system on the market. That documentation must be kept up to date throughout the system's lifetime.
+
+| Requirement | ROOTKey capability |
+|-------------|-------------------|
+| Technical documentation prepared before deployment | Anchor documentation at completion - blockchain timestamp proves documentation existed before market placement |
+| Documentation updated for each significant change | Anchor each version - tamper-evident version history; each update provably post-dates the previous |
+| Documentation provided to authorities on request | Vault ID and file IDs provide authorities with independently verifiable access - no ROOTKey cooperation required for verification |
+
+---
+
+### Article 12 - Record-Keeping
+
+Article 12 requires high-risk AI systems to automatically log events throughout their operation - to the extent necessary to ensure post-market monitoring and investigation of incidents.
+
+| Requirement | ROOTKey capability |
+|-------------|-------------------|
+| Automatic logging of relevant events | Anchor decision logs at emission - before they reach any mutable storage |
+| Logs protected from modification | Blockchain anchoring - any modification after anchoring produces a detectable hash mismatch |
+| Logs retained for appropriate period | On-chain anchors are permanent; off-chain log retention configured per regulatory obligation |
+| Logs accessible to providers and authorities | Vault records queryable via API; verifiable by authorities via Polygonscan or EBSI explorer without system access |
+
+<Info>
+  Article 12 is the strongest ROOTKey alignment in the EU AI Act. The requirement for tamper-evident, automatically generated logs that cannot be modified - and that are accessible to authorities - is precisely what blockchain anchoring provides structurally, not by policy.
+</Info>
+
+---
+
+### Article 13 - Transparency and Provision of Information
+
+Article 13 requires providers to ensure high-risk AI systems are sufficiently transparent to allow deployers to interpret and use outputs correctly.
+
+| Requirement | ROOTKey capability |
+|-------------|-------------------|
+| System capabilities and limitations documented | Anchor model cards and system cards at each version - tamper-evident documentation of what the system can and cannot do |
+| Performance metrics documented | Anchor evaluation results - independently timestamped evidence of performance at the time of assessment |
+| Instructions for use anchored | Anchor instructions for use - version-controlled, tamper-evident |
+
+---
+
+### Article 14 - Human Oversight
+
+Article 14 requires high-risk AI systems to be designed to allow effective human oversight, and requires deployers to implement oversight measures.
+
+| Requirement | ROOTKey capability |
+|-------------|-------------------|
+| Human oversight measures implemented | Anchor oversight configuration records - tamper-evident proof of what oversight was in place |
+| Human oversight decisions logged | Anchor operator decisions (accept, override, escalate) at the time of each decision |
+| Override and intervention records maintained | Blockchain timestamp on each human intervention - independently verifiable that oversight was actually exercised |
+
+---
+
+### Article 17 - Quality Management System
+
+Article 17 requires providers to implement a quality management system covering the full AI lifecycle.
+
+| Requirement | ROOTKey capability |
+|-------------|-------------------|
+| QMS documentation and records | Anchor QMS procedures at each approval - tamper-evident version history |
+| Testing and validation records | Anchor test results and validation outcomes - independently timestamped |
+| Corrective action records | Anchor corrective action plans and closure evidence |
+
+---
+
+### Article 61 - Post-Market Monitoring
+
+Article 61 requires providers to implement post-market monitoring plans and collect data from deployed high-risk AI systems.
+
+| Requirement | ROOTKey capability |
+|-------------|-------------------|
+| Post-market monitoring plan documented | Anchor monitoring plan at approval - tamper-evident baseline |
+| Monitoring data collected and retained | Anchor monitoring reports - tamper-evident record of what was observed and when |
+| Serious incidents reported to authorities | Anchor incident records at detection and reporting - blockchain timestamp proves reporting timeline |
+| Plan updated based on findings | Anchor each updated plan version - verifiable evolution of the monitoring approach |
+
+---
+
+## Obligations by Role
+
+| Role | Key obligations | ROOTKey role |
+|------|----------------|--------------|
+| **Provider** (develops and places on market) | Art. 9–17: full documentation, conformity assessment, registration | Anchor all technical documentation, training data provenance, model artifacts, and QMS records |
+| **Deployer** (uses in own operations) | Art. 26: implement human oversight, maintain logs, report incidents | Anchor decision logs, human oversight records, and incident reports |
+| **Importer** | Art. 23: ensure provider compliance documentation is complete | Anchor supplier conformity documentation received from providers |
+| **Distributor** | Art. 24: verify CE marking and documentation before distribution | Anchor verification records and distribution records |
+
+---
+
+## Conformity Assessment and CE Marking
+
+Before a high-risk AI system can be placed on the EU market, it must undergo a conformity assessment. ROOTKey supports the evidence layer:
+
+| Assessment stage | ROOTKey role |
+|-----------------|--------------|
+| Internal conformity assessment (Annex VI) | Anchor completed assessment and declaration of conformity at signing |
+| Third-party assessment (notified body) | Anchor assessment report received from notified body - tamper-evident proof of third-party review |
+| EU Declaration of Conformity | Anchor the declaration at signing - blockchain timestamp proves it predates market placement |
+| CE marking application | Anchor the marking decision and its supporting evidence |
+
+---
+
+## Compliance Timeline
+
+| Date | Obligation |
+|------|-----------|
+| **August 2024** | Act entered into force |
+| **February 2025** | Prohibited AI systems banned |
+| **August 2025** | GPAI model obligations apply; governance rules apply |
+| **August 2026** | High-risk AI system obligations fully apply |
+| **August 2027** | Additional high-risk systems (Annex I) obligations apply |
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request an EU AI Act compliance review"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=compliance_ai_act&utm_content=demo_cta"
+  >
+    We'll classify your AI systems by risk tier, map the applicable obligations, and design a ROOTKey implementation for your logging, documentation, and conformity evidence architecture.
+  </Card>
+  <Card
+    title="AI System Integrity use case"
+    icon="brain"
+    href="/use-cases/ai-integrity"
+  >
+    Full implementation guide for AI Act-compliant model provenance, decision logging, and human oversight records.
+  </Card>
+</CardGroup>

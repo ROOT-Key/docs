@@ -1,0 +1,106 @@
+---
+title: Rate Limits
+description: API throughput limits, burst behaviour, and retry guidance for all ROOTKey plans.
+icon: gauge
+mode: wide
+---
+
+The ROOTKey API enforces rate limits on a per-API-key basis to ensure platform stability and fair resource allocation across all clients. Limits vary by subscription plan and apply equally to sandbox and production environments.
+
+---
+
+## How Rate Limiting Works
+
+Rate limits are applied on a **sliding window** basis. When a limit is exceeded, the API returns:
+
+```
+HTTP 429 Too Many Requests
+```
+
+with a `Retry-After` header indicating the number of seconds to wait before retrying.
+
+```
+HTTP/1.1 429 Too Many Requests
+Retry-After: 5
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1725200000
+```
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Maximum requests allowed in the current window |
+| `X-RateLimit-Remaining` | Requests remaining in the current window |
+| `X-RateLimit-Reset` | Unix timestamp when the window resets |
+| `Retry-After` | Seconds to wait before retrying |
+
+---
+
+## Plan Limits
+
+For specific throughput limits per plan, visit the pricing pages:
+
+- [Platform Pricing](https://www.rootkey.ai/platform/pricing?utm_source=api_docs&utm_medium=rate_limits&utm_content=platform_pricing)
+- [Enterprise Pricing](https://rootkey.ai/contact?utm_source=api_docs&utm_medium=rate_limits&utm_content=enterprise_pricing)
+
+Enterprise plans include custom rate limit configurations. If your workload requires throughput beyond standard plan limits, contact [contact@rootkey.ai](mailto:contact@rootkey.ai) to discuss a custom arrangement.
+
+---
+
+## Protocol Throughput Considerations
+
+Rate limits are enforced at the API layer. Actual throughput for operations that write to the blockchain (RKP-1) is additionally constrained by Polygon block times.
+
+| Protocol | API Rate Limit | Additional Constraint |
+|----------|---------------|----------------------|
+| RKP-1 | Per plan | Polygon block confirmation time |
+| RKP-2 | Per plan | None (async anchoring) |
+| RKP-3 | Per plan | Depends on routing path |
+
+For high-throughput workloads, [RKP-2](/pages/protocols/rkp-2-off-chain) or [RKP-3](/pages/protocols/rkp-3-hybrid) are recommended. [RKP-1](/pages/protocols/rkp-1-on-chain) is bounded by blockchain block times in addition to API rate limits.
+
+---
+
+## Handling Rate Limits in Your Integration
+
+Implement retry logic with **exponential backoff** for all `429` responses:
+
+```python
+import time
+import requests
+
+def api_request_with_retry(url, headers, payload, max_retries=5):
+    for attempt in range(max_retries):
+        response = requests.post(url, headers=headers, json=payload)
+
+        if response.status_code == 429:
+            retry_after = int(response.headers.get("Retry-After", 2 ** attempt))
+            time.sleep(retry_after)
+            continue
+
+        return response
+
+    raise Exception("Max retries exceeded")
+```
+
+**Recommendations:**
+- Always inspect the `Retry-After` header - use it instead of a fixed backoff value
+- Add jitter to your backoff to avoid thundering herd behaviour when multiple clients hit the limit simultaneously
+- Monitor `X-RateLimit-Remaining` to detect when you are approaching the limit and proactively slow down
+- For high-volume batch operations, distribute requests over time rather than sending in bursts
+
+---
+
+## Development Environment Rate Limits
+
+The development environment (`dev-api.rootkey.ai`) applies the same rate limits as production. This allows you to test rate-limit handling during development - you will encounter `429` responses under the same conditions as in production.
+
+---
+
+## Increasing Limits
+
+If your workload consistently approaches plan limits:
+
+1. **Upgrade your plan** - [view plans](https://www.rootkey.ai/platform/pricing?utm_source=api_docs&utm_medium=rate_limits&utm_content=upgrade)
+2. **Contact enterprise sales** - for custom throughput arrangements at [contact@rootkey.ai](mailto:contact@rootkey.ai)
+3. **Optimise your integration** - review whether your call pattern can be batched or deferred to reduce peak request volume

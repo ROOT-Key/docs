@@ -1,0 +1,121 @@
+---
+title: IEC 62443
+description: How ROOTKey addresses the data integrity and audit logging requirements of IEC 62443 for Industrial Automation and Control Systems (IACS) - without disrupting OT network architecture.
+sidebarTitle: IEC 62443
+icon: microchip
+mode: wide
+---
+
+## Overview
+
+**IEC 62443** is the international standard series for security in Industrial Automation and Control Systems (IACS). It defines security requirements for operators (asset owners), system integrators, and product suppliers across operational technology (OT) environments - including SCADA systems, PLCs, DCS, and industrial networking equipment.
+
+IEC 62443 is directly referenced in NIS2 for operators of essential services with OT/ICS infrastructure, and in national regulations across the EU, US, and Asia-Pacific for critical infrastructure sectors.
+
+A core requirement across multiple IEC 62443 parts is **data integrity** - ensuring that sensor readings, control commands, operational events, and audit logs have not been tampered with between generation and analysis. This is precisely the problem ROOTKey is designed to solve.
+
+---
+
+## Standard Structure and Coverage
+
+IEC 62443 is structured as a series of parts, grouped into four series:
+
+| Series | Scope | ROOTKey relevance |
+|--------|-------|-------------------|
+| IEC 62443-1 (General) | Concepts, terminology, requirements | Architecture guidance |
+| IEC 62443-2 (Policies & Procedures) | Security management requirements | Log and record protection |
+| IEC 62443-3 (System) | System-level security requirements | Security Level data integrity |
+| IEC 62443-4 (Component) | Component-level security requirements | Device data integrity |
+
+---
+
+## Security Requirements Coverage
+
+### IEC 62443-3-3: System Security Requirements and Security Levels
+
+The most operationally relevant part for asset owners. Security Requirements (SR) addressed by ROOTKey:
+
+| Requirement | Description | ROOTKey capability |
+|-------------|-------------|-------------------|
+| **SR 2.8** | Audit log accessibility | Blockchain-anchored logs accessible to authorised parties independently |
+| **SR 2.9** | Audit log protection | Anchored at emission - logs cannot be altered after generation |
+| **SR 2.10** | Support for audits | Full audit trail verifiable by auditors without access to OT systems |
+| **SR 3.3** | Security functionality verification | Anchored configuration records prove which security settings were active at each time |
+| **SR 6.1** | Audit log accessibility | Logs anchored at source are permanently retrievable - not subject to storage failure |
+| **SR 6.2** | Continuous monitoring | Analytics API confirms anchoring is continuous - gaps indicate potential tampering or failure |
+
+### IEC 62443-2-1: Security Management System
+
+| Requirement | ROOTKey capability |
+|-------------|-------------------|
+| Security event recording | Anchor SCADA and OT events at emission - tamper-evident at source |
+| Incident response records | Immutable incident records with blockchain timestamps |
+| Change management records | Anchored change approvals and implementation evidence |
+
+---
+
+## OT Deployment Architecture
+
+IEC 62443 requirements apply to environments where installing new software on devices is often not possible, and where network changes carry significant operational risk. ROOTKey's MQTT-based deployment is designed specifically for this constraint:
+
+<CardGroup cols={2}>
+  <Card title="No device modification required" icon="microchip">
+    Devices publish to their existing MQTT topics. ROOTKey's bridge subscribes at the OT/IT boundary - devices are unaware of anchoring.
+  </Card>
+  <Card title="OT network isolation preserved" icon="network-wired">
+    The bridge handles outbound connectivity at the defined OT/IT boundary - no new network paths into the OT zone required.
+  </Card>
+  <Card title="No latency impact" icon="gauge">
+    Anchoring is asynchronous - device operation and response times are unaffected.
+  </Card>
+  <Card title="Protocol native" icon="plug">
+    MQTT is the native protocol of most OT environments - no protocol translation required in the OT zone.
+  </Card>
+</CardGroup>
+
+→ See also: [MQTT Deployment Guide](/pages/deployment/mqtt) · [IoT & Industrial use case](/use-cases/iot-industrial)
+
+---
+
+## Security Level Coverage
+
+IEC 62443 defines Security Levels (SL 1–4) based on the sophistication of the threat actor being defended against. ROOTKey's data integrity layer supports:
+
+| Security Level | Threat profile | ROOTKey contribution |
+|----------------|----------------|----------------------|
+| SL 1 | Unintentional or casual violation | SHA-256 integrity verification detects accidental data corruption |
+| SL 2 | Intentional violation using simple means | Blockchain anchoring prevents undetected tampering by insiders |
+| SL 3 | Sophisticated intentional attack | Independent blockchain verification means tampering cannot be concealed even by the data owner |
+| SL 4 | State-sponsored, highly sophisticated | EU-sovereign deployment (EBSI + OVH) removes dependency on non-EU infrastructure for critical national infrastructure |
+
+---
+
+## Applicable Sectors
+
+| Sector | IEC 62443 applicability |
+|--------|------------------------|
+| Energy (generation, transmission, distribution) | Direct - SCADA and EMS integrity |
+| Water and wastewater | Direct - treatment plant and monitoring |
+| Oil and gas | Direct - pipeline SCADA and safety systems |
+| Manufacturing | Direct - PLC and DCS integrity |
+| Transport (rail, maritime, aviation) | Direct - signalling and control |
+| Chemicals and pharmaceuticals | Direct - batch and process control |
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request an OT integration consultation"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=compliance_iec62443&utm_content=demo_cta"
+  >
+    Our team will assess your OT topology, MQTT infrastructure, and IEC 62443 scope - and design a ROOTKey integration that fits without disruption.
+  </Card>
+  <Card
+    title="IoT & Industrial use case"
+    icon="microchip"
+    href="/use-cases/iot-industrial"
+  >
+    Full implementation guide for IEC 62443-aligned OT data integrity anchoring.
+  </Card>
+</CardGroup>

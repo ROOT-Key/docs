@@ -7,7 +7,24 @@
     "light": "#B800E6",
     "dark": "#6100FF"
   },
-  "favicon": "/homescreen_72.png",
+  "favicon": "/favicon.png",
+  "openapi": "api-reference/openapi-v2.json",
+  "api": {
+    "playground": {
+      "mode": "simple"
+    }
+  },
+  "metadata": {
+    "og:site_name": "ROOTKey Documentation",
+    "og:type": "website",
+    "og:image": "https://media.rootkey.ai/logo_rootkey/png/og.png",
+    "og:locale": "en_US",
+    "twitter:card": "summary_large_image",
+    "twitter:site": "@__rootkey__",
+    "twitter:creator": "@__rootkey__",
+    "author": "ROOTKey",
+    "robots": "index, follow"
+  },
   "navigation": {
     "tabs": [
       {
@@ -17,7 +34,6 @@
             "group": "Introduction",
             "pages": [
               "introduction",
-              "api",
               "pages/pricing"
             ]
           },
@@ -36,6 +52,46 @@
             ]
           },
           {
+            "group": "Protocols",
+            "pages": [
+              "pages/protocols/overview"
+            ]
+          },
+          {
+            "group": "RKP-1 - Full On-Chain",
+            "pages": [
+              "pages/protocols/rkp-1-on-chain",
+              "pages/protocols/rkp-1-eu",
+              "pages/protocols/rkp-1-sovereign"
+            ]
+          },
+          {
+            "group": "Data Sovereignty",
+            "pages": [
+              "pages/data-sovereignty"
+            ]
+          },
+          {
+            "group": "Deployment Methods",
+            "pages": [
+              "pages/deployment/overview",
+              "pages/deployment/api-integration",
+              "pages/deployment/on-premise",
+              "pages/deployment/container",
+              "pages/deployment/mqtt",
+              "pages/deployment/native"
+            ]
+          },
+          {
+            "group": "Developer Resources",
+            "pages": [
+              "pages/sdks",
+              "pages/webhooks",
+              "pages/rate-limits",
+              "pages/api-versioning"
+            ]
+          },
+          {
             "group": "Additional Resources",
             "pages": [
               "pages/security-and-compliance",
@@ -46,7 +102,63 @@
         ]
       },
       {
-        "tab": "API References",
+        "tab": "Use Cases",
+        "groups": [
+          {
+            "group": "Use Cases",
+            "pages": [
+              "use-cases/overview",
+              "use-cases/document-integrity",
+              "use-cases/regulatory-audit-trails",
+              "use-cases/supply-chain",
+              "use-cases/iot-industrial",
+              "use-cases/software-integrity",
+              "use-cases/healthcare",
+              "use-cases/ai-integrity"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Compliance",
+        "groups": [
+          {
+            "group": "Compliance",
+            "pages": [
+              "compliance/overview"
+            ]
+          },
+          {
+            "group": "European Union",
+            "pages": [
+              "compliance/eu/nis2",
+              "compliance/eu/dora",
+              "compliance/eu/gdpr",
+              "compliance/eu/eidas",
+              "compliance/eu/csddd",
+              "compliance/eu/ai-act"
+            ]
+          },
+          {
+            "group": "International Standards",
+            "pages": [
+              "compliance/international/iso-27001",
+              "compliance/international/iso-28000",
+              "compliance/international/iec-62443",
+              "compliance/international/pci-dss"
+            ]
+          },
+          {
+            "group": "United States",
+            "pages": [
+              "compliance/us/sox",
+              "compliance/us/21-cfr-part-11"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
         "groups": [
           {
             "group": "API Documentation",
@@ -63,13 +175,7 @@
             ]
           },
           {
-            "group": "Platform API",
-            "pages": [
-              "api-reference/platform/overview"
-            ]
-          },
-          {
-            "group": "Status",
+            "group": "Health",
             "pages": [
               "api-reference/platform/endpoint/status/get-healthz"
             ]
@@ -97,17 +203,18 @@
               "api-reference/platform/endpoint/vaults/deactivate-vault",
               "api-reference/platform/endpoint/vaults/reactivate-vault"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "Changelog",
-        "groups": [
+          },
           {
-            "group": "Changelog",
+            "group": "Records",
             "pages": [
-              "changelog/2025/overview",
-              "changelog/2024/overview"
+              "api-reference/platform/endpoint/records/overview"
+            ]
+          },
+          {
+            "group": "Analytics",
+            "pages": [
+              "api-reference/platform/endpoint/analytics/analyse-creation-of-vaults-over-time",
+              "api-reference/platform/endpoint/analytics/analyse-files-x-validations"
             ]
           }
         ]
@@ -116,14 +223,14 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Github",
-          "href": "https://github.com/ROOT-Key",
-          "icon": "github"
+          "anchor": "Request a Demo",
+          "href": "https://rootkey.ai/contact?utm_source=api_docs&utm_medium=side_bar_anchors&utm_content=demo",
+          "icon": "calendar"
         },
         {
-          "anchor": "Blog",
-          "href": "https://rootkey.ai/blog?utm_source=api_docs&utm_medium=side_bar_anchors&utm_content=blog",
-          "icon": "newspaper"
+          "anchor": "Enterprise",
+          "href": "https://rootkey.ai/enterprise?utm_source=api_docs&utm_medium=side_bar_anchors&utm_content=enterprise",
+          "icon": "building"
         }
       ]
     }
@@ -146,8 +253,8 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.rootkey.ai?utm_source=api_docs&utm_medium=navBar&utm_content=dashboard"
+      "label": "Get Started",
+      "href": "https://app.rootkey.ai?utm_source=api_docs&utm_medium=navBar&utm_content=get_started"
     }
   },
   "footer": {

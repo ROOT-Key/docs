@@ -1,0 +1,137 @@
+---
+title: Healthcare & Life Sciences
+description: Integrity-protect clinical data, trial records, and patient information at scale - with GDPR erasure compatibility and cryptographic auditability for regulatory submissions and post-market surveillance.
+sidebarTitle: Healthcare & Life Sciences
+icon: heart-pulse
+mode: wide
+---
+
+## The Problem
+
+Healthcare and life sciences organisations operate under some of the most demanding data integrity requirements of any sector. Clinical trial data must be protected against manipulation - a falsified trial record can affect regulatory approval, patient safety, and public trust. Patient records must be accurate and auditable. Post-market surveillance data must be reliable enough to detect safety signals.
+
+The consequences of compromised data integrity in this sector are not financial - they are human.
+
+At the same time, healthcare organisations handle large volumes of sensitive personal data under strict regulatory frameworks: GDPR in Europe, HIPAA in the United States, and national health data regulations that vary by jurisdiction. These frameworks impose retention obligations, erasure rights, and data localisation requirements that create tension with immutable record systems.
+
+ROOTKey resolves this tension: it provides cryptographic integrity guarantees without requiring personal data to be written permanently to a public blockchain.
+
+---
+
+## How ROOTKey Solves It
+
+ROOTKey separates the **integrity proof** from the **data itself**. Personal or sensitive data is stored off-chain, within your infrastructure or ROOTKey's encrypted storage. Only a cryptographic hash - which cannot be reversed to recover the original data - is anchored to the blockchain.
+
+This means:
+
+- **Integrity is provable** - the hash on-chain proves that the data has not been altered since anchoring
+- **GDPR erasure is possible** - the off-chain data can be deleted; the on-chain proof does not contain personal data
+- **Data residency is preserved** - off-chain data remains within your perimeter or a defined region
+- **Regulatory submissions are defensible** - trial data and safety records are anchored at the moment of collection, with a blockchain timestamp that cannot be backdated
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TD
+    A([Clinical System\nEDC · LIMS · EHR]) -->|Create · Amend · Submit| B[ROOTKey API\nRKP-3 Hybrid]
+    B --> C[Off-Chain Storage\nClient perimeter · GDPR region\nFull record · Personal data\nErasable on request]
+    B --> D[(Blockchain Anchor\nPolygon Mainnet\nSHA-256 hash · Timestamp\nNo personal data)]
+    D --> E[Regulators · Auditors\nVerify integrity independently\nNo access to personal data]
+```
+
+---
+
+## Implementation
+
+<Steps>
+  <Step title="Design your vault structure around data categories">
+    Create separate vaults for different data categories - clinical trial data, adverse event reports, patient consent records, post-market surveillance data. This enables granular access control and simplifies providing regulators with scoped evidence.
+
+    → [Create Vault](/api-reference/platform/endpoint/vaults/create-vault)
+  </Step>
+
+  <Step title="Anchor records at collection - before any processing">
+    Anchor clinical data, safety reports, or consent records at the moment of collection - before the data enters any processing pipeline. This establishes the integrity baseline at the earliest possible point.
+
+    → [Create File](/api-reference/platform/endpoint/files/create-file)
+  </Step>
+
+  <Step title="Anchor amendments with full version history">
+    If a record is legitimately amended - a data query response, a protocol deviation correction - anchor the amended version as a new version. The original and all amendments are preserved and independently verifiable.
+
+    → [Create File Version](/api-reference/platform/endpoint/files/create-file-versions) · [Get File Versions](/api-reference/platform/endpoint/files/get-file-versions)
+  </Step>
+
+  <Step title="Handle GDPR erasure without losing audit integrity">
+    When a data subject exercises their right to erasure, delete the off-chain record. The on-chain hash remains - it is not personal data and cannot be used to recover the original content. The audit trail of the record's existence is preserved; the personal data is gone.
+
+    → [RKP-3 Protocol](/pages/protocols/rkp-3-hybrid) · [Security & Trust - GDPR](/pages/security-and-compliance)
+  </Step>
+
+  <Step title="Provide verifiable evidence for regulatory submissions">
+    For regulatory submissions - EMA, FDA, national health authorities - provide the vault ID and file IDs for the relevant dataset. Regulators can verify the integrity and timestamp of each record independently, without accessing the underlying personal data.
+
+    → [Validate File](/api-reference/platform/endpoint/files/validate-file) · [Get File History](/api-reference/platform/endpoint/files/get-files-history)
+  </Step>
+</Steps>
+
+---
+
+## Recommended Configuration
+
+| Parameter | Recommendation |
+|-----------|---------------|
+| **Protocol** | [RKP-3 (Hybrid)](/pages/protocols/rkp-3-hybrid) - off-chain storage for personal data with on-chain integrity proof; [RKP-1 (Full On-Chain)](/pages/protocols/rkp-1-on-chain) only for anonymised or aggregate data |
+| **Deployment** | [On-Premise](/pages/deployment/on-premise) for health systems with strict data localisation requirements; [API Integration](/pages/deployment/api-integration) for cloud-native platforms in GDPR-compliant regions; [Container](/pages/deployment/container) for private cloud deployments |
+| **Personal data** | Never submit identifiable personal data for on-chain anchoring - use RKP-3 with off-chain storage |
+| **Anchor timing** | Anchor at collection, not at submission - the earlier the anchor, the stronger the integrity evidence |
+| **Erasure handling** | Implement a documented erasure process that deletes off-chain data while preserving the on-chain proof; record the erasure event in the vault audit log |
+
+---
+
+## Key API Endpoints
+
+| Endpoint | Purpose |
+|----------|---------|
+| [Create Vault](/api-reference/platform/endpoint/vaults/create-vault) | Create vaults per study, data category, or system |
+| [Create File](/api-reference/platform/endpoint/files/create-file) | Anchor clinical records at collection |
+| [Create File Version](/api-reference/platform/endpoint/files/create-file-versions) | Anchor amendments and corrections |
+| [Get File History](/api-reference/platform/endpoint/files/get-files-history) | Full amendment history for a record |
+| [Validate File](/api-reference/platform/endpoint/files/validate-file) | Validate a record against its on-chain anchor |
+| [RKP-3 Protocol](/pages/protocols/rkp-3-hybrid) | GDPR-compatible hybrid anchoring |
+| [On-Premise Deployment](/pages/deployment/on-premise) | Data localisation and perimeter control |
+
+---
+
+## Compliance Alignment
+
+| Framework | How this use case addresses it |
+|-----------|-------------------------------|
+| **GDPR** | Off-chain erasure compatible; on-chain proof contains no personal data; supports right-to-erasure without losing audit integrity |
+| **EU Clinical Trials Regulation (536/2014)** | Tamper-evident trial data with blockchain-anchored timestamps for regulatory submissions |
+| **ICH E6 (GCP)** | Good Clinical Practice data integrity - anchoring at collection prevents backdating and alteration |
+| **21 CFR Part 11 (FDA)** | Electronic records and signatures with audit trail - blockchain anchoring provides an additional immutability layer |
+| **ISO 27001** *(in progress)* | A.5.33 (protection of records), applied to clinical and patient data management |
+| **NIS2** | For health entities classified as critical or important - data integrity and auditability obligations |
+| **MDR / IVDR** | Post-market surveillance data integrity for medical device and IVD manufacturers |
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request a healthcare architecture consultation"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=uc_health&utm_content=demo_cta"
+  >
+    We'll design a GDPR-compatible integrity architecture tailored to your clinical systems, data residency requirements, and regulatory submission obligations.
+  </Card>
+  <Card
+    title="Get started - free account"
+    icon="rocket"
+    href="https://app.rootkey.ai?utm_source=api_docs&utm_medium=uc_health&utm_content=signup_cta"
+  >
+    Test the GDPR-compatible anchoring pattern in the sandbox environment before touching patient data.
+  </Card>
+</CardGroup>

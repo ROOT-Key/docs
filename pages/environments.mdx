@@ -1,83 +1,87 @@
 ---
-title: 'Environments'
-description: 'This page explains how production and sandbox modes work within the same API endpoint, allowing seamless testing and live operation through platform configuration and API keys.'
+title: Environments
+description: ROOTKey provides two separate API environments - a development endpoint for testing and a production endpoint for live operations. Switch by changing the base URL and API key.
 icon: seedling
-mode: "wide"
+mode: wide
 ---
 
-## Unified Production Environment
+## Two Environments, Two Endpoints
 
-The ROOTKey API operates through a single production endpoint that supports both **live** and **sandbox (test)** operations. This approach allows users to test and validate integrations without switching URLs or risking unintended costs.
+ROOTKey provides dedicated endpoints for development and production. Each environment has its own base URL and requires its own API key. Switching from development to production requires updating both.
 
-- **Base URL**: `https://api.rootkey.ai`
-- **Network**: Polygon (Mainnet or Testnet, depending on mode)
-- **Configuration**: Controlled directly from the ROOTKey platform
-
-Traffic routing (production vs. sandbox) is determined by:
-1. The **mode selected** in the platform (Test Mode or Live Mode)
-2. The **API key** associated with that mode
-
-This design simplifies development workflows and reduces configuration errors.
+| Environment | Base URL | Purpose |
+|-------------|----------|---------|
+| **Development** | `https://dev-api.rootkey.ai` | Testing and integration development |
+| **Production** | `https://api.rootkey.ai` | Live operations |
 
 ---
 
-## Sandbox (Test Mode)
+## Development Environment
 
-Sandbox mode allows users to safely test their integrations using the same API endpoint, without generating real costs or affecting live data.
+The development environment is a full-featured environment for testing your integration before going live. All endpoints, request schemas, and response structures are identical to production.
+
+**Base URL:** `https://dev-api.rootkey.ai`
 
 ### How it works
-1. Enable **Test Mode** in the ROOTKey platform  
-2. Generate a **sandbox API key**  
-3. All requests made with this key are automatically routed to the sandbox environment
+1. Create an account at [app.rootkey.ai](https://app.rootkey.ai)
+2. Generate a **development API key** from the platform dashboard
+3. Send requests to `https://dev-api.rootkey.ai` using that key
 
-- **Network**: [Polygon Testnet (Amoy)](https://amoy.polygonscan.com/)
-- **Data**: Test-only, non-persistent
-- **Costs**: None
+| Property | Value |
+|----------|-------|
+| Base URL | `https://dev-api.rootkey.ai` |
+| Data persistence | Non-persistent |
+| Blockchain anchoring | Development network - no real transactions |
+| Costs | None |
+| Rate limits | Applied |
 
-### Key Characteristics
-- Identical API behaviour to production
-- No financial impact during testing
-- Ideal for development, QA, and pre-production validation
-- No URL changes required
+### Key characteristics
+- Full API parity with production - no endpoint or schema differences
+- No financial impact during development and QA
+- Suitable for integration testing, pre-production validation, and load testing
+- All webhook events are fired as in production
 
 ---
 
-## Live Mode (Production Usage)
+## Production Environment
 
-Once testing is complete, moving to live usage is straightforward and requires no code changes.
+The production environment serves live operations. All operations are real - blockchain anchors are written to Polygon Mainnet and credits are consumed per your active plan.
 
-### Steps to go live
-1. Disable **Test Mode** in the platform  
-2. Generate a **new live API key**  
-3. Start sending requests using the same base URL
+**Base URL:** `https://api.rootkey.ai`
 
-- **Network**: [Polygon Mainnet](https://polygonscan.com/)
-- **Data**: Real, persistent
-- **Costs**: Applied according to the active pricing plan
+### How to go live
+1. Generate a **production API key** from the ROOTKey platform dashboard
+2. Update your `base URL` to `https://api.rootkey.ai`
+3. Update your API key to the production key
 
-### Key Characteristics
+| Property | Value |
+|----------|-------|
+| Base URL | `https://api.rootkey.ai` |
+| Data persistence | Persistent |
+| Blockchain | Polygon Mainnet |
+| Costs | Applied per active plan |
+| Rate limits | Applied |
+
+### Key characteristics
+- All blockchain operations are real and permanent
 - High availability and reliability
-- Optimised for real-world workloads
-- Suitable for end-users and production integrations
+- Credits consumed per operation according to your plan
 
 ---
 
-## Sandbox vs Live Mode Overview
+## Environment Comparison
 
-| Feature            | Sandbox (Test Mode)            | Live Mode (Production)        |
-|--------------------|--------------------------------|-------------------------------|
-| **Base URL**       | `https://api.rootkey.ai`       | `https://api.rootkey.ai`      |
-| **API Key**        | Sandbox key                    | Live key                      |
-| **Network**        | Polygon Testnet (Amoy)         | Polygon Mainnet               |
-| **Data**           | Test data                      | Real data                     |
-| **Costs**          | None                           | Applied                       |
-| **Purpose**        | Testing and validation         | Live operation                |
+| Feature | Development | Production |
+|---------|-------------|-----------|
+| **Base URL** | `https://dev-api.rootkey.ai` | `https://api.rootkey.ai` |
+| **API Key** | Development key | Production key |
+| **Blockchain** | Development network | Polygon Mainnet |
+| **Data** | Non-persistent | Persistent |
+| **Costs** | None | Applied |
+| **Rate limits** | Applied | Applied |
 
 ---
 
 ## Summary
 
-By unifying production and sandbox access under a single endpoint, ROOTKey enables a smoother transition from testing to live operation. Users can validate their cyber resilience solutions without unnecessary complexity, then move to production instantly by switching mode and API key.
-
-This approach minimises risk, avoids accidental costs, and accelerates time to value.
-
+Use `dev-api.rootkey.ai` while building your integration. Switch to `api.rootkey.ai` when you are ready to go live - update the base URL and the API key in your environment configuration.

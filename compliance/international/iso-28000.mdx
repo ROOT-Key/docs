@@ -1,0 +1,98 @@
+---
+title: ISO 28000
+description: How ROOTKey supports ISO 28000:2022 supply chain security management system requirements - providing tamper-evident custody records and multi-party traceability.
+sidebarTitle: ISO 28000
+icon: boxes-stacked
+mode: wide
+---
+
+## Overview
+
+**ISO 28000:2022** - Security and Resilience: Security Management Systems for the Supply Chain - specifies requirements for security management systems for organisations involved in supply chains of any type. It provides a framework for assessing security threats, implementing security controls, and maintaining records that demonstrate security management is operating effectively.
+
+ROOTKey provides the cryptographic traceability and tamper-evident record infrastructure that ISO 28000 security records require to be audit-ready.
+
+---
+
+## Key Requirements and ROOTKey Coverage
+
+### Clause 6 - Planning
+
+ISO 28000 Clause 6 requires organisations to assess security risks in their supply chain operations and document the controls selected in response. ROOTKey anchors:
+
+- Security risk assessments at each review cycle - tamper-evident proof of what was assessed and when
+- Security plans and control selection records - verifiable evidence of the management decisions taken
+
+### Clause 8 - Operations
+
+| Clause 8 requirement | ROOTKey capability |
+|---------------------|-------------------|
+| Operational controls documentation | Anchor operational procedure documents at approval - immutable version history |
+| Supplier and partner security controls | Anchor supplier assessment records across supply chain tiers |
+| Incident and emergency management records | Anchor security incident records at occurrence - tamper-evident incident history |
+| Change control for supply chain operations | Anchor change approvals and implementation records |
+
+### Clause 9 - Performance Evaluation
+
+ISO 28000 Clause 9 requires monitoring, measurement, analysis, and evaluation of the supply chain security management system. ROOTKey supports:
+
+- Audit records anchored at completion - verifiable evidence of audit conduct and findings
+- Management review records anchored at each review - immutable minutes and action items
+
+### Clause 10 - Improvement
+
+| Requirement | ROOTKey capability |
+|-------------|-------------------|
+| Nonconformity records | Anchor nonconformities and corrective actions at occurrence |
+| Corrective action plans | Anchored commitments - tamper-evident proof of what was agreed and when |
+| Improvement tracking | Anchored follow-up records - verifiable evidence of closure |
+
+---
+
+## Multi-Party Custody Records
+
+ISO 28000 security management covers the full supply chain - which inherently involves multiple organisations with different systems and incentives. The standard requires that security records can be traced across organisational boundaries.
+
+ROOTKey's multi-party vault architecture addresses this directly:
+
+| Feature | ISO 28000 benefit |
+|---------|------------------|
+| Shared vaults across multiple organisations | Each supply chain participant writes to the same vault with their own API key - no single party controls the record |
+| Immutable custody events | Each handoff, inspection, and transfer is anchored at the time it occurs - custody records cannot be retroactively altered |
+| Independent verification | Regulators, auditors, and trading partners can verify the full custody chain without contacting any supply chain participant |
+| Cross-border traceability | Vault records are accessible to any authorised party regardless of where they operate |
+
+→ See also: [Supply Chain Traceability use case](/use-cases/supply-chain)
+
+---
+
+## Certification Support
+
+ISO 28000 certification requires auditors to verify that security management records are accurate and protected from tampering. ROOTKey provides:
+
+| Audit requirement | ROOTKey evidence |
+|------------------|-----------------|
+| Security incident records | Blockchain-anchored incident records with timestamps that cannot be backdated |
+| Supplier assessment evidence | Anchored assessments verifiable by auditor without accessing the assessee's systems |
+| Corrective action closure | Anchored closure records with verifiable timestamps |
+| Management review evidence | Anchored minutes and decisions at each management review |
+| Full custody chain | Polygonscan-verifiable anchor for each custody event across supply chain tiers |
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request a supply chain security review"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=compliance_iso28000&utm_content=demo_cta"
+  >
+    We'll design a multi-party vault architecture for your supply chain that satisfies ISO 28000 audit requirements and supports certification.
+  </Card>
+  <Card
+    title="Supply chain traceability use case"
+    icon="route"
+    href="/use-cases/supply-chain"
+  >
+    Full implementation guide for ISO 28000-aligned multi-party supply chain traceability.
+  </Card>
+</CardGroup>

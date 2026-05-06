@@ -1,0 +1,158 @@
+---
+title: AI System Integrity & Auditability
+description: Anchor AI model versions, training data provenance, decision logs, and conformity assessment records - building the tamper-evident audit trail that high-risk AI systems require under the EU AI Act and enterprise governance frameworks.
+sidebarTitle: AI System Integrity
+icon: brain
+mode: wide
+---
+
+## The Problem
+
+AI systems - particularly those used in high-stakes decisions - face a growing set of accountability obligations. Regulators, auditors, and affected parties increasingly ask questions that organisations cannot currently answer:
+
+- **Which version of the model** produced this decision?
+- **What data was the model trained on**, and when was that dataset approved?
+- **Was the human oversight step** actually performed, or was it bypassed?
+- **Has the model been modified** since its conformity assessment was completed?
+- **What did the system log** at the time of a disputed decision - and can that log be trusted?
+
+The common thread is **provenance and integrity**: the ability to prove, after the fact and under adversarial scrutiny, that an AI system operated as documented. Most organisations have no mechanism to provide this proof. Logs can be altered. Model artifacts can be replaced. Audit records can be created retroactively.
+
+ROOTKey makes that impossible.
+
+---
+
+## How ROOTKey Solves It
+
+ROOTKey anchors AI system artifacts and events to the blockchain at the moment they are created - model releases, dataset manifests, conformity assessments, decision logs, human oversight records. Each anchor is:
+
+- **Timestamped by blockchain consensus** - the timestamp cannot be backdated or altered
+- **Cryptographically bound to the artifact** - any modification breaks the integrity link
+- **Independently verifiable** - regulators, auditors, and affected parties can verify records without accessing your systems or trusting your assurance
+
+The result is a tamper-evident audit trail for the full lifecycle of an AI system - from training data approval through deployment, monitoring, and decommissioning.
+
+---
+
+## Architecture
+
+```
+AI System Lifecycle
+        │
+        ├──► Training data approval   ──► ROOTKey anchor (dataset hash + approval metadata)
+        │
+        ├──► Model training complete  ──► ROOTKey anchor (model artifact hash + version ID)
+        │
+        ├──► Conformity assessment    ──► ROOTKey anchor (assessment document + outcome)
+        │
+        ├──► Model deployment         ──► ROOTKey anchor (deployment record + config hash)
+        │
+        ├──► Decision events          ──► ROOTKey anchor (decision log per event or batch)
+        │
+        ├──► Human oversight actions  ──► ROOTKey anchor (oversight decision + operator ID)
+        │
+        └──► Post-market monitoring   ──► ROOTKey anchor (monitoring report + period)
+
+                    All anchors independently verifiable
+                    Regulators can verify without your cooperation
+```
+
+---
+
+## Implementation
+
+<Steps>
+  <Step title="Create vaults per AI system and lifecycle stage">
+    Organise vaults by AI system and stage: one vault for model artifacts, one for training data provenance, one for decision logs, one for conformity documentation. This enables scoped access for different auditors and regulators.
+
+    → [Create Vault](/api-reference/platform/endpoint/vaults/create-vault)
+  </Step>
+
+  <Step title="Anchor training data manifests at approval">
+    When a training dataset is approved for use, anchor its manifest - a hash of the dataset or a structured record of its composition, sources, and governance approval. This creates a tamper-evident record of what the model was trained on.
+
+    → [Create File](/api-reference/platform/endpoint/files/create-file) · [Records API](/api-reference/platform/endpoint/records/overview)
+  </Step>
+
+  <Step title="Anchor model artifacts at release">
+    At the point the model artifact is produced - whether a weights file, a container image, or a packaged inference service - anchor its hash. Any modification to the model after this point is detectable before deployment.
+
+    → [Create File Version](/api-reference/platform/endpoint/files/create-file-versions)
+  </Step>
+
+  <Step title="Anchor conformity assessment documentation">
+    For high-risk AI systems under the EU AI Act, conformity assessments must be documented before deployment. Anchor the assessment document and its outcome at approval - creating tamper-evident proof that assessment was conducted and what it concluded.
+
+    → [Create File](/api-reference/platform/endpoint/files/create-file)
+  </Step>
+
+  <Step title="Anchor decision logs and human oversight records">
+    For each AI decision event (or each batch), anchor the decision log. For high-risk systems requiring human oversight, anchor the oversight decision record - including whether the operator accepted, overrode, or escalated the AI output.
+
+    → [Records API](/api-reference/platform/endpoint/records/overview) · [Tables API](/api-reference/platform/endpoint/tables/overview)
+  </Step>
+
+  <Step title="Monitor and validate with Analytics">
+    Use the Analytics API to verify that anchoring is continuous across the deployment lifecycle. Gaps in coverage indicate periods where AI decisions were made without a tamper-evident log - a potential compliance gap under EU AI Act Article 12.
+
+    → [Analytics - Files vs Validations](/api-reference/platform/endpoint/analytics/analyse-files-x-validations)
+  </Step>
+</Steps>
+
+---
+
+## Recommended Configuration
+
+| Parameter | Recommendation |
+|-----------|---------------|
+| **Protocol** | [RKP-1 (Full On-Chain)](/pages/protocols/rkp-1-on-chain) for conformity assessments and model release artifacts; [RKP-3 (Hybrid)](/pages/protocols/rkp-3-hybrid) for high-volume decision logging |
+| **Deployment** | [API Integration](/pages/deployment/api-integration) for cloud-native ML pipelines; [Container](/pages/deployment/container) for self-hosted inference infrastructure |
+| **Data sovereignty** | High-risk AI systems processing EU personal data should use [EU-sovereign deployment](/pages/data-sovereignty) (EBSI + OVH) to satisfy GDPR and EU AI Act combined requirements |
+| **Anchor granularity** | Anchor each model version separately - do not overwrite; retain full version history for post-market audit |
+| **Decision logs** | For very high-frequency inference, anchor decision logs in batches with a merkle root - individual decision integrity is preserved while anchoring overhead scales |
+
+---
+
+## Key API Endpoints
+
+| Endpoint | Purpose |
+|----------|---------|
+| [Create Vault](/api-reference/platform/endpoint/vaults/create-vault) | Vaults per AI system, lifecycle stage, or regulatory scope |
+| [Create File](/api-reference/platform/endpoint/files/create-file) | Anchor model artifacts, datasets, and conformity documents |
+| [Create File Version](/api-reference/platform/endpoint/files/create-file-versions) | Anchor new model versions - full version history retained |
+| [Records API](/api-reference/platform/endpoint/records/overview) | Structured decision logs with per-record integrity |
+| [Tables API](/api-reference/platform/endpoint/tables/overview) | Queryable, schema-validated AI event records |
+| [Validate File](/api-reference/platform/endpoint/files/validate-file) | Verify a model artifact has not been modified since anchoring |
+| [Get File History](/api-reference/platform/endpoint/files/get-files-history) | Full version and audit history for a model or dataset |
+
+---
+
+## Compliance Alignment
+
+| Framework | How this use case addresses it |
+|-----------|-------------------------------|
+| **EU AI Act** | Article 9 (risk management records), Article 11 (technical documentation), Article 12 (automatic logging), Article 14 (human oversight records), Article 61 (post-market monitoring logs) |
+| **GDPR** | Article 22 (automated decision-making) - tamper-evident record of which model version made each decision and whether human review was conducted |
+| **ISO 42001** | AI management system audit trail and records |
+| **NIST AI RMF** | Govern and Measure functions - tamper-evident documentation of AI governance decisions |
+| **NIS2** | For AI used in critical infrastructure - integrity of the AI system itself as an ICT asset |
+| **DORA** | For AI used in financial services - model risk management documentation and audit evidence |
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request an AI governance architecture review"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=uc_ai&utm_content=demo_cta"
+  >
+    We'll map your AI systems' risk classification and regulatory obligations to a concrete ROOTKey implementation - including EU AI Act conformity documentation architecture.
+  </Card>
+  <Card
+    title="Get started - free account"
+    icon="rocket"
+    href="https://app.rootkey.ai?utm_source=api_docs&utm_medium=uc_ai&utm_content=signup_cta"
+  >
+    Create a sandbox vault and anchor your first model artifact or decision log in minutes.
+  </Card>
+</CardGroup>

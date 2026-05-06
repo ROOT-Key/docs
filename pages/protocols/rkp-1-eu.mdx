@@ -1,0 +1,89 @@
+---
+title: "RKP-1 Enhanced EU - Full On-Chain, EU Cloud"
+description: Full on-chain integrity anchoring on Polygon, with all off-chain data and API processing hosted on OVH - EU-incorporated cloud with no US parent company and no CLOUD Act exposure.
+sidebarTitle: "RKP-1 Enhanced EU"
+icon: earth-europe
+mode: wide
+---
+
+<Note>
+  This is a sovereignty variant of [RKP-1 (Full On-Chain)](/pages/protocols/rkp-1-on-chain). The anchoring mechanics are identical - the difference is the cloud infrastructure used for off-chain processing and storage.
+</Note>
+
+## Sovereignty Profile
+
+| Component | Provider | Jurisdiction | Notes |
+|-----------|----------|-------------|-------|
+| **Blockchain** | Polygon (PoS) | Global | Public distributed network - no single jurisdiction controls it |
+| **Cloud / API processing** | OVH | EU (France) | No US parent company; no CLOUD Act exposure; SecNumCloud certified |
+| **Off-chain storage** | OVH | EU | Data remains in EU jurisdiction at rest and in transit |
+| **Sovereignty level** | **Partial EU** | EU cloud + global blockchain | Cloud sovereign; blockchain not EU-exclusive |
+
+**When to choose this variant:** Your regulatory environment requires EU cloud data residency (GDPR, national cloud policies) but does not specifically mandate that the blockchain infrastructure itself be EU-operated or under EU jurisdiction.
+
+---
+
+## How It Differs from RKP-1 Standard
+
+| Property | RKP-1 Standard | RKP-1 Enhanced EU |
+|----------|---------------|------------------|
+| Blockchain | Polygon | Polygon |
+| Cloud provider | Azure / AWS | **OVH** |
+| Cloud jurisdiction | US-incorporated (EU regions) | **EU-incorporated (France)** |
+| CLOUD Act exposure | Yes - Microsoft / Amazon subject to US law | **No - OVH not subject to CLOUD Act** |
+| SecNumCloud | No | **Yes - OVH holds SecNumCloud** |
+| BSI C5 | No | **Yes - OVH holds BSI C5** |
+| Blockchain jurisdiction | Global | Global |
+| EBSI anchoring | No | No |
+| Data residency | EU region configurable | **EU guaranteed** |
+| Anchoring mechanics | SHA-256 → Polygon | SHA-256 → Polygon (unchanged) |
+
+---
+
+## Anchoring Architecture
+
+```mermaid
+flowchart TD
+    A([Your Application]) --> B[ROOTKey API\nOVH · EU Jurisdiction]
+    B --> C[Off-Chain Storage\nOVH · EU Jurisdiction]
+    B --> D[(Polygon Mainnet\nGlobal Network)]
+    D --> E[Independent Verification\nPolygonscan · No cooperation needed]
+```
+
+The only component outside EU legal jurisdiction is the Polygon blockchain itself - which is a permissionless, distributed network operated by no single entity and subject to no single national law.
+
+---
+
+## Regulatory Frameworks Addressed
+
+| Framework | How RKP-1 Enhanced EU helps |
+|-----------|----------------------------|
+| **GDPR** | Personal data processed on OVH (EU) - no transfer to US-controlled infrastructure |
+| **NIS2** | EU cloud for critical entity operators who cannot rely on US-controlled infrastructure |
+| **DORA** | ICT third-party risk: OVH removes US CLOUD Act exposure from the risk assessment |
+| **SecNumCloud (ANSSI)** | OVH certification satisfies French national cloud requirements |
+| **BSI C5 (Germany)** | OVH certification satisfies German federal cloud security baseline |
+| **ISO 27001** | EU-resident data processing supports data residency controls |
+
+---
+
+## Configuration
+
+RKP-1 Enhanced EU is available as a configuration option on your ROOTKey workspace. No changes to your API integration are required - the anchoring API endpoints and request format are identical to RKP-1 Standard.
+
+Contact our team to configure your workspace for OVH-backed processing.
+
+→ [Request EU cloud configuration](https://rootkey.ai/contact?utm_source=api_docs&utm_medium=rkp1_eu&utm_content=demo_cta)
+
+---
+
+## When to Use RKP-1 Sovereign EU Instead
+
+If your regulatory environment requires that **the blockchain record itself** be under EU legal jurisdiction - not only the cloud infrastructure - use [RKP-1 Sovereign EU](/pages/protocols/rkp-1-sovereign) (EBSI + OVH) instead.
+
+RKP-1 Sovereign EU is appropriate for:
+- National critical infrastructure operators with sovereignty requirements on the anchoring layer
+- Organisations subject to classification requirements that prohibit reliance on non-EU networks for integrity proofs
+- Public sector organisations or those processing data at EU-classified levels
+
+→ [RKP-1 Sovereign EU](/pages/protocols/rkp-1-sovereign)

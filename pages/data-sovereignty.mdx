@@ -1,0 +1,130 @@
+---
+title: European Data Sovereignty
+description: ROOTKey's infrastructure stack, sovereignty levels by deployment configuration, and the 100% EU-sovereign mode using EBSI and OVH - for organisations with strict data residency requirements.
+sidebarTitle: Data Sovereignty
+icon: flag
+mode: wide
+---
+
+## Overview
+
+Data sovereignty means that data is subject to the laws of the country in which it is processed and stored - and that no foreign government, court, or authority can compel access without the knowledge and consent of the data owner under EU law.
+
+For organisations subject to **NIS2**, **GDPR**, national critical infrastructure regulations, or sector-specific requirements (healthcare, defence, financial services), this is not a preference - it is a requirement.
+
+ROOTKey's infrastructure is designed to support sovereignty at multiple levels - from standard EU-region cloud deployments to a fully EU-sovereign configuration using no US-operated infrastructure at any stage of the pipeline.
+
+---
+
+## Infrastructure Stack
+
+ROOTKey's platform is built on a combination of cloud and blockchain infrastructure. The choice of infrastructure determines the sovereignty level of the deployment:
+
+| Component | Provider | Sovereignty level | Notes |
+|-----------|----------|------------------|-------|
+| **Blockchain (default)** | Polygon | Global | Public PoS network - distributed globally; no single jurisdiction controls the network |
+| **Blockchain (EU sovereign)** | EBSI | EU | European Blockchain Services Infrastructure - operated by the European Commission; EU jurisdiction |
+| **Cloud (standard)** | Azure / AWS | EU-region available | Microsoft and Amazon are US-incorporated; EU CLOUD Act exposure remains |
+| **Cloud (EU sovereign)** | OVH | EU | French company; SecNumCloud certified; no US parent company; fully EU jurisdiction |
+
+---
+
+## Sovereignty Levels
+
+<CardGroup cols={3}>
+  <Card title="Standard" icon="globe">
+    **Azure or AWS** (EU regions) + **Polygon**
+
+    Data remains in EU geographically but is subject to US jurisdiction via the CLOUD Act. Suitable for most commercial deployments where EU data residency (not strict sovereignty) is the requirement.
+  </Card>
+  <Card title="Enhanced EU" icon="eu">
+    **OVH** + **Polygon**
+
+    Cloud infrastructure is fully EU-sovereign (OVH, no US parent). Blockchain anchoring uses Polygon (global network). Suitable for organisations where cloud sovereignty is required but blockchain jurisdiction is not a specific concern.
+  </Card>
+  <Card title="Full EU Sovereign" icon="shield-halved">
+    **OVH** + **EBSI**
+
+    100% EU jurisdiction at every stage - cloud, storage, and blockchain. No data or proof leaves EU legal jurisdiction at any point. Available on request for organisations with national security, critical infrastructure, or strict regulatory requirements.
+  </Card>
+</CardGroup>
+
+---
+
+## Protocol Sovereignty Matrix
+
+| Protocol | Default blockchain | Default cloud | Enhanced EU | Full EU Sovereign |
+|----------|--------------------|---------------|-------------|-------------------|
+| [RKP-1 (Full On-Chain)](/pages/protocols/rkp-1-on-chain) | Polygon | Azure / AWS | OVH + Polygon | OVH + EBSI |
+| [RKP-2 (Off-Chain)](/pages/protocols/rkp-2-off-chain) | - | Azure / AWS | OVH | OVH |
+| [RKP-3 (Hybrid)](/pages/protocols/rkp-3-hybrid) | Polygon (on-chain portion) | Azure / AWS | OVH + Polygon | OVH + EBSI |
+
+For RKP-2, all anchoring is off-chain - sovereignty is determined entirely by the cloud provider. For RKP-1 and RKP-3, both the cloud and blockchain infrastructure must be EU-sovereign for the full EU configuration.
+
+---
+
+## What Changes in Full EU Sovereign Mode
+
+### Blockchain: EBSI instead of Polygon
+
+**EBSI** (European Blockchain Services Infrastructure) is the EU's own distributed ledger infrastructure, operated by the European Commission in collaboration with EU member states. Unlike public blockchains, EBSI:
+
+- Is operated under EU law by EU public authorities
+- Has nodes located within EU member state infrastructure
+- Is used for EU government-grade applications including the European Digital Identity Wallet (EUDIW)
+
+Anchoring to EBSI instead of Polygon means the blockchain record itself is subject to EU jurisdiction - there is no US-incorporated infrastructure in the chain at any point.
+
+### Cloud: OVH instead of Azure / AWS
+
+**OVH** is Europe's largest cloud provider. Incorporated in France, with no US parent company, OVH is:
+
+- Subject exclusively to EU and French law
+- SecNumCloud-certified - France's highest national cloud security qualification (ANSSI)
+- Operated from EU-based data centres
+
+Using OVH means that off-chain data storage, API processing, and platform operations are all outside the jurisdiction of US law enforcement and the CLOUD Act.
+
+---
+
+## Regulatory Frameworks That Require or Benefit From Sovereignty
+
+| Framework | Sovereignty relevance |
+|-----------|----------------------|
+| **GDPR** | Processing of personal data must be lawful - transfers outside EEA require adequate safeguards; EU-sovereign deployment eliminates transfer risk |
+| **NIS2** | Critical entity operators may be subject to national requirements for data sovereignty in sensitive infrastructure |
+| **EU Cybersecurity Act** | Certification schemes (EUCS) increasingly require EU-sovereign cloud for high-assurance levels |
+| **DORA** | ICT third-party risk - US CLOUD Act exposure is a material risk for financial entities under ECB scrutiny |
+| **French SecNumCloud** | OVH is SecNumCloud-certified - satisfies ANSSI requirements for hosting sensitive French government and regulated data |
+| **German BSI C5** | OVH holds BSI C5 attestation - satisfies German federal cloud security requirements |
+| **Healthcare (EU)** | Clinical trial data and patient records processed under EU CTR and GDPR benefit from EU-sovereign infrastructure |
+
+---
+
+## Requesting Full EU Sovereign Deployment
+
+Full EU sovereign mode (EBSI + OVH) is available on request for organisations with demonstrated sovereignty requirements. The configuration involves:
+
+1. A dedicated tenancy on OVH infrastructure
+2. EBSI network configuration for blockchain anchoring
+3. Modified API endpoints scoped to the sovereign deployment
+4. SLA and data processing agreements under EU law exclusively
+
+Contact our team to discuss your requirements and initiate a sovereignty assessment.
+
+<CardGroup cols={2}>
+  <Card
+    title="Request a data sovereignty consultation"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=data_sovereignty&utm_content=demo_cta"
+  >
+    We'll assess your regulatory environment and design a ROOTKey deployment configuration that meets your sovereignty requirements.
+  </Card>
+  <Card
+    title="View compliance coverage"
+    icon="shield-check"
+    href="/compliance/overview"
+  >
+    Full mapping of ROOTKey capabilities to EU regulatory frameworks that drive sovereignty requirements.
+  </Card>
+</CardGroup>

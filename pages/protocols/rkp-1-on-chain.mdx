@@ -1,0 +1,168 @@
+---
+title: RKP-1 - Full On-Chain
+description: Every operation is anchored directly to the Polygon blockchain. Maximum verifiability, immutability by design, and decentralised trust - no reliance on ROOTKey infrastructure for validation.
+sidebarTitle: RKP-1 - Full On-Chain
+icon: link
+mode: wide
+---
+
+## Overview
+
+**RKP-1 (Full On-Chain)** is ROOTKey's highest-integrity data processing protocol. Every data operation - creation, validation, versioning, or transfer - is recorded directly to the Polygon blockchain via a smart contract transaction.
+
+The result is a permanent, tamper-evident, publicly verifiable audit trail that requires no trust in any third party, including ROOTKey. Any entity with blockchain access can independently verify the integrity and existence of a record without contacting ROOTKey or relying on ROOTKey infrastructure.
+
+This protocol is designed for scenarios where the integrity of data is itself a compliance requirement, and where the provenance of records must withstand adversarial scrutiny - legal proceedings, regulatory audits, or multi-party disputes.
+
+---
+
+## Architecture Overview
+
+```
+Client Application
+        │
+        ▼ HTTPS / JSON
+  ROOTKey REST API
+        │
+        ▼
+  Smart Contract Layer
+        │
+        ▼
+  Polygon Blockchain  (Mainnet)
+        │
+        ▼
+  Publicly Queryable via Polygonscan
+```
+
+Each API operation triggers a smart contract execution that writes a cryptographic record to the Polygon blockchain. The on-chain record includes:
+
+- **SHA-256 hash** of the data payload
+- **Timestamp** of the operation (block timestamp)
+- **Vault and asset identifiers**
+- **Originating wallet address**
+
+On-chain records are **immutable** - they cannot be altered, deleted, or invalidated after submission. They are **publicly queryable** via [Polygonscan](https://polygonscan.com), independently of any ROOTKey service or API.
+
+---
+
+## Request Limits and Throughput
+
+| Parameter | Value |
+|-----------|-------|
+| Maximum requests per second | 10 |
+| Maximum concurrent operations | 5-10 |
+| Maximum payload size per request | 35 |
+| Burst allowance | 2x/10seconds |
+
+For plan-specific throughput limits, visit [Pricing](/pages/pricing).
+
+---
+
+## Performance Indicators
+
+| Metric | Value |
+|--------|-------|
+| Average end-to-end latency | 3500 ms |
+| P95 end-to-end latency | 5000 ms |
+| Polygon block confirmation time | 2-5 s |
+| Recovery time objective (RTO) | 10 minutes |
+| Recovery point objective (RPO) | 3.5s |
+
+> Performance is subject to Polygon network conditions. ROOTKey applies optimised gas pricing strategies to maintain predictable confirmation windows under variable network load.
+
+---
+
+## Validation Capabilities
+
+RKP-1 validation is **fully decentralised**:
+
+| Validation Type | Supported |
+|-----------------|-----------|
+| Independent third-party verification (no ROOTKey required) | Yes |
+| On-chain proof of existence | Yes |
+| On-chain proof of integrity (hash match) | Yes |
+| Smart contract auditability | Yes |
+| Historical record traversal | Yes |
+| Deletion or amendment post-submission | No (by design) |
+
+Any auditor, regulator, or counterparty can verify a record by querying the Polygon blockchain directly using a standard block explorer. No API key, no ROOTKey account, no trust assumption required.
+
+---
+
+## Strengths
+
+- **Maximum auditability** - full chain-of-custody on a public, permissionless blockchain
+- **Decentralised trust model** - no single party controls verification, including ROOTKey
+- **Immutability by design** - cryptographic guarantees, not policy-based controls
+- **Independently verifiable** - auditors and regulators can verify without vendor cooperation
+- **Zero-trust compatible** - aligns with zero-trust architecture principles at the data layer
+- **Permanent record** - no dependency on storage availability or vendor continuity
+
+---
+
+## Weaknesses
+
+- **Higher latency** - each operation waits for blockchain block confirmation
+- **Higher cost per operation** - each write incurs a gas fee on the Polygon network
+- **Throughput constraints** - bounded by block time; not suitable for high-frequency write workloads
+- **No data deletion** - records are permanent; requires careful data classification to avoid writing personal data on-chain (GDPR implications)
+
+---
+
+## Typical Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Legal and Regulatory Documents" icon="scale-balanced">
+    Contracts, compliance filings, and regulatory submissions requiring cryptographic proof of existence, integrity, and timestamp.
+  </Card>
+  <Card title="Financial Records and Audit Trails" icon="building-columns">
+    Transaction logs, financial statements, and audit trails where tamper-evidence is a regulatory requirement under frameworks such as MiFID II or SOX.
+  </Card>
+  <Card title="Supply Chain Provenance" icon="certificate">
+    Product authenticity certificates, quality records, and multi-party custody chains anchored immutably for each transfer event.
+  </Card>
+  <Card title="Critical Infrastructure Logs" icon="shield-halved">
+    Operational logs for critical systems - energy, healthcare, public services - where regulatory bodies require tamper-evident records.
+  </Card>
+  <Card title="Intellectual Property Registration" icon="pen-nib">
+    Proof-of-existence for IP assets, design files, or proprietary content prior to formal registration processes.
+  </Card>
+  <Card title="Multi-party Agreement Evidence" icon="handshake">
+    Binding records of agreements, SLAs, or operational decisions involving multiple organisations that each require independent verification rights.
+  </Card>
+</CardGroup>
+
+---
+
+## Compliance Alignment
+
+| Framework | Alignment |
+|-----------|-----------|
+| **NIS2 Directive** | Supports Article 21 obligations - integrity, availability, and auditability of critical information assets |
+| **ISO 27001** *(in progress)* | Aligns with Annex A controls: A.8.15 (logging and monitoring), A.5.33 (protection of records), A.5.36 (compliance with policies) |
+| **eIDAS** | On-chain timestamps provide electronic evidence suitable for qualified trust service workflows |
+| **GDPR** | Requires architectural consideration - personal data must not be written on-chain; hash-only patterns are GDPR-compatible |
+| **DORA** | Supports digital operational resilience requirements for financial entities through immutable audit trails |
+
+<Note>
+ROOTKey is actively pursuing NIS2 alignment and ISO 27001 certification. Contact us at [contact@rootkey.ai](mailto:contact@rootkey.ai) for the current compliance posture, available security documentation, and pending certifications.
+</Note>
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Get started with a free account"
+    icon="rocket"
+    href="https://app.rootkey.ai?utm_source=api_docs&utm_medium=rkp1&utm_content=signup_cta"
+  >
+    Access sandbox and live environments immediately. No commitment required.
+  </Card>
+  <Card
+    title="Request a technical briefing"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=rkp1&utm_content=briefing_cta"
+  >
+    Discuss your architecture, compliance requirements, and protocol fit with our engineering team.
+  </Card>
+</CardGroup>

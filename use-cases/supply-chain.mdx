@@ -1,0 +1,137 @@
+---
+title: Supply Chain Traceability
+description: Anchor custody events and provenance data across multi-party supply chains. Any participant - including regulators - can verify product authenticity independently, without trusting any single party.
+sidebarTitle: Supply Chain
+icon: route
+mode: wide
+---
+
+## The Problem
+
+Global supply chains involve dozens of parties - manufacturers, logistics providers, distributors, customs agents, retailers - each with their own systems, incentives, and potential for error or fraud. At every handoff, there is an opportunity for counterfeiting, tampering, record manipulation, or traceability gaps when data crosses organisational boundaries.
+
+Traditional traceability systems centralise records in one party's database. That party becomes the single source of truth - and the single point of trust. If that party is compromised, incentivised to misreport, or simply wrong, the entire traceability record is suspect.
+
+Regulators are now requiring supply chain traceability that is verifiable without relying on the producing organisation's assurance.
+
+---
+
+## How ROOTKey Solves It
+
+ROOTKey anchors each custody event - production, inspection, handoff, customs clearance, delivery - to the Polygon blockchain as it happens. Each anchor is:
+
+- **Immutable** - no party can retroactively alter a custody record once anchored
+- **Timestamped by the blockchain** - the timestamp cannot be backdated
+- **Multi-party verifiable** - every participant in the chain, and any regulator, can verify any event independently
+- **Cross-organisational** - vaults can accept anchors from multiple parties, building a shared, tamper-evident record that no single party controls
+
+The result is a supply chain record where trust is mathematical, not contractual.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    M[Manufacturer\nProduction cert] -->|POST /files| V
+    L[Logistics\nPickup event] -->|POST /files| V
+    D[Distributor\nReceipt] -->|POST /files| V
+    R[Retailer\nDelivery] -->|POST /files| V
+    V[(Shared Vault\nPolygon Mainnet)] --> VE[Full Chain Verifiable\nAny Party · Regulators\nNo intermediary needed]
+```
+
+Each party in the supply chain writes to the same vault using their own scoped API key. The vault accumulates an immutable, multi-party chain of custody - owned by no single participant.
+
+---
+
+## Implementation
+
+<Steps>
+  <Step title="Create a shared vault for the product or batch">
+    Create one vault per product, batch, or shipment. Configure access so that each supply chain participant can write to their custody segment using their own API key.
+
+    → [Create Vault](/api-reference/platform/endpoint/vaults/create-vault)
+  </Step>
+
+  <Step title="Anchor the production certificate or origin record">
+    The manufacturer anchors the initial record - product specification, quality certificate, origin declaration, or inspection result - at the point of production.
+
+    → [Create File](/api-reference/platform/endpoint/files/create-file)
+  </Step>
+
+  <Step title="Each party anchors their custody event">
+    At every handoff - pickup, customs, receipt, delivery - the relevant party anchors their custody event. The event includes timestamps, location data, condition readings, or any other relevant attestation.
+
+    → [Create File Version](/api-reference/platform/endpoint/files/create-file-versions) · [Records API](/api-reference/platform/endpoint/records/overview)
+  </Step>
+
+  <Step title="Record transfer of ownership">
+    When custody formally transfers between parties, use the Transfer endpoint to record the ownership change on-chain - creating an immutable chain-of-custody that documents every entity that held the asset.
+
+    → [Transfer File](/api-reference/platform/endpoint/files/transfer-file)
+  </Step>
+
+  <Step title="Enable independent verification">
+    Provide the vault ID and file IDs to any party requiring verification - regulators, auditors, end customers. They can verify the full chain of custody independently via the ROOTKey API or directly via Polygonscan, without contacting any supply chain participant.
+
+    → [Get File History](/api-reference/platform/endpoint/files/get-files-history) · [Validate File](/api-reference/platform/endpoint/files/validate-file)
+  </Step>
+</Steps>
+
+---
+
+## Recommended Configuration
+
+| Parameter | Recommendation |
+|-----------|---------------|
+| **Protocol** | [RKP-3 (Hybrid)](/pages/protocols/rkp-3-hybrid) - on-chain anchoring for custody events, off-chain for large documents and sensor data |
+| **Deployment** | [API Integration](/pages/deployment/api-integration) for participants with web-native systems; [MQTT](/pages/deployment/mqtt) for IoT-enabled logistics (sensors, RFID readers, cold chain monitors); [On-Premise](/pages/deployment/on-premise) for participants with air-gapped or regulated infrastructure |
+| **Vault design** | One vault per SKU, batch, or shipment - not one global vault for all products |
+| **Anchor granularity** | Anchor each discrete custody event separately - do not batch custody events into a single record |
+| **Sensor data** | High-frequency condition monitoring should use RKP-2 via MQTT with records linked to the primary custody vault |
+
+---
+
+## Key API Endpoints
+
+| Endpoint | Purpose |
+|----------|---------|
+| [Create Vault](/api-reference/platform/endpoint/vaults/create-vault) | Create a vault per product, batch, or shipment |
+| [Create File](/api-reference/platform/endpoint/files/create-file) | Anchor custody events and certificates |
+| [Create File Version](/api-reference/platform/endpoint/files/create-file-versions) | Anchor updates to existing records |
+| [Transfer File](/api-reference/platform/endpoint/files/transfer-file) | Record ownership transfer between parties |
+| [Get File History](/api-reference/platform/endpoint/files/get-files-history) | Full chain-of-custody history |
+| [Validate File](/api-reference/platform/endpoint/files/validate-file) | Validate a specific record at any point |
+| [MQTT Integration](/pages/deployment/mqtt) | Real-time sensor and IoT data anchoring |
+
+---
+
+## Compliance Alignment
+
+| Framework | How this use case addresses it |
+|-----------|-------------------------------|
+| **EU Supply Chain Due Diligence** | Verifiable provenance records across multi-tier supply chains |
+| **NIS2** | Supply chain security obligations for critical entity operators |
+| **ISO 28000** | Supply chain security management with tamper-evident records |
+| **GS1 / EPCIS** | Blockchain-backed extension of EPCIS event records for immutable traceability |
+| **Food Safety (FDA / EU)** | Full chain-of-custody traceability for food, pharmaceutical, and perishable goods |
+| **CE / product certification** | Anchored certification records verifiable by market surveillance authorities |
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Get started - free account"
+    icon="rocket"
+    href="https://app.rootkey.ai?utm_source=api_docs&utm_medium=uc_supply&utm_content=signup_cta"
+  >
+    Create a test vault and simulate a custody chain in the sandbox environment.
+  </Card>
+  <Card
+    title="Request a supply chain architecture review"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=uc_supply&utm_content=demo_cta"
+  >
+    We'll design a multi-party vault architecture tailored to your supply chain topology and regulatory requirements.
+  </Card>
+</CardGroup>

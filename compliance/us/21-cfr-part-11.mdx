@@ -1,0 +1,110 @@
+---
+title: 21 CFR Part 11
+description: How ROOTKey addresses the electronic record integrity, audit trail, and validation requirements of FDA 21 CFR Part 11 - for pharmaceutical, biotech, and medical device manufacturers submitting to the FDA.
+sidebarTitle: 21 CFR Part 11
+icon: flask
+mode: wide
+---
+
+## Overview
+
+**21 CFR Part 11** is the US FDA regulation governing electronic records and electronic signatures in FDA-regulated industries. It applies to pharmaceutical, biotechnology, medical device, and clinical research organisations that create, modify, maintain, archive, retrieve, or transmit electronic records that are required to be maintained under any FDA regulation.
+
+Part 11 requires that electronic records be trustworthy, reliable, and equivalent to paper records. The core mechanism for achieving this is audit trail integrity: the system must generate computer-generated, date-and-time-stamped audit trails that are protected from modification.
+
+ROOTKey's blockchain anchoring provides the strongest available implementation of this requirement.
+
+---
+
+## Regulatory Requirements and Coverage
+
+### §11.10 - Controls for Closed Systems
+
+| Requirement | Description | ROOTKey capability |
+|-------------|-------------|-------------------|
+| **§11.10(a)** | System validation - capable of discerning invalid or altered records | SHA-256 hash anchoring detects any modification to a record, however minor |
+| **§11.10(b)** | Ability to generate accurate and complete copies of records | Vault records are queryable via API - complete and reproducible |
+| **§11.10(c)** | Protection of records throughout retention period | On-chain anchors are permanent - not subject to storage failure, deletion, or system migration loss |
+| **§11.10(e)** | Computer-generated, date-and-time-stamped audit trails | Blockchain timestamp set by consensus - cannot be set or altered by the regulated entity |
+| **§11.10(j)** | System documentation - including descriptions of the system and evidence of adequate controls | ROOTKey API documentation and this compliance documentation support §11.10(j) |
+| **§11.10(k)** | Operational system checks - appropriate event sequencing | Vault record ordering is verifiable - events cannot be inserted retroactively |
+
+### §11.50 - Signature Manifestations
+
+For records requiring electronic signatures, §11.50 requires that signed electronic records include the printed name of the signer, the date and time of signing, and the meaning of the signature. ROOTKey anchors:
+
+- Signature events at the time of signing - blockchain timestamp proves the signature time
+- The signed document hash - proof that the signed version has not been altered post-signature
+
+### §11.70 - Signature/Record Linking
+
+§11.70 requires that electronic signatures be linked to their electronic records such that the signatures cannot be excised, copied, or otherwise transferred. ROOTKey anchors both the signature and the document hash in a single transaction - the link is cryptographic and cannot be severed without detection.
+
+---
+
+## Audit Trail Requirements in Detail
+
+§11.10(e) is the central audit trail requirement. The FDA expects audit trails that:
+
+| Expectation | ROOTKey implementation |
+|-------------|----------------------|
+| Created automatically by the computer system | Anchoring is triggered by the application - not by the user |
+| Date- and time-stamped | Timestamp is the block timestamp - set by Polygon network consensus |
+| Cannot be turned off by operators | Blockchain anchoring is independent of system configuration - operators cannot disable the on-chain record |
+| Record who made a change, when, and the original value | Anchoring records include the document hash, timestamp, and metadata identifying the anchoring event |
+| Available for FDA inspection | Polygonscan-verifiable - accessible to FDA inspectors without system access |
+
+---
+
+## Predicate Rule Integration
+
+21 CFR Part 11 applies to records required by **predicate rules** - other FDA regulations that mandate record-keeping. ROOTKey is applicable across the major predicate rules:
+
+| Predicate rule | Regulated activity | ROOTKey application |
+|----------------|-------------------|---------------------|
+| **21 CFR Part 211** | Pharmaceutical manufacturing (cGMP) | Batch record anchoring, equipment log integrity |
+| **21 CFR Part 820** | Medical device quality system regulation | Design history file anchoring, DHR records |
+| **21 CFR Part 312** | Investigational New Drug (IND) applications | Clinical trial record integrity |
+| **21 CFR Part 314** | NDA/ANDA submissions | Submission document anchoring - tamper-evident regulatory filing |
+| **21 CFR Part 58** | Good Laboratory Practice (GLP) | Laboratory record integrity, study data anchoring |
+
+---
+
+## Computer System Validation (CSV) and 21 CFR Part 11
+
+Part 11 compliance begins with system validation. ROOTKey supports the validation lifecycle:
+
+| Validation stage | ROOTKey role |
+|-----------------|--------------|
+| Installation Qualification (IQ) | Anchor IQ protocol execution records - tamper-evident proof of system installation state |
+| Operational Qualification (OQ) | Anchor OQ test scripts and results - verifiable evidence of test completion |
+| Performance Qualification (PQ) | Anchor PQ results - independently timestamped evidence of system performance |
+| Change Control | Anchor all change control records - immutable change history |
+| Periodic Review | Anchor periodic review records - verifiable evidence of ongoing compliance |
+
+---
+
+## EU Equivalent: Annex 11
+
+For EU pharmaceutical operations, the equivalent regulation is **EU GMP Annex 11** (Computerised Systems). ROOTKey's audit trail capabilities address the same core requirements - particularly paragraph 9 (audit trail) and paragraph 7 (data integrity and storage).
+
+→ See also: [Healthcare & Life Sciences use case](/use-cases/healthcare)
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request a 21 CFR Part 11 compliance review"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=compliance_21cfr11&utm_content=demo_cta"
+  >
+    We'll map your Part 11 scope, predicate rules, and validation obligations to a ROOTKey implementation - with support for FDA inspection readiness.
+  </Card>
+  <Card
+    title="Healthcare & Life Sciences use case"
+    icon="heart-pulse"
+    href="/use-cases/healthcare"
+  >
+    Full implementation guide for FDA and EU GMP-aligned clinical data and record integrity.
+  </Card>
+</CardGroup>

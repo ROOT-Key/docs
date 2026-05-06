@@ -1,0 +1,132 @@
+---
+title: Tamper-Evident Document Management
+description: Anchor documents at creation or approval and prove their integrity to any third party - without relying on a trusted intermediary or a centralised record system.
+sidebarTitle: Document Integrity
+icon: file-shield
+mode: wide
+---
+
+## The Problem
+
+Organisations produce thousands of critical documents - contracts, regulatory filings, certificates, board resolutions, NDAs, audit reports. These documents define legal obligations, evidence compliance, and establish accountability.
+
+The problem is that digital documents are trivially mutable. A file saved to a server can be altered without trace. A signature on a PDF is only as trustworthy as the system that issued and stores it. When a document needs to be verified - by a regulator, a counterparty, or a court - the verification chain inevitably leads back to a system that someone controls, and therefore someone could have manipulated.
+
+Traditional document management systems solve version control. They do not solve trust.
+
+---
+
+## How ROOTKey Solves It
+
+ROOTKey anchors a cryptographic hash of each document to the Polygon blockchain at the moment it is created, approved, or finalised. The blockchain record is:
+
+- **Permanent** - it cannot be deleted or modified by anyone
+- **Timestamped** - the block timestamp is set by the blockchain, not by your system
+- **Independently verifiable** - any party with the original document can verify it against the on-chain record without contacting ROOTKey or you
+
+If a document is altered after anchoring - even by a single character - the hash no longer matches the on-chain record. The tampering is detectable by anyone.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TD
+    A([Document Management\nSystem / Workflow]) -->|Create · Approve · Sign| B[ROOTKey API\nPOST /files]
+    B --> C[(Blockchain Anchor\nPolygon Mainnet\nHash · Timestamp · Vault & File ID)]
+    C --> D[Independent Verification\nPolygonscan · ROOTKey API]
+```
+
+ROOTKey fits alongside your existing DMS - it does not replace it. Your document storage, access controls, and workflows remain unchanged. ROOTKey adds the cryptographic trust layer on top.
+
+---
+
+## Implementation
+
+<Steps>
+  <Step title="Create a vault for document anchoring">
+    Create a vault scoped to the document category - for example, legal contracts or regulatory filings. Configure the protocol based on your auditability requirements.
+
+    → [Create Vault](/api-reference/platform/endpoint/vaults/create-vault)
+  </Step>
+
+  <Step title="Anchor a document at creation or approval">
+    When a document reaches a significant lifecycle event (created, approved, signed, finalised), post it to the Files API. ROOTKey computes the hash and anchors it to the blockchain.
+
+    → [Create File](/api-reference/platform/endpoint/files/create-file)
+  </Step>
+
+  <Step title="Create a new version on amendment">
+    If the document is legitimately amended, create a new version. The previous version remains intact on-chain - the full amendment history is preserved and verifiable.
+
+    → [Create File Version](/api-reference/platform/endpoint/files/create-file-versions)
+  </Step>
+
+  <Step title="Validate on demand">
+    At any point - during an audit, a dispute, or a routine check - validate the document against its on-chain anchor. ROOTKey returns a valid or invalid result, and the validation event itself is anchored.
+
+    → [Validate File](/api-reference/platform/endpoint/files/validate-file)
+  </Step>
+
+  <Step title="Share verifiable proof">
+    Provide the file ID and vault ID to any counterparty or auditor. They can validate the document independently - either through the ROOTKey API or directly via Polygonscan - without requiring access to your systems.
+  </Step>
+</Steps>
+
+---
+
+## Recommended Configuration
+
+| Parameter | Recommendation |
+|-----------|---------------|
+| **Protocol** | [RKP-1 (Full On-Chain)](/pages/protocols/rkp-1-on-chain) for legally critical documents; [RKP-3 (Hybrid)](/pages/protocols/rkp-3-hybrid) for high-volume archives |
+| **Deployment** | [API Integration](/pages/deployment/api-integration) for cloud-native DMS; [On-Premise](/pages/deployment/on-premise) for air-gapped or regulated environments |
+| **Trigger point** | Anchor at the moment of signing or approval, not at upload - anchor the authoritative version |
+| **Version strategy** | Create a new version for each legitimate amendment; do not overwrite |
+| **Personal data** | Do not anchor documents containing personal data directly on-chain with RKP-1; use hash-only patterns or RKP-3 with off-chain storage |
+
+---
+
+## Key API Endpoints
+
+| Endpoint | Purpose |
+|----------|---------|
+| [Create Vault](/api-reference/platform/endpoint/vaults/create-vault) | Create a vault scoped to a document category |
+| [Create File](/api-reference/platform/endpoint/files/create-file) | Anchor a document |
+| [List Files](/api-reference/platform/endpoint/files/get-files) | List and search anchored documents |
+| [Get File](/api-reference/platform/endpoint/files/get-file-by-id) | Retrieve a specific document record |
+| [Create File Version](/api-reference/platform/endpoint/files/create-file-versions) | Anchor an amended version |
+| [Get File Versions](/api-reference/platform/endpoint/files/get-file-versions) | Retrieve version history |
+| [Validate File](/api-reference/platform/endpoint/files/validate-file) | Validate a document against its on-chain anchor |
+| [File History](/api-reference/platform/endpoint/files/get-files-history) | Full audit history for a document |
+
+---
+
+## Compliance Alignment
+
+| Framework | How this use case helps |
+|-----------|------------------------|
+| **NIS2** | Supports Article 21 - integrity and auditability of information assets for critical entities |
+| **ISO 27001** *(in progress)* | Addresses A.5.33 (protection of records) and A.8.15 (logging and monitoring) |
+| **eIDAS** | On-chain anchors constitute qualified electronic evidence for document existence and integrity |
+| **GDPR** | Use RKP-3 with off-chain storage to maintain erasure capability for documents containing personal data |
+| **DORA** | Immutable record-keeping for operational documentation in financial entities |
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Get started - free account"
+    icon="rocket"
+    href="https://app.rootkey.ai?utm_source=api_docs&utm_medium=uc_document&utm_content=signup_cta"
+  >
+    Access sandbox and production environments. Anchor your first document in under 5 minutes.
+  </Card>
+  <Card
+    title="Speak with our team"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=uc_document&utm_content=demo_cta"
+  >
+    We'll walk through a document integrity architecture tailored to your DMS and compliance requirements.
+  </Card>
+</CardGroup>

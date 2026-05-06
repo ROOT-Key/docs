@@ -1,0 +1,116 @@
+---
+title: GDPR / RGPD
+description: How ROOTKey supports GDPR compliance - integrity and confidentiality of personal data, security of processing, breach notification evidence, and GDPR-compatible off-chain erasure.
+sidebarTitle: GDPR / RGPD
+icon: user-shield
+mode: wide
+---
+
+## Overview
+
+The **General Data Protection Regulation** (GDPR, EU 2016/679 - RGPD in Portuguese) applies to any organisation processing personal data of EU data subjects, regardless of where the organisation is established. It sets requirements for data security, record-keeping, and evidence of compliance.
+
+Two GDPR principles create a specific challenge for blockchain-based systems:
+
+- **Integrity and confidentiality** (Article 5(1)(f)): Data must be processed with appropriate security, including protection against unauthorised or unlawful processing and against accidental loss, destruction, or damage
+- **Right to erasure** (Article 17): Data subjects have the right to have their personal data deleted under certain conditions
+
+ROOTKey is designed to satisfy both - through a protocol architecture that separates on-chain integrity proofs (which contain no personal data) from off-chain data storage (which can be deleted on request).
+
+---
+
+## Article-Level Coverage
+
+| Article | Requirement | ROOTKey role |
+|---------|-------------|--------------|
+| Art. 5(1)(f) | Integrity and confidentiality of personal data | SHA-256 anchoring ensures processing records cannot be altered after creation |
+| Art. 25 | Data protection by design and by default | ROOTKey's architecture anchors proofs rather than data - personal data stays in your controlled systems |
+| Art. 30 | Records of processing activities | Anchor processing logs and data access records at emission - tamper-evident ROPA supporting evidence |
+| Art. 32 | Security of processing | Cryptographic record integrity; blockchain timestamps; access event anchoring |
+| Art. 33 | Notification of personal data breach (72h) | Blockchain timestamp on detection and notification records proves the 72-hour deadline was met |
+| Art. 34 | Communication to data subjects | Anchor communication records at dispatch - timestamp is independently verifiable |
+| Art. 35 | Data Protection Impact Assessment (DPIA) | Anchor DPIA documents at approval - version history proves which assessment was in force at each time |
+
+---
+
+## The GDPR–Blockchain Architecture Challenge
+
+Blockchains are immutable by design. GDPR's right to erasure requires that personal data can be deleted. This creates a direct tension that ROOTKey resolves at the protocol level:
+
+<CardGroup cols={2}>
+  <Card title="What goes on-chain" icon="link-slash">
+    **Only the hash** - a SHA-256 fingerprint of the data. A hash contains no personal information and cannot be reversed to reveal the original data. Deleting the underlying data does not require modifying the on-chain record.
+  </Card>
+  <Card title="What stays off-chain" icon="hard-drive">
+    **The actual data** - stored in your controlled systems or ROOTKey's off-chain storage, which can be deleted in response to an erasure request. Deletion severs the proof without compromising the blockchain record's integrity.
+  </Card>
+</CardGroup>
+
+### GDPR Erasure Compatibility by Protocol
+
+| Protocol | Personal data location | Erasure-compatible | How |
+|----------|----------------------|-------------------|-----|
+| [RKP-1 (Full On-Chain)](/pages/protocols/rkp-1-on-chain) | Off-chain (your systems); hash on-chain | Yes | Delete off-chain data; on-chain hash contains no personal data |
+| [RKP-2 (Off-Chain)](/pages/protocols/rkp-2-off-chain) | Off-chain storage | Yes | ROOTKey off-chain data deleted on request |
+| [RKP-3 (Hybrid)](/pages/protocols/rkp-3-hybrid) | Off-chain for data; hash on-chain | Yes | Delete off-chain data; hash is non-personal |
+
+<Warning>
+  Do not anchor personal data directly into a blockchain record. Always anchor the SHA-256 hash of the data, keeping the data itself in erasure-capable off-chain storage. This is how ROOTKey's protocols are designed to be used.
+</Warning>
+
+---
+
+## Processing Records and Accountability
+
+GDPR Article 30 requires controllers and processors to maintain records of processing activities. ROOTKey supports this by anchoring:
+
+- Data access logs (who accessed what data, when)
+- Data transfer records (cross-border transfers under Chapter V)
+- Consent records (with timestamp and version of consent language)
+- Data subject request records (access, rectification, erasure, portability)
+- Third-party processor agreement records
+
+Each anchored record is independently timestamped and cannot be retroactively altered - satisfying the accountability principle (Article 5(2)).
+
+---
+
+## Breach Notification Evidence
+
+GDPR Article 33 requires notification to the supervisory authority within **72 hours** of becoming aware of a personal data breach. Regulators investigate whether:
+
+1. The 72-hour deadline was genuinely met, or whether notification was backdated
+2. The breach scope was accurately reported at the time, or was revised to minimise apparent impact
+
+ROOTKey anchors:
+- The detection record (time of awareness)
+- The assessment record (scope determination)
+- The notification record (time of submission)
+
+Each record carries a blockchain timestamp that cannot be altered retroactively - providing independently verifiable proof of compliance with Article 33.
+
+---
+
+## Data Sovereignty
+
+For GDPR compliance, personal data must be processed lawfully when transferred outside the EEA. ROOTKey's EU-sovereign deployment uses **EBSI** and **OVH** - ensuring no data (or hash) leaves EU jurisdiction.
+
+→ [European Data Sovereignty](/pages/data-sovereignty)
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request a GDPR compliance review"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=compliance_gdpr&utm_content=demo_cta"
+  >
+    We'll design a ROOTKey architecture that satisfies GDPR integrity and accountability requirements while remaining fully compatible with erasure obligations.
+  </Card>
+  <Card
+    title="Healthcare use case"
+    icon="heart-pulse"
+    href="/use-cases/healthcare"
+  >
+    GDPR-compatible integrity protection for clinical data, trial records, and patient information.
+  </Card>
+</CardGroup>

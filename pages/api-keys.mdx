@@ -1,54 +1,83 @@
 ---
 title: API Keys
 sidebarTitle: API Keys
-description: Learn how to get your ROOTKey API key by following the steps below.
+description: Generate and manage ROOTKey API keys for sandbox and production environments. Step-by-step guide for authenticating API requests.
 icon: key
 ---
 
 ## How to Create an API Key
 
 <Steps>
-  <Step title="Log in to Your Account">
-    - Go to [ROOTKey's Platform](https://app.rootkey.ai/sign-in?utm_source=api_docs&utm_medium=api_keys_page&utm_content=login).
-    - Enter your username and password.
-    - Click on the **Log In** button.
+  <Step title="Log in and open the Dashboard">
+    Go to [app.rootkey.ai](https://app.rootkey.ai/sign-in?utm_source=api_docs&utm_medium=api_keys_page&utm_content=login) and sign in. You will land on the main Dashboard.
+
+    <img style={{ borderRadius: "0.5rem" }} src="https://media.rootkey.ai/docs/dev-api-step-1.png" />
   </Step>
-  <Step title="Navigate to the Developer Tab">
-    - After logging in, you are now on the **Dashboard**.
-    - From the dashboard, locate and click on the **Developer** section in the sidebar.
-    <img style={{ borderRadius: "0.5rem" }} src="https://www.media.rootkey.ai/docs/developer-tab-platform.png" />
+
+  <Step title="Navigate to Developer Tools">
+    In the left sidebar, scroll down to the **Platform** section and click **Developer Tools**. The Overview tab shows your active integrations, total request volume, and overall success rate.
+
+    <img style={{ borderRadius: "0.5rem" }} src="https://media.rootkey.ai/docs/dev-api-step-2.png" />
   </Step>
-  <Step title="Create a New API Key">
-    - In the **Developer Settings** section, click on the **Generate API Key** button.
-    - Your new generated API Key will be available under the **Standard keys** section.
-    <img style={{ borderRadius: "0.5rem" }} src="https://www.media.rootkey.ai/docs/developer-tab-platform-click.png" />
+
+  <Step title="Open the API Keys tab">
+    Click the **API Keys** tab at the top of the Developer Tools panel.
+
+    <img style={{ borderRadius: "0.5rem" }} src="https://media.rootkey.ai/docs/dev-api-step-3.png" />
   </Step>
-  <Step title="Copy and Store Your API Key">
-    - Once the API key is generated, it will be displayed on the screen.
-    - Copy the API key to a secure location.
-    <img style={{ borderRadius: "0.5rem" }} src="https://www.media.rootkey.ai/docs/developer-api-key-generated.png" />
-    - **Note:** To copy the key click on the _Other_ > **Copy API Key**.
+
+  <Step title="Start creating a new key">
+    If no keys exist yet, you will see the empty state. Click **+ Create API Key** in the top right corner to open the creation form.
+
+    <img style={{ borderRadius: "0.5rem" }} src="https://media.rootkey.ai/docs/dev-api-step-4.png" />
   </Step>
-  <Step title="Verify Your API Key">
-    - To ensure your API key works correctly, go to any endpoint on the [API Reference](/api-reference/overview.mdx) section in the documentation.
-    - Use the API key to make a request.
-    - If the request is successful, your API key is ready to use.
+
+  <Step title="Fill in the key details">
+    Enter a **Key Name**, an optional description, and choose an icon to help identify this key. Click **Generate Key** when ready.
+
+    <img style={{ borderRadius: "0.5rem" }} src="https://media.rootkey.ai/docs/dev-api-step-5.png" />
+  </Step>
+
+  <Step title="Copy and store your key">
+    Your new API key is displayed once. Copy it now and store it in a secure location - it will not be shown again after you close this modal.
+
+    <img style={{ borderRadius: "0.5rem" }} src="https://media.rootkey.ai/docs/dev-api-step-6.png" />
+  </Step>
+
+  <Step title="Confirm the key is active">
+    After closing the modal, the key appears in the API Keys list with an **Active** status and a request counter. You are ready to authenticate API calls.
+
+    <img style={{ borderRadius: "0.5rem" }} src="https://media.rootkey.ai/docs/dev-api-step-7.png" />
   </Step>
 </Steps>
 
-## Best Practices for API Key Management
+---
 
-By following these steps, you can easily create and manage your ROOTKey API keys. 
+## Using Your API Key
+
+Pass the key in the `x-api-key` header on every request:
+
+```http
+x-api-key: YOUR_API_KEY
+```
+
+→ See [Authentication](/api-reference/auth) for the full reference and error handling.
+
+---
+
+## Best Practices
 
 <AccordionGroup>
-    <Accordion title="Keep your API key secure" icon="file-shield">
-        Never share your API key publicly or store it in insecure locations.
-    </Accordion>
-    <Accordion title="Regenerate your API key periodically" icon="arrows-spin">
-        Regularly update your API key to maintain security.
-    </Accordion>
-    <Accordion title="Monitor API usage" icon="magnifying-glass">
-        Keep track of how your API key is being used to detect any unusual activity.
-    </Accordion>
+  <Accordion title="Never expose your key in client-side code" icon="file-shield">
+    API keys grant full access to your workspace. Keep them server-side and use environment variables - never commit them to source control or include them in frontend bundles.
+  </Accordion>
+  <Accordion title="Use one key per integration" icon="key">
+    Create a separate key for each application or environment. This makes it easy to rotate or revoke a single integration without affecting others.
+  </Accordion>
+  <Accordion title="Rotate keys periodically" icon="arrows-spin">
+    Regenerate keys on a regular schedule and immediately on any suspected exposure. Old keys can be revoked from the Developer Tools panel without downtime if a replacement is in place.
+  </Accordion>
+  <Accordion title="Monitor usage" icon="magnifying-glass">
+    The Developer Tools Overview tab shows request volume and error rates per key. Unusual spikes may indicate misuse or an integration issue.
+  </Accordion>
 </AccordionGroup>
-

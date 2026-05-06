@@ -1,0 +1,81 @@
+---
+title: Compliance Coverage
+description: ROOTKey provides cryptographic data integrity infrastructure that addresses audit evidence, record protection, and tamper-evident logging requirements across EU law, international standards, and sector-specific regulatory frameworks.
+sidebarTitle: Overview
+icon: shield-check
+mode: wide
+---
+
+## How ROOTKey Enables Compliance
+
+Modern regulatory frameworks increasingly require organisations to **prove** what happened, **when** it happened, and that records have **not been altered** - not just assert it. The burden of proof is shifting from assurance to evidence.
+
+ROOTKey anchors data to the blockchain at the moment it is created, producing cryptographic proofs that:
+
+- **Cannot be backdated** - blockchain timestamps are set by network consensus, not by your systems or administrators
+- **Cannot be altered** - once anchored, records are immutable regardless of who has database or infrastructure access
+- **Can be verified independently** - regulators and auditors can verify records without your cooperation, without accessing your systems
+
+This single capability - tamper-evident, timestamped, independently verifiable records - maps directly to specific articles and control requirements across the major regulatory frameworks.
+
+---
+
+## Coverage at a Glance
+
+<CardGroup cols={3}>
+  <Card title="European Union" icon="eu" href="/compliance/eu/nis2">
+    NIS2, DORA, GDPR, eIDAS 2.0, CSDDD - the core regulatory stack for EU-operating organisations
+  </Card>
+  <Card title="International Standards" icon="globe" href="/compliance/international/iso-27001">
+    ISO 27001, ISO 28000, IEC 62443, PCI-DSS - framework compliance for regulated industries globally
+  </Card>
+  <Card title="United States" icon="flag-usa" href="/compliance/us/sox">
+    SOX, 21 CFR Part 11 - evidence and record integrity obligations for US markets and FDA-regulated research
+  </Card>
+</CardGroup>
+
+---
+
+## Quick Reference Table
+
+| Framework | Region | Key Articles / Controls | ROOTKey Coverage |
+|-----------|--------|------------------------|-----------------|
+| [NIS2](/compliance/eu/nis2) | EU | Art. 21(2)(h) cryptography · Art. 21(2)(b) incident handling · Art. 23 reporting | Tamper-evident audit trails, incident evidence, cryptographic records |
+| [DORA](/compliance/eu/dora) | EU · Financial | Art. 17 incident management · Art. 19 reporting · Art. 28 third-party risk | ICT audit logs, incident evidence packages, software supply chain integrity |
+| [GDPR / RGPD](/compliance/eu/gdpr) | EU · Global | Art. 5(1)(f) integrity · Art. 32 security · Art. 33 breach notification | Record integrity, processing logs, breach evidence, GDPR-compatible off-chain deletion |
+| [eIDAS 2.0](/compliance/eu/eidas) | EU | Art. 41–42 qualified electronic timestamps | Blockchain-based timestamps with legal standing under eIDAS |
+| [CSDDD](/compliance/eu/csddd) | EU | Supply chain due diligence obligations | Immutable multi-party provenance records across supply chain tiers |
+| [EU AI Act](/compliance/eu/ai-act) | EU | Art. 12 logging · Art. 9 risk management · Art. 11 technical documentation · Art. 14 human oversight | Tamper-evident AI decision logs, model provenance, conformity assessment records |
+| [ISO 27001](/compliance/international/iso-27001) | International | A.5.33 record protection · A.8.15 logging · A.8.9 configuration | Tamper-evident log protection, cryptographic record integrity |
+| [ISO 28000](/compliance/international/iso-28000) | International | Supply chain security management system | Blockchain-backed custody records for supply chain security |
+| [IEC 62443](/compliance/international/iec-62443) | International | SR 3.3 data integrity · SR 6.1–6.2 audit log protection | OT/IACS data integrity anchoring via MQTT |
+| [PCI-DSS v4.0](/compliance/international/pci-dss) | International | Req. 10.3 audit log integrity · Req. 10.5 audit log review | Tamper-evident cardholder environment audit logs |
+| [SOX](/compliance/us/sox) | United States | § 302/404 internal controls · § 409 real-time disclosure | Cryptographically verifiable financial audit trails |
+| [21 CFR Part 11](/compliance/us/21-cfr-part-11) | United States (FDA) | § 11.10(e) audit trails · § 11.10(a) record validation | Electronic record integrity for regulated clinical and pharmaceutical submissions |
+
+---
+
+## Data Sovereignty
+
+For organisations subject to EU data residency requirements, ROOTKey supports a 100% EU-sovereign deployment using **EBSI** (European Blockchain Services Infrastructure) and **OVH** cloud - with no data leaving EU jurisdiction at any stage.
+
+→ [European Data Sovereignty](/pages/data-sovereignty)
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request a compliance architecture review"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=compliance_overview&utm_content=demo_cta"
+  >
+    We'll map your regulatory obligations to a concrete ROOTKey implementation and provide compliance documentation support for auditors and regulators.
+  </Card>
+  <Card
+    title="Get started - free account"
+    icon="rocket"
+    href="https://app.rootkey.ai?utm_source=api_docs&utm_medium=compliance_overview&utm_content=signup_cta"
+  >
+    Create a sandbox vault and test compliance-grade anchoring before committing to a production architecture.
+  </Card>
+</CardGroup>

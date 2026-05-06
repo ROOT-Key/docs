@@ -1,0 +1,64 @@
+---
+title: SDKs & Libraries
+description: Client libraries, code examples, and integration resources for the ROOTKey API.
+icon: code
+mode: wide
+---
+
+The ROOTKey API is a standard REST API accessible from any language or HTTP client. Any environment capable of sending HTTPS requests and parsing JSON can integrate with ROOTKey without an SDK.
+
+---
+
+## REST API - No SDK Required
+
+All ROOTKey functionality is available directly through the REST API using standard HTTP libraries. Authentication requires only an `x-api-key` header. See the [API Reference](/api-reference/overview) for full endpoint documentation.
+
+```bash
+curl -X POST https://api.rootkey.ai/vaults \
+  -H "x-api-key: your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "My Vault" }'
+```
+
+---
+
+## Code Examples
+
+The API Reference includes interactive examples and code snippets for every endpoint. Examples are available for:
+
+- **Shell (cURL)**
+- **JavaScript / Node.js**
+- **Python**
+
+Access examples directly in the [API Reference](/api-reference/overview) or use the interactive API playground in the documentation.
+
+---
+
+## Community and Integrations
+
+ROOTKey integrates with a range of enterprise platforms through our partner network and custom-built connectors. See [Native Integrations](/pages/deployment/native) for the integration model.
+
+---
+
+## SDK Roadmap
+
+Official SDK packages for common languages are on the ROOTKey roadmap. If SDK support for a specific language is important to your integration, let us know - contact [support@rootkey.ai](mailto:support@rootkey.ai) with your use case and language preference.
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="API Reference"
+    icon="book-open-cover"
+    href="/api-reference/overview"
+  >
+    Full endpoint documentation with interactive examples.
+  </Card>
+  <Card
+    title="Quickstart"
+    icon="play"
+    href="/pages/overview"
+  >
+    Make your first API call in under 5 minutes.
+  </Card>
+</CardGroup>

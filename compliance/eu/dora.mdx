@@ -1,0 +1,117 @@
+---
+title: DORA - Digital Operational Resilience Act
+description: How ROOTKey helps financial entities meet the ICT risk management, incident management, and third-party risk requirements of DORA (EU 2022/2554).
+sidebarTitle: DORA
+icon: building-columns
+mode: wide
+---
+
+## Overview
+
+The **Digital Operational Resilience Act** (DORA, EU 2022/2554) applies to financial entities in the EU - including banks, payment institutions, investment firms, insurance companies, crypto-asset service providers, and their critical ICT third-party service providers. It has applied since January 2025.
+
+DORA introduces binding requirements for ICT risk management, incident classification and reporting, digital operational resilience testing, and third-party ICT risk - all with documentation and audit obligations that regulators can examine.
+
+The defining feature of DORA compliance is **auditability**: financial entities must demonstrate, with verifiable evidence, that their ICT systems were managed and monitored in accordance with the regulation. That evidence must hold up under adversarial scrutiny, including during incident investigations where the entity itself may be a subject of review.
+
+---
+
+## Article-Level Coverage
+
+### Chapter II - ICT Risk Management (Articles 5–14)
+
+| Article | Requirement | ROOTKey capability |
+|---------|-------------|-------------------|
+| Art. 6 | ICT risk management framework with documented policies | Anchor policy documents and configuration baselines at creation and each revision |
+| Art. 8 | ICT asset management | Tamper-evident asset inventory records with version history |
+| Art. 9 | Protection and prevention - data integrity | SHA-256 anchoring ensures no alteration of ICT records after creation |
+| Art. 10 | Detection - monitoring of anomalous activities | Anchor SIEM and monitoring events to create tamper-evident detection records |
+| Art. 11 | Response and recovery - ICT-related incident records | Immutable incident timeline, response actions, and recovery decisions |
+| Art. 12 | Backup and restoration - recovery point evidence | Anchor backup verification records with blockchain timestamp |
+| Art. 13 | Learning and evolving - post-incident analysis records | Anchored post-incident reports with verifiable timestamps |
+
+---
+
+### Article 17 - ICT-Related Incident Management
+
+DORA Article 17 requires financial entities to establish and maintain an ICT-related incident management process. Key documentation requirements:
+
+| Requirement | ROOTKey role |
+|-------------|--------------|
+| Classify ICT incidents at time of detection | Anchor classification decision at moment of triage - blockchain timestamp proves classification was not retroactively changed |
+| Maintain incident lifecycle records | Each stage of the incident lifecycle (detection → containment → recovery → closure) anchored separately |
+| Preserve evidence for regulatory examination | Immutable, independently verifiable incident record - verifiable by ECB, EBA, ESMA, or national competent authorities without accessing your systems |
+| Demonstrate response timeline accuracy | Blockchain timestamps on each record cannot be backdated - response times are mathematically provable |
+
+---
+
+### Article 19 - Reporting of Major ICT-Related Incidents
+
+DORA Article 19 requires financial entities to report major incidents to their competent authority. ROOTKey supports the evidence requirements at each reporting stage:
+
+| Reporting stage | Timeline | ROOTKey role |
+|----------------|----------|--------------|
+| Initial notification | Within 4 hours of major incident classification | Anchored classification record proves timing - timestamp cannot be altered |
+| Intermediate report | Within 72 hours | Anchored incident detail record provides tamper-evident status at time of reporting |
+| Final report | Within 1 month of resolution | Full anchored audit trail of incident timeline - independently verifiable by competent authority |
+
+---
+
+### Article 28 - General Principles on ICT Third-Party Risk
+
+DORA Article 28 requires financial entities to manage the risks arising from ICT third-party service providers - including their software supply chains.
+
+| Requirement | ROOTKey capability |
+|-------------|-------------------|
+| Register and monitor ICT third-party service providers | Anchor vendor assessment records and due diligence evidence |
+| Assess ICT third-party concentration risk | Immutable records of which critical functions depend on which providers |
+| Verify software and artifact integrity | Anchor build artifacts and release packages in CI/CD pipelines - detect tampering between build and deployment |
+| Maintain contractual documentation | Anchor SLA terms, service descriptions, and amendment records at signing |
+
+→ See also: [Software Integrity use case](/use-cases/software-integrity)
+
+---
+
+## Compliance Summary
+
+| DORA Pillar | Key Articles | ROOTKey Solution |
+|-------------|--------------|-----------------|
+| ICT risk management | Art. 6–14 | Tamper-evident policy, asset, and configuration records |
+| ICT incident management | Art. 17 | Immutable incident lifecycle and classification records |
+| Incident reporting | Art. 19 | Blockchain-timestamped evidence packages for competent authorities |
+| Resilience testing | Art. 25–39 | Anchored test plans, results, and remediation records |
+| Third-party risk | Art. 28 | Vendor assessment records, software supply chain integrity |
+
+---
+
+## Applicable Entities
+
+| Entity type | DORA classification |
+|-------------|---------------------|
+| Credit institutions (banks) | Essential |
+| Payment institutions | In scope |
+| Investment firms | In scope |
+| Crypto-asset service providers (CASPs) | In scope |
+| Insurance and reinsurance undertakings | In scope |
+| Central securities depositories | In scope |
+| ICT third-party service providers (critical) | Oversight regime |
+| Data reporting service providers | In scope |
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Request a DORA compliance review"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=compliance_dora&utm_content=demo_cta"
+  >
+    We'll map your DORA obligations to a ROOTKey implementation - including evidence package design for ECB, EBA, ESMA, or national competent authorities.
+  </Card>
+  <Card
+    title="Regulatory audit trail use case"
+    icon="scale-balanced"
+    href="/use-cases/regulatory-audit-trails"
+  >
+    Full implementation guide for DORA-compliant audit trails and incident evidence management.
+  </Card>
+</CardGroup>

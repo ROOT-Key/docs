@@ -1,0 +1,99 @@
+---
+title: Use Cases
+description: How organisations use ROOTKey to enforce data integrity, meet regulatory obligations, and build trust into critical systems - with implementation guidance for each scenario.
+sidebarTitle: Overview
+icon: lightbulb
+mode: wide
+---
+
+ROOTKey provides a single, composable primitive - **cryptographic proof that data existed in a specific state at a specific time** - that applies across a wide range of industries and integration patterns.
+
+This section maps that primitive to concrete use cases: what problem is being solved, how ROOTKey fits into the architecture, which protocol and deployment model to use, and where to go in the documentation to implement it.
+
+---
+
+<CardGroup cols={2}>
+  <Card
+    title="Tamper-Evident Document Management"
+    icon="file-shield"
+    href="/use-cases/document-integrity"
+  >
+    Anchor documents at creation or approval - contracts, filings, certificates - and prove their integrity to any third party without relying on a trusted intermediary.
+  </Card>
+  <Card
+    title="Regulatory Compliance & Audit Trails"
+    icon="scale-balanced"
+    href="/use-cases/regulatory-audit-trails"
+  >
+    Build immutable, independently verifiable audit trails for NIS2, DORA, ISO 27001, and financial regulatory frameworks. Evidence that holds up under adversarial scrutiny.
+  </Card>
+  <Card
+    title="Supply Chain Traceability"
+    icon="route"
+    href="/use-cases/supply-chain"
+  >
+    Anchor custody events and provenance data across multi-party supply chains. Any participant - including regulators - can verify product authenticity independently.
+  </Card>
+  <Card
+    title="IoT & Industrial Data Integrity"
+    icon="microchip"
+    href="/use-cases/iot-industrial"
+  >
+    Protect sensor data, SCADA events, and OT telemetry at source. High-frequency integrity anchoring over MQTT without disrupting existing OT network architecture.
+  </Card>
+  <Card
+    title="Software & Artifact Integrity"
+    icon="code-branch"
+    href="/use-cases/software-integrity"
+  >
+    Anchor build artifacts, container images, and release artefacts in CI/CD pipelines. Detect tampering between build and deployment with cryptographic evidence.
+  </Card>
+  <Card
+    title="Healthcare & Life Sciences"
+    icon="heart-pulse"
+    href="/use-cases/healthcare"
+  >
+    Integrity-protect clinical data, trial records, and patient information at scale - with GDPR erasure compatibility and auditability for regulatory submissions.
+  </Card>
+  <Card
+    title="AI System Integrity & Auditability"
+    icon="brain"
+    href="/use-cases/ai-integrity"
+  >
+    Anchor model versions, training data provenance, decision logs, and conformity assessment records - the tamper-evident audit trail that high-risk AI systems require under the EU AI Act.
+  </Card>
+</CardGroup>
+
+---
+
+## How to Use This Section
+
+Each use case page follows the same structure:
+
+1. **The problem** - what breaks without cryptographic integrity
+2. **How ROOTKey solves it** - the architectural role ROOTKey plays
+3. **Implementation** - step-by-step, with links to the relevant API endpoints
+4. **Recommended configuration** - which [protocol](/pages/protocols/overview) and [deployment model](/pages/deployment/overview) to use
+5. **Compliance alignment** - which regulatory frameworks this use case addresses
+6. **CTA** - where to go next
+
+---
+
+## Not sure which use case fits your architecture?
+
+<CardGroup cols={2}>
+  <Card
+    title="Talk to our engineering team"
+    icon="calendar"
+    href="https://rootkey.ai/contact?utm_source=api_docs&utm_medium=use_cases_overview&utm_content=demo_cta"
+  >
+    We'll map your specific data integrity requirements to a concrete ROOTKey architecture and walk you through a working implementation.
+  </Card>
+  <Card
+    title="Start with the Quickstart"
+    icon="play"
+    href="/pages/overview"
+  >
+    Create your first vault and anchor a record in under 5 minutes - no commitment required.
+  </Card>
+</CardGroup>
