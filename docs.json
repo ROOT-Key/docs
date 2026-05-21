@@ -34,7 +34,8 @@
             "group": "Introduction",
             "pages": [
               "introduction",
-              "pages/pricing"
+              "pages/pricing",
+              "pages/comparison"
             ]
           },
           {
