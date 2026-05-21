@@ -34,7 +34,8 @@
             "group": "Introduction",
             "pages": [
               "introduction",
-              "pages/pricing"
+              "pages/pricing",
+              "pages/comparison"
             ]
           },
           {
@@ -63,6 +64,22 @@
               "pages/protocols/rkp-1-on-chain",
               "pages/protocols/rkp-1-eu",
               "pages/protocols/rkp-1-sovereign"
+            ]
+          },
+          {
+            "group": "RKP-2 - Off-Chain",
+            "pages": [
+              "pages/protocols/rkp-2-off-chain",
+              "pages/protocols/rkp-2-eu",
+              "pages/protocols/rkp-2-sovereign"
+            ]
+          },
+          {
+            "group": "RKP-3 - Hybrid",
+            "pages": [
+              "pages/protocols/rkp-3-hybrid",
+              "pages/protocols/rkp-3-eu",
+              "pages/protocols/rkp-3-sovereign"
             ]
           },
           {
@@ -208,6 +225,16 @@
             "group": "Records",
             "pages": [
               "api-reference/platform/endpoint/records/overview"
+            ]
+          },
+          {
+            "group": "Data Recovery",
+            "pages": [
+              "api-reference/platform/endpoint/recovery/list-recoverable-items",
+              "api-reference/platform/endpoint/recovery/recover-vault",
+              "api-reference/platform/endpoint/recovery/recover-file",
+              "api-reference/platform/endpoint/recovery/get-recovery-details",
+              "api-reference/platform/endpoint/recovery/get-recovery-history"
             ]
           },
           {
