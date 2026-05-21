@@ -1,0 +1,148 @@
+---
+title: Competitive Comparison
+description: How ROOTKey compares to other cyber resilience, data integrity, and blockchain anchoring platforms across deployment models, integrity guarantees, sovereignty, and trust architecture.
+icon: scale-balanced
+mode: wide
+---
+
+ROOTKey is designed for organisations that require more than a simple timestamping service - they need a full infrastructure layer with flexible deployment, sovereign data handling, and a protocol architecture that matches their operational complexity.
+
+This page compares ROOTKey against seven platforms commonly evaluated for enterprise cyber resilience and data integrity workloads.
+
+<Note>
+  The platforms below span two distinct categories. **Cryptographic proof platforms** (ROOTKey, Guardtime, Woleet, OriginStamp, Acronis Notary, LTO Network) anchor data to an immutable ledger and generate independently verifiable proofs of integrity. **Backup & recovery platforms** (Rubrik, Acsense) protect data through immutable snapshots and rapid restore. These approaches are complementary - backup recovers data after a failure; cryptographic proofing proves the data was never altered before it. When evaluating for regulatory audit trails, tamper-evidence, or zero-trust data validation, ensure you are comparing solutions in the correct category.
+</Note>
+
+---
+
+## Platforms Compared
+
+<CardGroup cols={3}>
+  <Card title="ROOTKey" icon="key">
+    Enterprise cyber resilience infrastructure. Blockchain-backed data integrity, validation, and audit trail APIs with sovereign deployment options and multi-protocol architecture.
+  </Card>
+  <Card title="Guardtime" icon="shield">
+    Estonian-origin KSI (Keyless Signature Infrastructure) blockchain platform. Widely used in government and defence for data integrity assurance at scale.
+  </Card>
+  <Card title="Woleet" icon="link">
+    French blockchain timestamping service using the Bitcoin network. Chainpoint-compatible proofs for document integrity and e-signatures.
+  </Card>
+  <Card title="OriginStamp" icon="clock">
+    German multi-blockchain timestamping platform anchoring to Bitcoin, Ethereum, and Polygon. API-first, used in academia, legal tech, and enterprise.
+  </Card>
+  <Card title="Acronis Cyber Notary" icon="file-certificate">
+    Cloud-based file notarization and e-signing service from Acronis, using the Ethereum blockchain. Offered exclusively through service provider partners.
+  </Card>
+  <Card title="LTO Network" icon="network-wired">
+    Dutch hybrid blockchain platform designed for GDPR-compliant decentralised workflows and business process integrity.
+  </Card>
+  <Card title="Rubrik" icon="database">
+    Enterprise data security and cyber resilience platform. Immutable, air-gapped backup and recovery for cloud, SaaS, and on-premise environments with Zero Trust Data Security.
+  </Card>
+  <Card title="Acsense" icon="id-card">
+    IAM Resilience Platform. Continuous immutable backup and one-click recovery for identity systems (Okta, AWS IAM, Azure AD). Recognised in Gartner's 2025 Hype Cycle for Data Protection.
+  </Card>
+</CardGroup>
+
+---
+
+## Data Integrity Fundamentals
+
+| Capability | ROOTKey | Guardtime | Woleet | OriginStamp | Acronis Notary | LTO Network | Rubrik | Acsense |
+|---|---|---|---|---|---|---|---|---|
+| **Integrity Mechanism** | SHA-256 anchored to Polygon / EBSI | KSI hash tree in global calendar | SHA-256 anchored to Bitcoin (Chainpoint) | SHA-256 anchored to BTC + ETH + Polygon | Cryptographic hash on Ethereum | Hash anchoring on hybrid chain | Immutable snapshots + ML anomaly detection | Immutable + air-gapped continuous backups |
+| **Near-Zero RTO** | ✅ On-chain proofs persist with no ROOTKey dependency | ✅ KSI signatures verifiable offline | ✅ Bitcoin-backed, verifiable forever | ✅ Multi-chain redundancy | ⚠️ Ethereum anchor public; UI depends on Acronis | ⚠️ Public anchor; process resolution needs nodes | ✅ Snapshot recovery in minutes | ✅ One-click IAM recovery in minutes |
+| **Data Validity Timing** | Real-time (RKP-1/3) or async (RKP-2) | Near-real-time (KSI calendar round) | Async (~10 min Bitcoin confirmation) | Async (multi-chain batching) | Near-real-time (Ethereum block time) | Async (process-event level) | RPO defined by backup policy | Continuous - 10-minute granularity |
+| **Validation is itself anchored** | ✅ Validation results are on-chain operations | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Version history with lineage** | ✅ Every version has its own anchor and links to prior | ❌ Per-file anchoring only | ❌ | ❌ | ❌ | ⚠️ Event-level only | ✅ Snapshot-based time-machine recovery | ✅ Any-point-in-time (10-min intervals) |
+| **Structured data integrity (row-level)** | ✅ Tables with per-record anchoring | ❌ Object-level only | ❌ File-level only | ❌ File-level only | ❌ File-level only | ⚠️ Workflow event-level | ✅ Broad - VMs, DBs, SaaS apps, files | ⚠️ IAM / identity data only |
+| **Independent cryptographic proof** | ✅ Blockchain anchor - no vendor needed | ✅ KSI - offline verifiable | ✅ Chainpoint open standard | ✅ Public chain explorers | ⚠️ Partial - UI vendor-dependent | ⚠️ Partial - needs LTO nodes | ❌ Proprietary - requires Rubrik platform | ❌ Proprietary - requires Acsense platform |
+| **Open standard / protocol** | Proprietary RKP; public blockchain verification | Proprietary KSI | ✅ Chainpoint open standard | ✅ Open standard | Proprietary | ✅ Open-source chain | ❌ Proprietary | ❌ Proprietary |
+
+---
+
+## Deployment & Infrastructure
+
+| Capability | ROOTKey | Guardtime | Woleet | OriginStamp | Acronis Notary | LTO Network | Rubrik | Acsense |
+|---|---|---|---|---|---|---|---|---|
+| **REST API** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **On-Premise deployment** | ✅ Full on-premise support | ✅ Enterprise deployments | ❌ | ❌ | ❌ | ⚠️ Limited | ✅ Hardware appliances + software | ❌ Cloud / SaaS only |
+| **Container (Docker / Kubernetes)** | ✅ Native K8s support | ⚠️ Enterprise only | ❌ | ❌ | ❌ | ⚠️ Limited | ✅ | ❌ |
+| **MQTT / IoT protocol** | ✅ Native MQTT integration | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Air-gap support** | ✅ RKP-2 Sovereign EU - full air-gap | ✅ Enterprise tier | ❌ | ❌ | ❌ | ❌ | ✅ Rubrik Cloud Vault (logical air-gap) | ✅ Air-gapped immutable backups |
+| **Native / ecosystem integrations** | ✅ CRM / ERP via engineering or partner ecosystem | ❌ | ❌ | ❌ | ⚠️ Via MSP partners | ❌ | ✅ Broad - Salesforce, AWS, GCP, Azure, VMware | ✅ Okta, AWS IAM, Azure AD |
+| **Multi-environment (sandbox / prod)** | ✅ | ⚠️ Not publicly documented | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+
+---
+
+## Compliance & Data Sovereignty
+
+| Capability | ROOTKey | Guardtime | Woleet | OriginStamp | Acronis Notary | LTO Network | Rubrik | Acsense |
+|---|---|---|---|---|---|---|---|---|
+| **GDPR compliance** | ✅ Hash-only on-chain; off-chain data deletable | ✅ No data ingested; hash-only | ✅ Hash-only; GDPR-certified | ✅ Hash-only | ✅ | ✅ Designed for GDPR; auto-erasure | ✅ Automated PII masking; GDPR acceleration platform | ✅ Historical access records; compliance mapping |
+| **Right to erasure compatible** | ✅ Off-chain deletable; on-chain hash only | ✅ No personal data on-chain | ✅ | ✅ | ✅ | ✅ Erasure by design | ✅ Data masking + deletion | ✅ |
+| **EU data sovereignty** | ✅ Full - OVH EU cloud + on-premise + air-gap tiers | ✅ European company; EU deployments | ✅ French company; EU-hosted | ⚠️ German company; cloud-only | ⚠️ Swiss company; cloud-only | ⚠️ Dutch company; cloud-dependent | ✅ EU data centres; customer-selected region | ✅ Customer-owned storage - BYO storage accounts |
+| **EU blockchain (EBSI)** | ✅ Sovereign EU protocols use EBSI | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ Not blockchain-based | ❌ Not blockchain-based |
+| **eIDAS alignment** | ✅ Applicable for electronic evidence workflows | ⚠️ Partial | ⚠️ Partial | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **NIS2 / DORA alignment** | ✅ NIS2 in progress | ⚠️ Government-grade; not published | ❌ | ❌ | ❌ | ❌ | ✅ Cyber resilience aligned | ✅ DORA compliance referenced |
+| **ISO 27001** | In progress | ⚠️ Not publicly certified | ❌ | ❌ | ⚠️ Parent company certified | ❌ | ✅ Certified | ⚠️ Not publicly confirmed |
+
+---
+
+## Trust Model & Verification
+
+| Capability | ROOTKey | Guardtime | Woleet | OriginStamp | Acronis Notary | LTO Network | Rubrik | Acsense |
+|---|---|---|---|---|---|---|---|---|
+| **Zero-trust architecture** | ✅ Neither data owner nor ROOTKey can alter anchored record | ✅ KSI is keyless - no trusted authority needed | ✅ Bitcoin-backed; no Woleet trust needed | ✅ | ⚠️ Some operations depend on Acronis | ⚠️ Hybrid model has centralised components | ✅ Zero Trust Data Security (immutable, role-scoped) | ✅ Zero Trust aligned; immutable backups |
+| **Independent verification (no vendor)** | ✅ Polygonscan / EBSI - no ROOTKey infrastructure | ✅ Offline KSI verifier tools | ✅ Chainpoint; Bitcoin explorer | ✅ Public blockchain explorers | ⚠️ Ethereum public; UI vendor-dependent | ⚠️ Public chain + LTO node dependency | ❌ Requires Rubrik platform | ❌ Requires Acsense platform |
+| **Blockchain** | Polygon (Mainnet) + EBSI | KSI (proprietary hash calendar) | Bitcoin | Bitcoin + Ethereum + Polygon | Ethereum | LTO Chain (→ Base) | ❌ None | ❌ None |
+| **No single point of failure** | ✅ Decentralised Polygon PoS network | ✅ Distributed global calendar | ✅ Bitcoin network | ✅ Multi-chain | ⚠️ Ethereum PoS + Acronis dependency | ⚠️ Hybrid dependency | ✅ Distributed cloud architecture | ✅ Cross-region failover |
+| **Vendor lock-in risk** | Low - on-chain proofs verifiable forever | Low - offline verification | Very low - open standard | Low - open standard | Moderate - UI / API dependency | Low - open source | Moderate - proprietary backup format | Moderate - platform-dependent |
+
+---
+
+## Use Case Coverage
+
+| Use Case | ROOTKey | Guardtime | Woleet | OriginStamp | Acronis Notary | LTO Network | Rubrik | Acsense |
+|---|---|---|---|---|---|---|---|---|
+| Document integrity & audit trails | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ⚠️ Backup, not cryptographic proof | ❌ |
+| Regulatory audit trails | ✅ | ✅ | ⚠️ | ⚠️ | ❌ | ⚠️ | ✅ Compliance reporting | ✅ IAM access history |
+| IoT / Industrial data integrity | ✅ Native MQTT | ⚠️ Limited | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Supply chain integrity | ✅ | ✅ | ⚠️ | ⚠️ | ❌ | ✅ | ⚠️ | ❌ |
+| Healthcare data integrity | ✅ | ✅ | ⚠️ | ✅ | ❌ | ⚠️ | ✅ HIPAA-aligned backup | ⚠️ IAM in healthcare contexts |
+| Software / build integrity | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ⚠️ | ❌ |
+| AI output integrity | ✅ | ⚠️ | ⚠️ | ⚠️ | ❌ | ❌ | ❌ | ❌ |
+| High-frequency / high-volume data | ✅ RKP-2 off-chain | ✅ KSI scales linearly | ⚠️ | ⚠️ | ❌ | ⚠️ | ✅ Enterprise backup scale | ✅ Continuous IAM events |
+| Ransomware recovery | ⚠️ Proofs persist; data recovery out of scope | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ Primary use case | ⚠️ IAM systems only |
+| IAM / Identity resilience | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ⚠️ SaaS apps including identity | ✅ Primary use case |
+
+---
+
+## Where ROOTKey is Differentiated
+
+<CardGroup cols={2}>
+  <Card title="Protocol Architecture" icon="network-wired">
+    ROOTKey offers three formally defined protocols (Full On-Chain, Off-Chain, Hybrid) with nine sovereignty tiers. No other platform in this comparison provides this level of architectural choice within a single product.
+  </Card>
+  <Card title="MQTT & IoT" icon="tower-broadcast">
+    ROOTKey is the only platform in this comparison with native MQTT support - purpose-built for IoT, industrial, and OT/IT convergence use cases.
+  </Card>
+  <Card title="Air-Gap Deployment" icon="building">
+    Together with Guardtime and Rubrik, ROOTKey supports fully air-gapped deployments - combining cryptographic proof with on-premise data sovereignty, critical for defence, healthcare, and critical infrastructure.
+  </Card>
+  <Card title="Anchored Validation Records" icon="circle-check">
+    In ROOTKey, validation events are themselves anchored on-chain - creating an immutable audit log not just of the data, but of every verification performed. No other platform in this comparison does this.
+  </Card>
+  <Card title="EU Blockchain (EBSI)" icon="flag">
+    ROOTKey Sovereign EU protocols anchor to EBSI - the European Blockchain Services Infrastructure - the only platform in this comparison to support EU-sovereign blockchain anchoring.
+  </Card>
+  <Card title="Structured Data (Tables)" icon="table">
+    ROOTKey supports row-level integrity for structured datasets through its Tables primitive, anchoring each record individually. All other platforms in this comparison operate at file, object, or snapshot level.
+  </Card>
+</CardGroup>
+
+---
+
+<Note>
+  This comparison reflects publicly available information as of 2025. Vendor capabilities evolve - contact the respective vendors for the most current feature and compliance status. For ROOTKey-specific guidance, contact [contact@rootkey.ai](mailto:contact@rootkey.ai) or [request a technical briefing](https://rootkey.ai/contact?utm_source=api_docs&utm_medium=comparison&utm_content=briefing_cta).
+</Note>
