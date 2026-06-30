@@ -1,0 +1,344 @@
+---
+title: Amazon S3 Connector
+sidebarTitle: Amazon S3
+description: Automatically forward files from an S3 bucket to ROOTKey using a Terraform-deployed Lambda function in your AWS account, with built-in retries, dead-letter queue, and secret management.
+icon: aws
+---
+
+## How It Works
+
+The S3 connector is a self-contained integration that runs **entirely inside your AWS account**. ROOTKey publishes a [Terraform module](https://github.com/rootkey-ai/rootkey-connectors/tree/main/aws-s3) that you deploy once. The module wires up a Lambda function to receive Amazon EventBridge events emitted by your S3 bucket whenever a new object is created.
+
+When a new file is uploaded to the monitored bucket (and matches your [filtering rules](/pages/connectors/rules), if configured), the Lambda streams the file content directly from S3 to the ROOTKey API authenticated with your **Connector API Key**. ROOTKey stores the file and anchors it on-chain, enabling both integrity verification and **full file recovery** in the event of corruption, ransomware, or accidental deletion.
+
+```
+S3 Bucket            EventBridge        AWS Lambda                      ROOTKey API
+─────────            ───────────        ──────────                      ───────────
+  Object Created  →  Rule matches    →  Reads object (streamed)      →  POST /api-v1/connectors/files/
+  event emitted      bucket + prefix    Fetches API key from Secret     (Connector API Key,
+                                        Streams body to ROOTKey         + idempotency headers)
+```
+
+<Note>
+  ROOTKey's cyber resilience guarantee includes full recovery — not just detection. For that reason the connector uploads the **full file content**, not only a hash. Anchoring a hash alone cannot restore a corrupted, encrypted, or deleted file.
+</Note>
+
+---
+
+## What This Module Creates in Your AWS Account
+
+Full transparency on what lands in your account when you `terraform apply`:
+
+| Resource | Purpose | Cost impact |
+|---|---|---|
+| `aws_lambda_function` | The connector itself (Node.js 22, 1024 MB, 300 s timeout). | Pay-per-invocation; one invocation per uploaded file. |
+| `aws_cloudwatch_event_rule` + target | Routes `Object Created` events from EventBridge to the Lambda. | Free — S3 events to the default EventBridge bus carry no extra charge. |
+| `aws_lambda_permission` | Grants EventBridge permission to invoke the Lambda, scoped to your AWS account. | None. |
+| `aws_secretsmanager_secret` (+ version) | Holds the ROOTKey Connector API Key. The Lambda reads it at cold start; it is **never** stored as a plain Lambda environment variable. | ~$0.40/month per connector. |
+| `aws_cloudwatch_log_group` | Pre-created with a configurable retention (default 30 days). | Lower than the default infinite-retention log group AWS would otherwise auto-create. |
+| `aws_sqs_queue` | Dead-letter queue for events that fail after retries. | Free in normal operation (only used on failure; SQS free tier covers 1M requests/month). |
+| `aws_lambda_function_event_invoke_config` | Configures 2 async retries with exponential backoff before the event is sent to the DLQ. | None. |
+| `aws_iam_role_policy` | Attaches an **inline policy** to the IAM Role you supply, granting only the runtime permissions the Lambda needs (S3 read on the monitored bucket, Secrets Manager read on the secret created above, SQS write on the DLQ, and CloudWatch log writes). | None. |
+
+The module **does not** modify your S3 bucket's notification configuration, your VPC, your existing IAM policies, or any other infrastructure outside the resources listed above. Any notifications you already have on the bucket (Lambda, SQS, SNS) remain untouched.
+
+For a typical bucket with a few thousand uploads per month, the **total recurring cost added to your AWS bill is well under one dollar per month**, mainly from Secrets Manager and Lambda invocations.
+
+---
+
+## Infrastructure Impact Summary
+
+<AccordionGroup>
+  <Accordion title="Does this modify my S3 bucket?" icon="bucket">
+    No. The module never touches `aws_s3_bucket_notification` or any other bucket-level resource. You enable EventBridge once on the bucket (a single switch — see the setup steps), and any other notifications on the bucket continue to work as before.
+  </Accordion>
+  <Accordion title="Does this modify my existing IAM Role?" icon="user-shield">
+    Yes, in one specific way: the module **attaches an inline policy** named `rootkey-s3-connector` to the role you supply, with exactly the permissions listed in the table above. It does **not** modify the trust policy, detach managed policies, or change anything else about the role. Other inline policies on the role are unaffected.
+
+    If your security policy forbids modules from attaching policies, you can instead pre-create the policy yourself using the JSON [shown below](#required-iam-permissions) — contact us if you need a variant of the module that skips the inline-policy creation.
+  </Accordion>
+  <Accordion title="Does the file content leave my AWS account?" icon="cloud-arrow-up">
+    Yes. The whole purpose of the connector is to forward file content to ROOTKey so it can be anchored and recovered. Transport is HTTPS-only (the module rejects non-`https://` API URLs at plan time). Files are streamed; the Lambda never writes them to local storage or to any other AWS service.
+  </Accordion>
+  <Accordion title="What happens to my API key?" icon="key">
+    The key you paste into Terraform is written into AWS Secrets Manager **in your own account**, encrypted at rest with the AWS-managed KMS key for Secrets Manager. The Lambda fetches it at cold start using the IAM Role and caches it in memory for the lifetime of the execution environment. It is **not** stored as a Lambda environment variable, so no IAM principal with `lambda:GetFunctionConfiguration` can read it.
+  </Accordion>
+  <Accordion title="What happens if the ROOTKey API is unreachable?" icon="circle-exclamation">
+    The Lambda invocation fails and EventBridge / Lambda retry the event twice with exponential backoff (configurable via `maximum_retry_attempts`). If all retries fail, the event lands in the SQS dead-letter queue created by the module. You can configure a CloudWatch alarm on the DLQ's `ApproximateNumberOfMessagesVisible` metric to be notified when this happens, and replay the events once the issue is resolved.
+  </Accordion>
+  <Accordion title="Can I roll this back?" icon="rotate-left">
+    Yes. Running `terraform destroy` removes every resource the module created (Lambda, EventBridge rule, Secrets Manager secret, log group, DLQ, inline IAM policy). The IAM Role and the S3 bucket are not deleted — they are your resources, not the module's.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- An **AWS account** with the target S3 bucket already created.
+- Permissions to **create IAM Roles** in that account (or an existing Role you can dedicate to the connector).
+- Permissions to apply Terraform with `iam:PutRolePolicy` on the chosen Role and the rights to create Lambda, EventBridge, Secrets Manager, SQS, and CloudWatch Logs resources.
+- **EventBridge notifications enabled on the bucket** — a one-time switch (instructions in step 2).
+- [Terraform](https://developer.hashicorp.com/terraform/install) v1.3 or later installed locally (or in a CI/CD pipeline that runs `terraform apply`).
+- [Node.js](https://nodejs.org) v22 or later on the machine running Terraform — the Lambda source is compiled at apply time.
+
+---
+
+## Required IAM Permissions
+
+The IAM Role that the Lambda will assume needs **only a trust policy** allowing Lambda to assume it. The module attaches every runtime permission needed as an inline policy at apply time.
+
+**Trust policy** (the only thing you need to set on the Role yourself):
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "Service": "lambda.amazonaws.com" },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+```
+
+For reference, the inline policy the module attaches at apply time looks like this (resource ARNs are filled in automatically from the resources the module creates):
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    { "Sid": "ReadS3Objects",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:GetObjectVersion", "s3:GetObjectAttributes"],
+      "Resource": "arn:aws:s3:::YOUR_BUCKET/*" },
+    { "Sid": "WriteLogs",
+      "Effect": "Allow",
+      "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+      "Resource": "arn:aws:logs:REGION:ACCOUNT:log-group:/aws/lambda/rootkey-s3-connector-YOUR_BUCKET:*" },
+    { "Sid": "ReadApiKeySecret",
+      "Effect": "Allow",
+      "Action": ["secretsmanager:GetSecretValue"],
+      "Resource": "arn:aws:secretsmanager:REGION:ACCOUNT:secret:rootkey-connector-YOUR_BUCKET-*" },
+    { "Sid": "SendToDLQ",
+      "Effect": "Allow",
+      "Action": ["sqs:SendMessage"],
+      "Resource": "arn:aws:sqs:REGION:ACCOUNT:rootkey-s3-connector-YOUR_BUCKET-dlq" }
+  ]
+}
+```
+
+---
+
+## Configuration Fields
+
+| Field | Required | Default | Description |
+|---|---|---|---|
+| **Connector Name** | Yes | — | A human-readable name to identify this connector in the dashboard. |
+| **Destination Vault** | Yes | — | The ROOTKey vault where anchored files will be stored. |
+| **S3 Bucket Name** | Yes | — | The exact name of the S3 bucket to monitor. |
+| **AWS Region** | Yes | — | The AWS region where the bucket is located (e.g., `eu-west-1`). |
+| **IAM Role ARN** | Yes | — | The ARN of the IAM Role the Lambda will assume (trust policy described above). |
+| **Prefix** | No | `""` | Only monitor objects whose key starts with this prefix (e.g., `documents/`). Leave empty to monitor the entire bucket. |
+| **Max file size (bytes)** | No | `524288000` (500 MiB) | Objects larger than this are skipped with an error. Raise only after increasing Lambda `memory_size` proportionally. |
+| **Log retention (days)** | No | `30` | CloudWatch log retention for the Lambda's log group. Must be a value accepted by AWS (`1, 3, 7, 14, 30, 60, 90, …`). |
+| **Tags** | No | `{}` | Extra tags applied to every resource created by the module — useful for cost allocation. |
+
+---
+
+## Setup
+
+The setup has a natural ordering dependency: the dashboard requires the **IAM Role ARN** to create the connector, and the Terraform module requires the **Connector API Key** to be applied. The steps below resolve this — create the Role first, then the connector wizard generates a ready-to-run Terraform block with all values pre-filled.
+
+<Steps>
+  <Step title="Create the IAM Role in AWS">
+    In the [AWS IAM Console](https://console.aws.amazon.com/iam/), create a new role:
+
+    - **Trusted entity type**: AWS service → Lambda.
+    - **Permissions**: skip this step — the module attaches the inline policy at apply time.
+    - **Role name**: something descriptive, e.g., `rootkey-s3-connector-role`.
+
+    After creating the role, open it and copy the **Role ARN** — it looks like `arn:aws:iam::123456789012:role/rootkey-s3-connector-role`. You will need this in step 3.
+
+    {/* TODO: screenshot */}
+  </Step>
+
+  <Step title="Enable EventBridge notifications on the bucket">
+    This is the only manual change to the bucket and is done **once per bucket**, regardless of how many connectors target it.
+
+    **AWS Console:** S3 → your bucket → **Properties** → **Event notifications** → **Amazon EventBridge** → **Edit** → set to **On** → Save.
+
+    **Terraform:** if you manage the bucket through Terraform, add `eventbridge = true` to your existing `aws_s3_bucket_notification` resource. Do not create a new resource — `aws_s3_bucket_notification` is unique per bucket.
+
+    ```hcl
+    resource "aws_s3_bucket_notification" "my_bucket" {
+      bucket      = "my-company-documents"
+      eventbridge = true
+      # ...keep any other notifications you already have here...
+    }
+    ```
+
+    <Tip>
+      Because the connector module never touches `aws_s3_bucket_notification`, any other notifications already attached to the bucket (Lambda, SQS, SNS) remain in place. You can also wire several different consumers to the same EventBridge events without conflict.
+    </Tip>
+
+    {/* TODO: screenshot */}
+  </Step>
+
+  <Step title="Create the connector in the dashboard">
+    Go to [app.rootkey.ai](https://app.rootkey.ai) → **Connectors** → **New Connector** → select **Amazon S3**.
+
+    Fill in all required fields:
+    - **Connector Name**
+    - **Destination Vault**
+    - **S3 Bucket Name**
+    - **AWS Region**
+    - **IAM Role ARN** — paste the ARN copied in step 1
+    - **Prefix** (optional)
+
+    Save the connector.
+
+    {/* TODO: screenshot */}
+  </Step>
+
+  <Step title="Copy the Connector API Key and the Terraform block">
+    At the end of the wizard, the dashboard displays two things:
+
+    1. The **Connector API Key** — copy it immediately.
+    2. A **ready-to-run Terraform block**, pre-filled with your bucket name, region, IAM Role ARN, and Connector API Key.
+
+    <Warning>
+      The Connector API Key is shown **only once** and is already embedded in the Terraform block. Copy both now and store them securely before closing this screen. The key cannot be retrieved again — only rotated by recreating the connector.
+    </Warning>
+
+    The generated block will look like this (with your actual values already substituted):
+
+    ```hcl
+    module "rootkey_s3_connector" {
+      source = "github.com/rootkey-ai/rootkey-connectors//aws-s3"
+
+      bucket_name     = "my-company-documents"
+      aws_region      = "eu-west-1"
+      iam_role_arn    = "arn:aws:iam::123456789012:role/rootkey-s3-connector-role"
+      rootkey_api_key = "rk_conn_xxxxxxxxxxxxxxxxxxxx"
+
+      # Optional
+      prefix              = "documents/"
+      max_file_size_bytes = 524288000
+      log_retention_days  = 30
+      tags = {
+        "cost-center" = "security"
+      }
+    }
+    ```
+
+    {/* TODO: screenshot */}
+  </Step>
+
+  <Step title="Deploy the Terraform module">
+    Create an empty directory and save the Terraform block copied from the wizard into a file named `main.tf` (or any name ending in `.tf`) inside that directory.
+
+    Then run:
+
+    ```bash
+    terraform init
+    terraform apply
+    ```
+
+    Terraform compiles the Lambda source (`npm ci && npm run build` under the hood — this is why Node.js 22+ is a prerequisite on the machine running Terraform), packages it, and provisions every resource listed in the [infrastructure section above](#what-this-module-creates-in-your-aws-account). The full apply typically takes 30–60 seconds.
+
+    The module exposes useful outputs you can wire into your own monitoring:
+
+    ```bash
+    terraform output dlq_url            # DLQ URL — add a CloudWatch alarm on its depth
+    terraform output log_group_name     # CloudWatch log group for the Lambda
+    terraform output api_key_secret_arn # Secrets Manager secret ARN
+    ```
+  </Step>
+
+  <Step title="Validate the connector">
+    Upload a test file to the S3 bucket (matching the prefix, if configured):
+
+    ```bash
+    aws s3 cp test.pdf s3://my-company-documents/test.pdf
+    ```
+
+    Within a few seconds the file should appear anchored in the destination vault. You can also tail the Lambda logs from your terminal:
+
+    ```bash
+    aws logs tail $(terraform output -raw log_group_name) --follow
+    ```
+
+    Check the connector status in the dashboard — it should show **ACTIVE**. If the status is **ERROR**, the detail panel shows the reason.
+
+    {/* TODO: screenshot */}
+  </Step>
+</Steps>
+
+---
+
+## Reliability Model
+
+<CardGroup cols={2}>
+  <Card title="Asynchronous invocation" icon="bolt">
+    EventBridge invokes the Lambda asynchronously, so a slow ROOTKey upload never blocks S3 or any other consumer of the bucket events.
+  </Card>
+  <Card title="Two automatic retries" icon="rotate">
+    On any failure (5xx from the ROOTKey API, network blip, throttling), Lambda retries the event up to two more times with exponential backoff before giving up.
+  </Card>
+  <Card title="Dead-letter queue" icon="inbox-full">
+    Events that fail all retries land in the SQS DLQ created by the module. Set a CloudWatch alarm on the queue depth to know immediately when files are not reaching ROOTKey.
+  </Card>
+  <Card title="Idempotent uploads" icon="fingerprint">
+    Every upload carries the source bucket, key, ETag and version ID as headers, so the ROOTKey API can safely deduplicate events that EventBridge delivers more than once.
+  </Card>
+</CardGroup>
+
+---
+
+## Filtering Rules
+
+The Terraform module supports an optional `prefix` to limit which keys trigger the Lambda. For finer control (by extension, size, filename content, regex), configure [Filtering Rules](/pages/connectors/rules) on the connector in the dashboard after creation. The prefix filter and the dashboard filtering rules are applied independently and compose with `AND` logic.
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Connector is in ERROR state" icon="triangle-exclamation">
+    Common causes:
+
+    - The IAM Role ARN you provided does not exist or its trust policy does not allow `lambda.amazonaws.com` to assume it. Verify in the AWS IAM console.
+    - The Terraform principal lacks `iam:PutRolePolicy` on the supplied Role, so the module could not attach the inline policy. Re-apply with sufficient permissions.
+    - The Lambda was deployed but the connector cannot reach it (rare — typically only happens if the Lambda is deleted out-of-band).
+
+    Check the Lambda execution logs in **CloudWatch** (`/aws/lambda/rootkey-s3-connector-<bucket-name>`) for the specific error message.
+  </Accordion>
+  <Accordion title="Files are not appearing in the vault" icon="magnifying-glass">
+    1. **Is EventBridge enabled on the bucket?** S3 → Properties → Event notifications → Amazon EventBridge must be **On**. Without it, no events are emitted and the connector receives nothing.
+    2. **Does the file match the configured prefix?** Files whose keys do not start with the configured prefix are not delivered to the Lambda.
+    3. **Does the file match your [filtering rules](/pages/connectors/rules)?** Files that do not match are silently skipped after the Lambda receives them.
+    4. **Is the file larger than `max_file_size_bytes`?** Oversized objects are skipped with an error logged in CloudWatch. Raise the limit (and the Lambda's `memory_size`) if needed.
+    5. **Did the upload land in the DLQ?** `aws sqs receive-message --queue-url $(terraform output -raw dlq_url)` returns any events that failed all retries.
+    6. **Inspect the Lambda CloudWatch logs** for invocation errors.
+  </Accordion>
+  <Accordion title="How do I rotate the Connector API Key?" icon="arrows-spin">
+    Delete the connector in the dashboard and create a new one. The IAM Role, S3 bucket, and other resources can be reused. Update the `rootkey_api_key` Terraform variable with the new key and run `terraform apply` — the module writes the new value into the Secrets Manager secret and the Lambda picks it up on the next cold start (or sooner, when the cached value expires).
+  </Accordion>
+  <Accordion title="How do I monitor the DLQ?" icon="bell">
+    Create a CloudWatch alarm on the SQS metric `ApproximateNumberOfMessagesVisible` for the queue exposed by the `dlq_arn` Terraform output. Any non-zero value indicates at least one file did not reach ROOTKey after all retries. Once the underlying issue is resolved, you can manually replay the messages by re-invoking the Lambda with each DLQ payload.
+  </Accordion>
+  <Accordion title="Can I monitor a bucket I don't own?" icon="users">
+    No. EventBridge events are emitted only from the AWS account that owns the bucket, and the Lambda must run in the same account to receive them. For cross-account scenarios, deploy the connector in the bucket's account.
+  </Accordion>
+  <Accordion title="What about existing files in the bucket?" icon="folder-tree">
+    The connector anchors files **created after deployment**. Files that already existed in the bucket are not automatically backfilled — they generated their `Object Created` events before the EventBridge rule existed. If you need to anchor pre-existing files, contact support for a one-shot backfill script that re-emits events for a key range.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+→ Back to [Connectors Overview](/pages/connectors/overview)

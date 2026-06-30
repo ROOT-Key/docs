@@ -1,0 +1,156 @@
+---
+title: Connector Filtering Rules
+sidebarTitle: Filtering Rules
+description: Control which files are anchored by a connector using inclusion and exclusion rules based on file extension, size, name, and more.
+icon: filter
+---
+
+## What are Filtering Rules?
+
+Filtering rules let you define precisely which files a connector should anchor. Without rules, a connector anchors **every** new file detected in the storage. Rules allow you to restrict anchoring to relevant files only — for example, only PDFs, or everything except temporary files.
+
+Rules are configured per connector and evaluated each time a new file is detected.
+
+---
+
+## Default Behavior
+
+If no filtering rules are configured on a connector, **all files are anchored** without restriction.
+
+---
+
+## Rule Structure
+
+Each rule has three parts:
+
+| Part | Description |
+|---|---|
+| **Action** | What to do when the rule matches: `INCLUDE` (anchor the file) or `EXCLUDE` (skip the file). |
+| **Operator** | How to combine multiple conditions within the rule: `AND` (all conditions must match) or `OR` (any condition must match). |
+| **Conditions** | One or more conditions that the file must satisfy. |
+
+### Conditions
+
+Each condition targets one **field** of the file and applies an **operator** to a **value**.
+
+| Field | Available Operators | Example Value | Description |
+|---|---|---|---|
+| `extension` | `equals` | `pdf` | File extension, without the leading dot. Case-insensitive. |
+| `prefix` | `starts_with`, `equals` | `documents/reports/` | The file path or key prefix (useful for S3 prefixes or folder paths). |
+| `suffix` | `ends_with`, `equals` | `_final` | A suffix in the filename (excluding extension). |
+| `size` | `less_than`, `greater_than` | `1048576` | File size in bytes. |
+| `filename_contains` | `contains` | `invoice` | A substring present anywhere in the filename (excluding path). |
+
+---
+
+## How Rules Are Evaluated
+
+1. When a new file is detected, all rules on the connector are evaluated in order.
+2. The first matching rule determines the outcome (`INCLUDE` or `EXCLUDE`).
+3. If no rule matches, the file is anchored by default (same as if no rules were configured).
+
+<Info>
+  Rules are evaluated top to bottom. Order matters when you have overlapping conditions. Place more specific rules before more general ones.
+</Info>
+
+---
+
+## Examples
+
+### Anchor only PDFs
+
+```
+Action: INCLUDE
+Operator: AND
+Conditions:
+  - extension equals pdf
+```
+
+Any file that is not a PDF will not be anchored, because no rule matches it and the default action applies — unless you add an explicit `EXCLUDE` rule for all other files.
+
+To strictly anchor only PDFs, add:
+
+```
+Rule 1:
+  Action: INCLUDE
+  Operator: AND
+  Conditions:
+    - extension equals pdf
+
+Rule 2:
+  Action: EXCLUDE
+  Operator: OR
+  Conditions:
+    - extension equals docx
+    - extension equals xlsx
+    - extension equals png
+    ... (or handle via a more general rule)
+```
+
+Alternatively, structure it as a single INCLUDE rule and rely on the default-pass-through not applying since no INCLUDE rule matches other file types.
+
+### Exclude temporary files
+
+Exclude files whose name contains common temporary indicators:
+
+```
+Action: EXCLUDE
+Operator: OR
+Conditions:
+  - filename_contains contains .tmp
+  - filename_contains contains ~$
+  - suffix ends_with _draft
+```
+
+### Include only files above 1 MB
+
+```
+Action: INCLUDE
+Operator: AND
+Conditions:
+  - size greater_than 1048576
+```
+
+### Anchor invoices from a specific folder (S3)
+
+```
+Action: INCLUDE
+Operator: AND
+Conditions:
+  - prefix starts_with invoices/2024/
+  - extension equals pdf
+```
+
+### Exclude large video files
+
+```
+Action: EXCLUDE
+Operator: OR
+Conditions:
+  - extension equals mp4
+  - extension equals mov
+  - extension equals avi
+  - size greater_than 524288000
+```
+
+---
+
+## Configuring Rules in the Dashboard
+
+Rules are managed on the connector detail page in [app.rootkey.ai](https://app.rootkey.ai):
+
+1. Open the connector.
+2. Go to the **Rules** tab.
+3. Click **Add Rule** to create a new rule.
+4. Set the action, operator, and add one or more conditions.
+5. Save. Rules take effect immediately for new files.
+
+{/* TODO: screenshot */}
+
+<Info>
+  Changes to rules do not retroactively affect files that were already processed. Only new files detected after the rule change are evaluated against the updated rule set.
+</Info>
+
+---
+
+→ Back to [Connectors Overview](/pages/connectors/overview)

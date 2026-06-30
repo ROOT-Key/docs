@@ -1,0 +1,120 @@
+---
+title: Connectors
+sidebarTitle: Overview
+description: Automatically anchor files from external storage services to the ROOTKey blockchain — no API integration required.
+icon: plug
+---
+
+## What are Connectors?
+
+Connectors bridge your existing storage infrastructure and the ROOTKey platform. Instead of integrating the ROOTKey API into your application, you configure a connector in the dashboard and ROOTKey automatically anchors every new file detected in that storage to the blockchain.
+
+This means teams that manage files in Amazon S3, Cloudflare R2, SharePoint, or OneDrive can achieve full blockchain-backed integrity guarantees without writing a single line of code.
+
+### The problem they solve
+
+Manual API integration works well when you control the file upload pipeline. However, many organizations store files in cloud storage services managed by third-party tools, ERPs, or business workflows — places where injecting API calls is impractical. Connectors handle this gap: they watch the storage for new files and anchor them automatically.
+
+| Approach | Setup effort | Code required | Works with existing storage |
+|---|---|---|---|
+| API Integration | Medium | Yes | Only if you control uploads |
+| Connector | Low | No | Yes |
+
+---
+
+## How Connectors Work
+
+```
+External Storage          ROOTKey Connector Module          ROOTKey Platform
+──────────────            ─────────────────────────         ────────────────
+  New file added    →     Detects new file                →  Anchors file in
+  to bucket/drive         Calls ROOTKey API                  configured Vault
+                          with Connector API Key
+```
+
+1. You create a connector in the dashboard, selecting the target vault and providing the storage credentials.
+2. ROOTKey generates a **Connector API Key** — shown once at creation, never recoverable.
+3. You deploy the connector module — a Terraform module in your AWS account (for S3), your Cloudflare account (for R2), or your Azure subscription (for SharePoint and OneDrive).
+4. The module monitors the storage for new files and calls the ROOTKey API using the Connector API Key to anchor each file.
+5. Anchored files appear in the configured vault, with full blockchain proof attached.
+
+---
+
+## Available Connectors
+
+<CardGroup cols={2}>
+  <Card title="Amazon S3" icon="aws" href="/pages/connectors/amazon-s3">
+    Monitor an S3 bucket with a Terraform-deployed Lambda function in your AWS account.
+  </Card>
+  <Card title="Cloudflare R2" icon="cloudflare" href="/pages/connectors/r2">
+    Monitor an R2 bucket with a Terraform-deployed Cloudflare Worker in your Cloudflare account.
+  </Card>
+  <Card title="SharePoint" icon="microsoft" href="/pages/connectors/sharepoint">
+    Monitor every document library on a SharePoint site with a Terraform-deployed Azure Function App in your Azure subscription.
+  </Card>
+  <Card title="OneDrive" icon="cloud" href="/pages/connectors/onedrive">
+    Monitor a OneDrive drive with a Terraform-deployed Azure Function App in your Azure subscription.
+  </Card>
+</CardGroup>
+
+---
+
+## Connector API Key
+
+When a connector is created, the platform generates a unique **Connector API Key** scoped exclusively to that connector. This key is used by the connector module to authenticate calls to the ROOTKey API.
+
+<Warning>
+  The Connector API Key is displayed **only once** at creation time. Copy it immediately and store it securely. It cannot be retrieved again — if lost, you must delete the connector and create a new one.
+</Warning>
+
+The key is not a general-purpose API key. It cannot be used to call other ROOTKey API endpoints and is automatically invalidated if the connector is deleted.
+
+---
+
+## Connector States
+
+| State | Meaning |
+|---|---|
+| `ACTIVE` | The connector is running and anchoring new files normally. |
+| `PAUSED` | The connector has been manually paused. New files are not anchored until resumed. |
+| `ERROR` | The connector encountered an error (e.g., invalid credentials, revoked permissions). Inspect the connector details in the dashboard for the error reason. |
+
+---
+
+## Filtering Rules
+
+By default, a connector anchors **every** new file detected in the storage. Filtering rules let you control exactly which files are anchored — by extension, size, name prefix, suffix, or content of the filename.
+
+Rules are composed of conditions joined by `AND` or `OR` logic, and each rule has an action of `INCLUDE` or `EXCLUDE`.
+
+→ See [Filtering Rules](/pages/connectors/rules) for full details and examples.
+
+---
+
+## Relation to Vaults
+
+Each connector is linked to exactly one **vault**. All files anchored by the connector are stored in that vault. The vault controls the blockchain protocol, data sovereignty settings, and access permissions applied to the anchored files.
+
+→ See [Concepts](/pages/concepts) for an overview of vaults and how they relate to files and records.
+
+---
+
+## Setup Guides
+
+<CardGroup cols={2}>
+  <Card title="Amazon S3" icon="aws" href="/pages/connectors/amazon-s3">
+    Deploy a Lambda-based connector into your AWS account using the ROOTKey Terraform module.
+  </Card>
+  <Card title="Cloudflare R2" icon="cloudflare" href="/pages/connectors/r2">
+    Deploy a Worker-based connector into your Cloudflare account using the ROOTKey Terraform module.
+  </Card>
+  <Card title="SharePoint" icon="microsoft" href="/pages/connectors/sharepoint">
+    Deploy a Function App-based connector into your Azure subscription using the ROOTKey Terraform module.
+  </Card>
+  <Card title="OneDrive" icon="cloud" href="/pages/connectors/onedrive">
+    Deploy a Function App-based connector into your Azure subscription using the ROOTKey Terraform module.
+  </Card>
+  <Card title="Filtering Rules" icon="filter" href="/pages/connectors/rules">
+    Control which files are anchored using inclusion and exclusion rules.
+  </Card>
+</CardGroup>

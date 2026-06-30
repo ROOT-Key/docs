@@ -46,6 +46,17 @@
             ]
           },
           {
+            "group": "Connectors",
+            "pages": [
+              "pages/connectors/overview",
+              "pages/connectors/amazon-s3",
+              "pages/connectors/sharepoint",
+              "pages/connectors/onedrive",
+              "pages/connectors/r2",
+              "pages/connectors/rules"
+            ]
+          },
+          {
             "group": "Ecosystem Guides",
             "pages": [
               "pages/environments",
