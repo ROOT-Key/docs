@@ -45,45 +45,10 @@
     }
   ],
   "paths": {
-    "/healthz": {
-      "get": {
-        "summary": "Verify application health",
-        "description": "Returns application health status including database, messaging, and queue subsystem checks plus runtime metrics.",
-        "tags": [
-          "api-v1-public"
-        ],
-        "security": [],
-        "responses": {
-          "200": {
-            "description": "Application is healthy",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HealthResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "$ref": "#/components/responses/InternalError"
-          },
-          "503": {
-            "description": "Application is unhealthy — one or more subsystems are not ready",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HealthResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/annual-report": {
       "get": {
         "summary": "Download annual report",
-        "description": "Downloads the annual report as a binary file stream. Caller IP is logged for audit.",
+        "description": "Returns the annual report file. Caller IP is logged for audit purposes.",
         "tags": [
           "api-v1-public"
         ],
@@ -111,7 +76,7 @@
     },
     "/plans": {
       "get": {
-        "summary": "List subscription plans",
+        "summary": "List plans",
         "description": "Returns the available subscription plans, optionally filtered by plan type.",
         "tags": [
           "api-v1-public"
@@ -160,7 +125,7 @@
     "/platform/vaults": {
       "post": {
         "summary": "Create vault",
-        "description": "Creates a new blockchain vault (wallet) and assigns it to the specified team. Returns 201 with the chain ID, address, name and description.",
+        "description": "Creates a new vault and assigns it to the specified team. Returns the chain ID, address, name and description.",
         "tags": [
           "api-v1-vaults"
         ],
@@ -176,21 +141,20 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "teamId",
                   "vaultName"
                 ],
                 "properties": {
-                  "teamId": {
-                    "type": "string",
-                    "format": "uuid",
-                    "description": "ID of the team this vault will be assigned to"
-                  },
                   "vaultName": {
                     "type": "string",
                     "example": "Compliance Vault Q1"
                   },
                   "description": {
                     "type": "string"
+                  },
+                  "teamId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Optional. ID of the team that will own the vault. Defaults to the organization's 'General' team."
                   }
                 }
               }
@@ -239,7 +203,7 @@
     "/platform/vaults/{vaultAddress}": {
       "put": {
         "summary": "Update vault",
-        "description": "Updates the name and/or description of an existing vault.",
+        "description": "Updates the name and/or description of a vault.",
         "tags": [
           "api-v1-vaults"
         ],
@@ -310,7 +274,7 @@
       },
       "delete": {
         "summary": "Delete vault",
-        "description": "Soft-deletes a vault. Returns 200 with an empty body on success.",
+        "description": "Deletes a vault. Returns 200 with an empty body on success.",
         "tags": [
           "api-v1-vaults"
         ],
@@ -357,7 +321,7 @@
     },
     "/platform/files": {
       "get": {
-        "summary": "List files for a vault",
+        "summary": "List files",
         "tags": [
           "api-v1-files"
         ],
@@ -475,7 +439,8 @@
         }
       },
       "post": {
-        "summary": "Anchor a file to the blockchain (create smart contract)",
+        "summary": "Create file",
+        "description": "Uploads a file and anchors its hash to create a verifiable record. The file becomes part of the specified vault.",
         "tags": [
           "api-v1-files"
         ],
@@ -498,11 +463,11 @@
                   "file": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The file to anchor"
+                    "description": "The file to upload"
                   },
                   "ownerVault": {
                     "type": "string",
-                    "description": "Blockchain address of the vault that will own the anchored file",
+                    "description": "Address of the vault that will own the file",
                     "example": "0xdf67CA8286510997567685c0385ECeAb11C23C92"
                   },
                   "fileName": {
@@ -547,7 +512,7 @@
     },
     "/platform/files/{parentId}/versions": {
       "get": {
-        "summary": "List versions of a parent file",
+        "summary": "List file versions",
         "tags": [
           "api-v1-files"
         ],
@@ -631,7 +596,8 @@
         }
       },
       "post": {
-        "summary": "Anchor a new version of a parent file",
+        "summary": "Create file version",
+        "description": "Uploads a new version of an existing file, keeping the parent's version history.",
         "tags": [
           "api-v1-files"
         ],
@@ -709,7 +675,7 @@
     },
     "/platform/files/{fileId}": {
       "get": {
-        "summary": "Fetch a single file with full blockchain details",
+        "summary": "Fetch file with details",
         "tags": [
           "api-v1-files"
         ],
@@ -760,7 +726,7 @@
         }
       },
       "delete": {
-        "summary": "Delete (burn) a file from the blockchain",
+        "summary": "Delete file",
         "tags": [
           "api-v1-files"
         ],
@@ -813,7 +779,7 @@
     },
     "/platform/files/{fileId}/download": {
       "get": {
-        "summary": "Download the original file binary",
+        "summary": "Download file",
         "tags": [
           "api-v1-files"
         ],
@@ -867,7 +833,7 @@
     },
     "/platform/files/{fileId}/history": {
       "get": {
-        "summary": "List activity history for a file",
+        "summary": "Fetch file history",
         "tags": [
           "api-v1-files"
         ],
@@ -944,7 +910,7 @@
     },
     "/platform/files/{fileId}/validations": {
       "get": {
-        "summary": "List validation history for a file",
+        "summary": "Fetch file validations",
         "tags": [
           "api-v1-files"
         ],
@@ -1019,85 +985,10 @@
         }
       }
     },
-    "/platform/files/{fileId}/transfer": {
-      "post": {
-        "summary": "Transfer file ownership to another wallet",
-        "tags": [
-          "api-v1-files"
-        ],
-        "security": [
-          {
-            "x-api-key": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "fileId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "tokenId",
-                  "ownerWallet",
-                  "destinationWallet"
-                ],
-                "properties": {
-                  "tokenId": {
-                    "type": "string",
-                    "description": "On-chain token ID of the file"
-                  },
-                  "ownerWallet": {
-                    "type": "string",
-                    "example": "0xdf67CA8286510997567685c0385ECeAb11C23C92"
-                  },
-                  "destinationWallet": {
-                    "type": "string",
-                    "example": "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Transfer submitted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ChainIdResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/DomainError"
-          },
-          "401": {
-            "description": "Unauthenticated"
-          },
-          "404": {
-            "description": "Wallet not found"
-          },
-          "500": {
-            "$ref": "#/components/responses/InternalError"
-          }
-        }
-      }
-    },
     "/platform/files/{fileId}/validate": {
       "post": {
-        "summary": "Validate (compare) a file against its anchored version",
+        "summary": "Validate file",
+        "description": "Uploads a file and compares it against the anchored version to verify integrity, ownership and validity.",
         "tags": [
           "api-v1-files"
         ],
@@ -1170,7 +1061,8 @@
     },
     "/platform/files/{fileId}/audit-report": {
       "post": {
-        "summary": "Enqueue a compliance audit report generation for a file",
+        "summary": "Create file audit report",
+        "description": "Enqueues a compliance audit report for the given file. The report is generated asynchronously; the response returns the report ID and its initial pending status.",
         "tags": [
           "api-v1-files"
         ],
@@ -1247,7 +1139,7 @@
     },
     "/platform/records": {
       "get": {
-        "summary": "List records for a vault",
+        "summary": "List records",
         "tags": [
           "api-v1-records"
         ],
@@ -1361,7 +1253,8 @@
         }
       },
       "post": {
-        "summary": "Anchor a structured-data record to the blockchain",
+        "summary": "Create record",
+        "description": "Anchors a structured key/value payload as a verifiable record.",
         "tags": [
           "api-v1-records"
         ],
@@ -1427,7 +1320,8 @@
     },
     "/platform/records/{parentId}/versions": {
       "post": {
-        "summary": "Anchor a new version of an existing record",
+        "summary": "Create record version",
+        "description": "Creates a new version of an existing record, preserving the parent's version history.",
         "tags": [
           "api-v1-records"
         ],
@@ -1542,8 +1436,8 @@
         }
       },
       "post": {
-        "summary": "Schedule recovery point creation",
-        "description": "Enqueues creation of a new recovery point. Returns 202 Accepted with a one-time decryption password for the resulting archive.",
+        "summary": "Create recovery point",
+        "description": "Enqueues creation of a new recovery point. Returns a one-time decryption password for the resulting archive.",
         "tags": [
           "api-v1-recovery-points"
         ],
@@ -1632,7 +1526,7 @@
     },
     "/platform/recovery-point/{recoveryPointId}": {
       "get": {
-        "summary": "Get recovery point",
+        "summary": "Fetch recovery point",
         "tags": [
           "api-v1-recovery-points"
         ],
@@ -1725,8 +1619,8 @@
     },
     "/platform/recovery-point/{recoveryPointId}/download": {
       "get": {
-        "summary": "Download recovery point archive",
-        "description": "Returns the recovery point archive as a binary stream. The archive is encrypted with the one-time password returned by POST /recovery-point.",
+        "summary": "Download recovery point",
+        "description": "Returns the recovery point archive. The archive is encrypted with the one-time password returned when the recovery point was created.",
         "tags": [
           "api-v1-recovery-points"
         ],

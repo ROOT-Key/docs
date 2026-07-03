@@ -203,12 +203,6 @@
             ]
           },
           {
-            "group": "Health",
-            "pages": [
-              "api-reference/platform/endpoint/status/get-healthz"
-            ]
-          },
-          {
             "group": "Files",
             "pages": [
               "api-reference/platform/endpoint/files/get-files",
@@ -219,7 +213,6 @@
               "api-reference/platform/endpoint/files/create-file",
               "api-reference/platform/endpoint/files/create-file-versions",
               "api-reference/platform/endpoint/files/validate-file",
-              "api-reference/platform/endpoint/files/transfer-file",
               "api-reference/platform/endpoint/files/download-file",
               "api-reference/platform/endpoint/files/generate-audit-report",
               "api-reference/platform/endpoint/files/delete-file"
