@@ -219,7 +219,10 @@
               "api-reference/platform/endpoint/files/create-file",
               "api-reference/platform/endpoint/files/create-file-versions",
               "api-reference/platform/endpoint/files/validate-file",
-              "api-reference/platform/endpoint/files/transfer-file"
+              "api-reference/platform/endpoint/files/transfer-file",
+              "api-reference/platform/endpoint/files/download-file",
+              "api-reference/platform/endpoint/files/generate-audit-report",
+              "api-reference/platform/endpoint/files/delete-file"
             ]
           },
           {
@@ -227,32 +230,38 @@
             "pages": [
               "api-reference/platform/endpoint/vaults/create-vault",
               "api-reference/platform/endpoint/vaults/update-vault",
-              "api-reference/platform/endpoint/vaults/delete-vault",
-              "api-reference/platform/endpoint/vaults/deactivate-vault",
-              "api-reference/platform/endpoint/vaults/reactivate-vault"
+              "api-reference/platform/endpoint/vaults/delete-vault"
             ]
           },
           {
             "group": "Records",
             "pages": [
-              "api-reference/platform/endpoint/records/overview"
+              "api-reference/platform/endpoint/records/overview",
+              "api-reference/platform/endpoint/records/list-records",
+              "api-reference/platform/endpoint/records/create-record",
+              "api-reference/platform/endpoint/records/create-record-versions"
             ]
           },
           {
             "group": "Data Recovery",
             "pages": [
-              "api-reference/platform/endpoint/recovery/list-recoverable-items",
-              "api-reference/platform/endpoint/recovery/recover-vault",
-              "api-reference/platform/endpoint/recovery/recover-file",
-              "api-reference/platform/endpoint/recovery/get-recovery-details",
-              "api-reference/platform/endpoint/recovery/get-recovery-history"
+              "api-reference/platform/endpoint/recovery/list-recovery-points",
+              "api-reference/platform/endpoint/recovery/schedule-recovery-point",
+              "api-reference/platform/endpoint/recovery/get-recovery-point",
+              "api-reference/platform/endpoint/recovery/download-recovery-point",
+              "api-reference/platform/endpoint/recovery/delete-recovery-point"
             ]
           },
           {
-            "group": "Analytics",
+            "group": "Reports",
             "pages": [
-              "api-reference/platform/endpoint/analytics/analyse-creation-of-vaults-over-time",
-              "api-reference/platform/endpoint/analytics/analyse-files-x-validations"
+              "api-reference/platform/endpoint/reports/annual-report"
+            ]
+          },
+          {
+            "group": "Subscriptions",
+            "pages": [
+              "api-reference/platform/endpoint/subscriptions/list-plans"
             ]
           }
         ]
