@@ -244,18 +244,6 @@
               "api-reference/platform/endpoint/recovery/download-recovery-point",
               "api-reference/platform/endpoint/recovery/delete-recovery-point"
             ]
-          },
-          {
-            "group": "Reports",
-            "pages": [
-              "api-reference/platform/endpoint/reports/annual-report"
-            ]
-          },
-          {
-            "group": "Subscriptions",
-            "pages": [
-              "api-reference/platform/endpoint/subscriptions/list-plans"
-            ]
           }
         ]
       }
