@@ -1,3 +1,19 @@
 ---
 openapi: post /platform/records
 ---
+
+<Note>
+  **This endpoint also creates versions.** ROOTKey groups a record's versions by the
+  table's **primary key** (the schema's key column — by default the first field, e.g. `id`).
+
+  - **New primary-key value → new record.**
+  - **Primary-key value that already exists → a new *version* of that record** (a
+    database-style update). The new version's `parentId` is set to the existing entity's
+    root record automatically — you don't send it.
+
+  So to update an entity, simply `POST` the same primary key again. To version a known
+  record explicitly, use [`POST /platform/records/{parentId}/versions`](/api-reference/platform/endpoint/records/create-record-versions).
+
+  See the [Records overview → Versioning](/api-reference/platform/endpoint/records/overview#versioning)
+  for the full model and how to read a record's `id` back.
+</Note>

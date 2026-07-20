@@ -1177,7 +1177,7 @@
       },
       "post": {
         "summary": "Create record",
-        "description": "Anchors a structured key/value payload as a verifiable record.",
+        "description": "Creates a structured, integrity-hashed record inside a **table vault**.\n\n**This endpoint also creates versions.** ROOTKey groups a record's versions by the table's **primary key** — the schema's key column, which (until one is explicitly designated) is the **first field**, by convention an `id`.\n\n- If **no record with that key value exists yet**, the payload is stored as a new **root** record.\n- If a **record with the same key value already exists**, the payload is stored as a **new version** of that entity (a database-style update). The version's `parentId` is set to the existing root automatically — you do not send it.\n\nSo to update an entity, simply `POST` the same primary key again. To version a known record explicitly, use `POST /platform/records/{parentId}/versions`.\n\nVersioning only applies when the vault has a schema **and** the payload is a keyed object with a non-empty key value; otherwise the record is stored as a standalone root.\n\n**Response:** returns only `{ chainId }`. The new record's `id` is **not** returned here — read it from `GET /platform/records` (the `__meta.id` field of each item).",
         "tags": [
           "api-v1-records"
         ],
@@ -1191,25 +1191,15 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": [
-                  "ownerVault",
-                  "recordData"
-                ],
-                "properties": {
-                  "ownerVault": {
-                    "type": "string",
-                    "example": "0xdf67CA8286510997567685c0385ECeAb11C23C92"
-                  },
-                  "recordData": {
-                    "type": "object",
-                    "additionalProperties": true,
-                    "description": "Arbitrary key-value payload to anchor (values must be string, number, boolean, or null)"
-                  },
-                  "expirationDate": {
-                    "type": "string",
-                    "format": "date-time"
-                  }
+                "$ref": "#/components/schemas/CreateRecordRequest"
+              },
+              "example": {
+                "ownerVault": "0xdf67CA8286510997567685c0385ECeAb11C23C92",
+                "recordData": {
+                  "id": "prod-001",
+                  "name": "ACME Corp",
+                  "logoUrl": "https://media.example.com/acme.svg",
+                  "active": true
                 }
               }
             }
@@ -1217,11 +1207,14 @@
         },
         "responses": {
           "200": {
-            "description": "Record anchored",
+            "description": "Record created (or a new version, if its primary key already existed)",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateSmartContractResponse"
+                  "$ref": "#/components/schemas/CreateRecordResponse"
+                },
+                "example": {
+                  "chainId": 137
                 }
               }
             }
@@ -1230,10 +1223,10 @@
             "$ref": "#/components/responses/DomainError"
           },
           "401": {
-            "description": "Unauthenticated"
+            "description": "Unauthenticated — missing or invalid API key"
           },
           "404": {
-            "description": "Wallet not found"
+            "description": "Table vault not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -1242,9 +1235,9 @@
       }
     },
     "/platform/records/{parentId}/versions": {
-      "post": {
-        "summary": "Create record version",
-        "description": "Creates a new version of an existing record, preserving the parent's version history.",
+      "get": {
+        "summary": "List record versions",
+        "description": "Returns the version history of a record, newest first by default. `parentId` is the record's `id` (from the `__meta.id` field of a List Records item). Each item is a full record version including its decrypted column values in `data`.\n\n**Response shape:** this endpoint returns a bare pagination envelope (`data` / `pagination` / `metadata`) — unlike List Records and Fetch Record History, there is **no `chainId` wrapper**.",
         "tags": [
           "api-v1-records"
         ],
@@ -1258,46 +1251,58 @@
             "name": "parentId",
             "in": "path",
             "required": true,
+            "description": "The record `id` whose versions to list (a branch root's id).",
             "schema": {
               "type": "string"
             }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "ownerVault",
-                  "recordData"
-                ],
-                "properties": {
-                  "ownerVault": {
-                    "type": "string",
-                    "example": "0xdf67CA8286510997567685c0385ECeAb11C23C92"
-                  },
-                  "recordData": {
-                    "type": "object",
-                    "additionalProperties": true
-                  },
-                  "expirationDate": {
-                    "type": "string",
-                    "format": "date-time"
-                  }
-                }
-              }
+          },
+          {
+            "name": "vaultAddress",
+            "in": "query",
+            "required": true,
+            "description": "Address of the table vault that owns the record.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 10
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
             }
           }
-        },
+        ],
         "responses": {
           "200": {
-            "description": "New record version anchored",
+            "description": "Paginated list of record versions",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateSmartContractResponse"
+                  "$ref": "#/components/schemas/PaginatedRecordDTOResponse"
                 }
               }
             }
@@ -1309,7 +1314,313 @@
             "description": "Unauthenticated"
           },
           "404": {
-            "description": "Wallet not found"
+            "description": "Record not found (or not owned by the caller's vault)"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create record version",
+        "description": "Creates a new version of an existing record explicitly, preserving the parent's version history. `parentId` is the target record's `id` (from `__meta.id`). Prefer this when you already hold the parent id; otherwise re-`POST`ing the same primary key to `POST /platform/records` produces the same versioning result.\n\n**Response:** returns only `{ chainId }`.",
+        "tags": [
+          "api-v1-records"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "parentId",
+            "in": "path",
+            "required": true,
+            "description": "The `id` of the record this new version belongs to.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecordRequest"
+              },
+              "example": {
+                "ownerVault": "0xdf67CA8286510997567685c0385ECeAb11C23C92",
+                "recordData": {
+                  "id": "prod-001",
+                  "name": "ACME Corporation",
+                  "logoUrl": "https://media.example.com/acme-v2.svg",
+                  "active": true
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New record version created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateRecordResponse"
+                },
+                "example": {
+                  "chainId": 137
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Table vault not found"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/platform/records/{fileId}/history": {
+      "get": {
+        "summary": "Fetch record history",
+        "description": "Returns the activity/audit log for a record — creation, new versions, deletion, and related events — newest first by default. `fileId` is the record's `id` (from `__meta.id`).",
+        "tags": [
+          "api-v1-records"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "description": "The record `id` whose history to fetch.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 10
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated activity history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FetchFileHistoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Record not found"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/platform/records/{fileId}/validations": {
+      "get": {
+        "summary": "Fetch record validations",
+        "description": "Returns the integrity-validation history for a record — each entry compares the stored payload against its integrity hash. `fileId` is the record's `id` (from `__meta.id`).\n\n**Response shape:** returned directly with **no `chainId` wrapper** — `{ currentHash, previousHash, validations }`, where `currentHash`/`previousHash` are the hashes of the current and parent-version payloads.",
+        "tags": [
+          "api-v1-records"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "description": "The record `id` whose validations to fetch.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 10
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current & previous hashes plus paginated validations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FetchValidationHistoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Record not found"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/platform/records/{recordId}": {
+      "delete": {
+        "summary": "Delete record",
+        "description": "**Soft-deletes** a record (tombstone via `deleted_at`). The record stops appearing in List / Fetch responses, but its row and audit trail are retained for compliance (NIS2/DORA/GDPR). Existing versions are not cascaded.\n\nAuthorization: the caller's organization must own the table vault named by `ownerAddress`, and that vault must own the target record.",
+        "tags": [
+          "api-v1-records"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "description": "The record `id` to delete (from `__meta.id`).",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ownerAddress",
+            "in": "query",
+            "required": true,
+            "description": "Address of the table vault that owns the record.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Record soft-deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteRecordResponse"
+                },
+                "example": {
+                  "chainId": 137,
+                  "recordId": "0f3c1e77-4b2a-4c1d-9f3e-6a1b2c3d4e5f"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/DomainError"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "The vault does not own this record",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Table vault or record not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -1942,13 +2253,12 @@
           },
           "records": {
             "type": "object",
-            "description": "Paginated records — fields are dynamic based on the anchored recordData payload",
+            "description": "Paginated records — each item's top-level fields are the record's decrypted column values (dynamic, per the table schema), plus a reserved `__meta` object carrying the record's identifiers.",
             "properties": {
               "data": {
                 "type": "array",
                 "items": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/RecordListItem"
                 }
               },
               "pagination": {
@@ -2260,6 +2570,220 @@
         "required": [
           "chainId",
           "transactionHash"
+        ]
+      },
+      "CreateRecordRequest": {
+        "type": "object",
+        "required": [
+          "ownerVault",
+          "recordData"
+        ],
+        "properties": {
+          "ownerVault": {
+            "type": "string",
+            "description": "Address of the table vault that will own the record. (`ownerWallet` is accepted as an alias.)",
+            "example": "0xdf67CA8286510997567685c0385ECeAb11C23C92"
+          },
+          "recordData": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "The record's columns as a JSON object. Values are primitives (string, number, boolean, ISO date, null) or nested objects/arrays within limits: 1 MB per record, 64 KB per string, 100 properties, 10 levels of nesting, 1,000 array elements. Keys beginning with `__` (and prototype-polluting keys) are stripped on ingest. The value of the schema's key column (the primary key) determines version grouping — see the endpoint description."
+          },
+          "expirationDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Optional expiry date-time for the record."
+          }
+        }
+      },
+      "CreateRecordResponse": {
+        "type": "object",
+        "description": "Record create/version response. Note: unlike files, record creation does not return a `transactionHash` or the new record `id` — obtain the id from `GET /platform/records` (`__meta.id`).",
+        "properties": {
+          "chainId": {
+            "type": "number",
+            "description": "Polygon chain ID (137 in production, 80002 on the Amoy testnet).",
+            "example": 137
+          }
+        },
+        "required": [
+          "chainId"
+        ]
+      },
+      "RecordMeta": {
+        "type": "object",
+        "description": "Reserved metadata envelope attached to every List Records item. `__`-prefixed keys are stripped from user data on ingest, so this never collides with a user-defined column.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The record's unique id — use as `parentId` for versions and as `recordId` for history / validations / delete.",
+            "example": "0f3c1e77-4b2a-4c1d-9f3e-6a1b2c3d4e5f"
+          },
+          "parentId": {
+            "type": "string",
+            "nullable": true,
+            "description": "The branch root's id when this record is a version; null for a root record."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "REGISTERED",
+              "FAILED"
+            ],
+            "description": "Anchoring status (uppercase). Note: the List Records `status` query filter takes the lowercase form — `pending` / `registered` / `error`."
+          },
+          "versionsNumber": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RecordListItem": {
+        "type": "object",
+        "description": "A record as returned by List Records: the record's decrypted column values spread at the top level (dynamic, per the table schema), plus a reserved `__meta` object.",
+        "additionalProperties": true,
+        "properties": {
+          "__meta": {
+            "$ref": "#/components/schemas/RecordMeta"
+          }
+        },
+        "example": {
+          "id": "prod-001",
+          "name": "ACME Corp",
+          "logoUrl": "https://media.example.com/acme.svg",
+          "active": true,
+          "__meta": {
+            "id": "0f3c1e77-4b2a-4c1d-9f3e-6a1b2c3d4e5f",
+            "parentId": null,
+            "status": "REGISTERED",
+            "versionsNumber": 2,
+            "createdAt": "2026-07-18T10:12:04.000Z"
+          }
+        }
+      },
+      "RecordDTO": {
+        "type": "object",
+        "description": "Full record representation returned by List Record Versions.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "memberId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Organization member who created this version; null when created via API key."
+          },
+          "parentId": {
+            "type": "string",
+            "nullable": true
+          },
+          "blockchainId": {
+            "type": "string",
+            "nullable": true,
+            "description": "On-chain identifier; null for records (records are integrity-hashed, not blockchain-anchored)."
+          },
+          "versionsNumber": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "REGISTERED",
+              "FAILED"
+            ]
+          },
+          "transactionHash": {
+            "type": "string",
+            "nullable": true,
+            "description": "Always null for records — records are not submitted to the blockchain."
+          },
+          "ownerAddress": {
+            "type": "string"
+          },
+          "chainId": {
+            "type": "number"
+          },
+          "dataHash": {
+            "type": "string",
+            "description": "Integrity hash of the record payload."
+          },
+          "integrity": {
+            "type": "number",
+            "description": "Integrity score (100 when REGISTERED, else 0)."
+          },
+          "vault": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "Partner Logos"
+              },
+              "address": {
+                "type": "string"
+              }
+            }
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "The decrypted column values of this record version."
+          },
+          "isTest": {
+            "type": "boolean"
+          },
+          "expirationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastValidateAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PaginatedRecordDTOResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecordDTO"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationBlock"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/PaginationMetadata"
+          }
+        }
+      },
+      "DeleteRecordResponse": {
+        "type": "object",
+        "properties": {
+          "chainId": {
+            "type": "number",
+            "example": 137
+          },
+          "recordId": {
+            "type": "string",
+            "description": "The id of the soft-deleted record."
+          }
+        },
+        "required": [
+          "chainId",
+          "recordId"
         ]
       },
       "HealthResponse": {

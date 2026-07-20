@@ -232,7 +232,11 @@
               "api-reference/platform/endpoint/records/overview",
               "api-reference/platform/endpoint/records/list-records",
               "api-reference/platform/endpoint/records/create-record",
-              "api-reference/platform/endpoint/records/create-record-versions"
+              "api-reference/platform/endpoint/records/create-record-versions",
+              "api-reference/platform/endpoint/records/get-record-versions",
+              "api-reference/platform/endpoint/records/get-record-history",
+              "api-reference/platform/endpoint/records/get-record-validations",
+              "api-reference/platform/endpoint/records/delete-record"
             ]
           },
           {
