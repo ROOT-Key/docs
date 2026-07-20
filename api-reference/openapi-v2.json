@@ -1177,7 +1177,7 @@
       },
       "post": {
         "summary": "Create record",
-        "description": "Creates a structured, integrity-hashed record inside a **table vault**.\n\n**This endpoint also creates versions.** ROOTKey groups a record's versions by the table's **primary key** — the schema's key column, which (until one is explicitly designated) is the **first field**, by convention an `id`.\n\n- If **no record with that key value exists yet**, the payload is stored as a new **root** record.\n- If a **record with the same key value already exists**, the payload is stored as a **new version** of that entity (a database-style update). The version's `parentId` is set to the existing root automatically — you do not send it.\n\nSo to update an entity, simply `POST` the same primary key again — there is **no separate version-creation endpoint**; versioning is a built-in behaviour of this route.\n\nVersioning only applies when the vault has a schema **and** the payload is a keyed object with a non-empty key value; otherwise the record is stored as a standalone root.\n\n**Response:** returns only `{ chainId }`. The new record's `id` is **not** returned here — read it from `GET /platform/records` (the `__meta.id` field of each item).",
+        "description": "Creates a structured, integrity-hashed record inside a **table**.\n\n**This endpoint also creates versions.** ROOTKey groups a record's versions by the table's **primary key** — the schema's key column, which (until one is explicitly designated) is the **first field**, by convention an `id`.\n\n- If **no record with that key value exists yet**, the payload is stored as a new **root** record.\n- If a **record with the same key value already exists**, the payload is stored as a **new version** of that entity (a database-style update). The version's `parentId` is set to the existing root automatically — you do not send it.\n\nSo to update an entity, simply `POST` the same primary key again — there is **no separate version-creation endpoint**; versioning is a built-in behaviour of this route.\n\nVersioning only applies when the table has a schema **and** the payload is a keyed object with a non-empty key value; otherwise the record is stored as a standalone root.\n\n**Response:** returns only `{ chainId }`. The new record's `id` is **not** returned here — read it from `GET /platform/records` (the `__meta.id` field of each item).",
         "tags": [
           "api-v1-records"
         ],
@@ -1226,7 +1226,7 @@
             "description": "Unauthenticated — missing or invalid API key"
           },
           "404": {
-            "description": "Table vault not found"
+            "description": "Table not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -1260,7 +1260,7 @@
             "name": "vaultAddress",
             "in": "query",
             "required": true,
-            "description": "Address of the table vault that owns the record.",
+            "description": "Address of the table that owns the record.",
             "schema": {
               "type": "string"
             }
@@ -1314,7 +1314,7 @@
             "description": "Unauthenticated"
           },
           "404": {
-            "description": "Record not found (or not owned by the caller's vault)"
+            "description": "Record not found (or not owned by the caller's table)"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -1483,7 +1483,7 @@
     "/platform/records/{recordId}": {
       "delete": {
         "summary": "Delete record",
-        "description": "**Soft-deletes** a record (tombstone via `deleted_at`). The record stops appearing in List / Fetch responses, but its row and audit trail are retained for compliance (NIS2/DORA/GDPR). Existing versions are not cascaded.\n\nAuthorization: the caller's organization must own the table vault named by `ownerAddress`, and that vault must own the target record.",
+        "description": "Deletes a record. Once deleted, it no longer appears in list or fetch responses.\n\nAuthorization: the caller's organization must own the table identified by `ownerAddress`, and that table must own the record.",
         "tags": [
           "api-v1-records"
         ],
@@ -1506,7 +1506,7 @@
             "name": "ownerAddress",
             "in": "query",
             "required": true,
-            "description": "Address of the table vault that owns the record.",
+            "description": "Address of the table that owns the record.",
             "schema": {
               "type": "string"
             }
@@ -1514,7 +1514,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Record soft-deleted",
+            "description": "Record deleted",
             "content": {
               "application/json": {
                 "schema": {
@@ -1534,7 +1534,7 @@
             "description": "Unauthenticated"
           },
           "403": {
-            "description": "The vault does not own this record",
+            "description": "The table does not own this record",
             "content": {
               "application/json": {
                 "schema": {
@@ -1544,7 +1544,7 @@
             }
           },
           "404": {
-            "description": "Table vault or record not found",
+            "description": "Table or record not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -2512,7 +2512,7 @@
         "properties": {
           "ownerVault": {
             "type": "string",
-            "description": "Address of the table vault that will own the record. (`ownerWallet` is accepted as an alias.)",
+            "description": "Address of the table that will own the record. (`ownerWallet` is accepted as an alias.)",
             "example": "0xdf67CA8286510997567685c0385ECeAb11C23C92"
           },
           "recordData": {
@@ -2709,7 +2709,7 @@
           },
           "recordId": {
             "type": "string",
-            "description": "The id of the soft-deleted record."
+            "description": "The id of the deleted record."
           }
         },
         "required": [

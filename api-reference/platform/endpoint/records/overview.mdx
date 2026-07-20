@@ -1,18 +1,18 @@
 ---
 title: Records
-description: Anchor and manage structured, row-level data inside a ROOTKey table vault. Every write is hashed, integrity-tracked, and versioned by primary key.
+description: Anchor and manage structured, row-level data inside a ROOTKey table. Every write is hashed, integrity-tracked, and versioned by primary key.
 sidebarTitle: Overview
 icon: rows
 ---
 
 ## Overview
 
-The **Records API** is the structured-data counterpart to [Files](/api-reference/platform/endpoint/files/get-files). Where a file anchors an opaque binary blob, a record anchors a **row of typed key/value data** — a partner logo entry, an inventory item, a testimonial, an audit event — inside a **table vault**.
+The **Records API** is the structured-data counterpart to [Files](/api-reference/platform/endpoint/files/get-files). Where a file anchors an opaque binary blob, a record anchors a **row of typed key/value data** — a partner logo entry, an inventory item, a testimonial, an audit event — inside a **table**.
 
 Every record write produces a cryptographic integrity hash and a tamper-evident, per-entity version history, giving you row-level auditability for compliance, forensic, and operational use cases.
 
 <Info>
-  Records live in a **table vault** (`type: TABLE`), which is different from the document vault (`type: VAULT`) used by the Files API. A table vault carries a **schema** that defines its columns and — critically — its **primary key**, which drives versioning (see [Versioning](#versioning)).
+  Records live in a **table** — a schema-defined container for structured rows. A table is **not** a vault: vaults are folders that store **files** (Files API), whereas tables store **records**. A table's schema defines its columns and — critically — its **primary key**, which drives versioning (see [Versioning](#versioning)).
 </Info>
 
 ---
@@ -22,8 +22,8 @@ Every record write produces a cryptographic integrity hash and a tamper-evident,
 Getting records working is a **two-place setup** — you configure the table in the ROOTKey platform UI first, then use its address + an API key from your application. This is the single most common onboarding snag, so follow it in order.
 
 <Steps>
-  <Step title="Create a table vault and define its schema (platform UI)">
-    In the [ROOTKey platform](https://app.rootkey.ai), create a **table** inside a vault and configure its schema: add each column and pick its type.
+  <Step title="Create a table and define its schema (platform UI)">
+    In the [ROOTKey platform](https://app.rootkey.ai), create a **table** and configure its schema: add each column and pick its type.
 
     <Warning>
       The **first column is automatically the primary key**. It is what groups a record's versions together (see [Versioning](#versioning)). There is currently no way to designate a different column as the key after creation, so choose your first column deliberately — it should be a stable, unique identifier (e.g. `id`, `slug`, `sku`).
@@ -67,7 +67,7 @@ Records use a **primary-key versioning model** — you don't need to track versi
 So the simplest — and only — way to create a version is to **`POST` the same primary key again** to [`POST /platform/records`](/api-reference/platform/endpoint/records/create-record). There is **no separate version-creation endpoint**; versioning is a built-in behaviour of the create route, driven entirely by the primary key.
 
 <Note>
-  Versioning only kicks in when the vault has a schema **and** the payload is a keyed object with a non-empty key value. A payload with no key value (or a vault with no schema) is stored as a standalone root record.
+  Versioning only kicks in when the table has a schema **and** the payload is a keyed object with a non-empty key value. A payload with no key value (or a table with no schema) is stored as a standalone root record.
 </Note>
 
 ### Working with record IDs
@@ -105,7 +105,7 @@ Use `__meta.id` as the `parentId` for versions, and as the `recordId` for histor
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | [`/platform/records`](/api-reference/platform/endpoint/records/list-records) | List records in a table vault (each item includes its data + `__meta`) |
+| `GET` | [`/platform/records`](/api-reference/platform/endpoint/records/list-records) | List records in a table (each item includes its data + `__meta`) |
 | `POST` | [`/platform/records`](/api-reference/platform/endpoint/records/create-record) | Create a record — or a new version, if its primary key already exists |
 | `GET` | [`/platform/records/{parentId}/versions`](/api-reference/platform/endpoint/records/get-record-versions) | List the version history of a record |
 | `GET` | [`/platform/records/{recordId}/history`](/api-reference/platform/endpoint/records/get-record-history) | Activity/audit log for a record (created, versioned, deleted…) |
@@ -113,7 +113,7 @@ Use `__meta.id` as the `parentId` for versions, and as the `recordId` for histor
 | `DELETE` | [`/platform/records/{recordId}`](/api-reference/platform/endpoint/records/delete-record) | Soft-delete a record |
 
 <Note>
-  **Delete is a soft delete.** The record stops appearing in List / Fetch responses, but its row and audit trail are retained for compliance (NIS2/DORA/GDPR). Delete requires both the `recordId` (path) and the table's `ownerAddress` (query). Existing versions are not cascaded.
+  Deletes a record. Provide the `recordId` (path) and the table's `ownerAddress` (query). Once deleted, the record no longer appears in list or fetch responses.
 </Note>
 
 ---
@@ -124,13 +124,13 @@ Use `__meta.id` as the `parentId` for versions, and as the `recordId` for histor
 - Automatic primary-key versioning — re-writing the same key creates a new version.
 - Full version history, activity/audit history, and validation history per record.
 - Cursor-based pagination and filtering (name, date range, status) on listings.
-- Soft-delete with a retained, immutable audit trail.
+- Delete records you no longer need.
 
 ---
 
 ## Related
 
 - [Files](/api-reference/platform/endpoint/files/get-files) — anchor unstructured documents instead of structured rows.
-- [Vaults](/api-reference/platform/endpoint/vaults/create-vault) — records are scoped to a table vault.
+- [Vaults](/api-reference/platform/endpoint/vaults/create-vault) — a separate concept: vaults store **files**, tables store **records**.
 - [API Keys](/pages/api-keys) — create and scope the key used for the `x-api-key` header.
-- [Protocols](/pages/protocols/overview) — how anchoring behaves under the vault's configured protocol.
+- [Protocols](/pages/protocols/overview) — how anchoring behaves under the configured protocol.
