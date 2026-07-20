@@ -1177,7 +1177,7 @@
       },
       "post": {
         "summary": "Create record",
-        "description": "Creates a structured, integrity-hashed record inside a **table vault**.\n\n**This endpoint also creates versions.** ROOTKey groups a record's versions by the table's **primary key** — the schema's key column, which (until one is explicitly designated) is the **first field**, by convention an `id`.\n\n- If **no record with that key value exists yet**, the payload is stored as a new **root** record.\n- If a **record with the same key value already exists**, the payload is stored as a **new version** of that entity (a database-style update). The version's `parentId` is set to the existing root automatically — you do not send it.\n\nSo to update an entity, simply `POST` the same primary key again. To version a known record explicitly, use `POST /platform/records/{parentId}/versions`.\n\nVersioning only applies when the vault has a schema **and** the payload is a keyed object with a non-empty key value; otherwise the record is stored as a standalone root.\n\n**Response:** returns only `{ chainId }`. The new record's `id` is **not** returned here — read it from `GET /platform/records` (the `__meta.id` field of each item).",
+        "description": "Creates a structured, integrity-hashed record inside a **table vault**.\n\n**This endpoint also creates versions.** ROOTKey groups a record's versions by the table's **primary key** — the schema's key column, which (until one is explicitly designated) is the **first field**, by convention an `id`.\n\n- If **no record with that key value exists yet**, the payload is stored as a new **root** record.\n- If a **record with the same key value already exists**, the payload is stored as a **new version** of that entity (a database-style update). The version's `parentId` is set to the existing root automatically — you do not send it.\n\nSo to update an entity, simply `POST` the same primary key again — there is **no separate version-creation endpoint**; versioning is a built-in behaviour of this route.\n\nVersioning only applies when the vault has a schema **and** the payload is a keyed object with a non-empty key value; otherwise the record is stored as a standalone root.\n\n**Response:** returns only `{ chainId }`. The new record's `id` is **not** returned here — read it from `GET /platform/records` (the `__meta.id` field of each item).",
         "tags": [
           "api-v1-records"
         ],
@@ -1315,75 +1315,6 @@
           },
           "404": {
             "description": "Record not found (or not owned by the caller's vault)"
-          },
-          "500": {
-            "$ref": "#/components/responses/InternalError"
-          }
-        }
-      },
-      "post": {
-        "summary": "Create record version",
-        "description": "Creates a new version of an existing record explicitly, preserving the parent's version history. `parentId` is the target record's `id` (from `__meta.id`). Prefer this when you already hold the parent id; otherwise re-`POST`ing the same primary key to `POST /platform/records` produces the same versioning result.\n\n**Response:** returns only `{ chainId }`.",
-        "tags": [
-          "api-v1-records"
-        ],
-        "security": [
-          {
-            "x-api-key": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "parentId",
-            "in": "path",
-            "required": true,
-            "description": "The `id` of the record this new version belongs to.",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateRecordRequest"
-              },
-              "example": {
-                "ownerVault": "0xdf67CA8286510997567685c0385ECeAb11C23C92",
-                "recordData": {
-                  "id": "prod-001",
-                  "name": "ACME Corporation",
-                  "logoUrl": "https://media.example.com/acme-v2.svg",
-                  "active": true
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "New record version created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateRecordResponse"
-                },
-                "example": {
-                  "chainId": 137
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/DomainError"
-          },
-          "401": {
-            "description": "Unauthenticated"
-          },
-          "404": {
-            "description": "Table vault not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"

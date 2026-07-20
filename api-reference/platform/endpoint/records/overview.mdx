@@ -64,7 +64,7 @@ Records use a **primary-key versioning model** — you don't need to track versi
 - If **no record with that key exists yet**, the record is stored as a new **root** entity.
 - If a **record with the same key already exists**, the new write is automatically stored as a **new version** of that entity — a database-style update. The version's `parentId` points to the entity's root record.
 
-So the simplest way to update an entity is to **`POST` the same primary key again** to [`POST /platform/records`](/api-reference/platform/endpoint/records/create-record). You can also create a version explicitly against a known root with [`POST /platform/records/{parentId}/versions`](/api-reference/platform/endpoint/records/create-record-versions).
+So the simplest — and only — way to create a version is to **`POST` the same primary key again** to [`POST /platform/records`](/api-reference/platform/endpoint/records/create-record). There is **no separate version-creation endpoint**; versioning is a built-in behaviour of the create route, driven entirely by the primary key.
 
 <Note>
   Versioning only kicks in when the vault has a schema **and** the payload is a keyed object with a non-empty key value. A payload with no key value (or a vault with no schema) is stored as a standalone root record.
@@ -107,7 +107,6 @@ Use `__meta.id` as the `parentId` for versions, and as the `recordId` for histor
 |--------|----------|-------------|
 | `GET` | [`/platform/records`](/api-reference/platform/endpoint/records/list-records) | List records in a table vault (each item includes its data + `__meta`) |
 | `POST` | [`/platform/records`](/api-reference/platform/endpoint/records/create-record) | Create a record — or a new version, if its primary key already exists |
-| `POST` | [`/platform/records/{parentId}/versions`](/api-reference/platform/endpoint/records/create-record-versions) | Create a new version of a known record explicitly |
 | `GET` | [`/platform/records/{parentId}/versions`](/api-reference/platform/endpoint/records/get-record-versions) | List the version history of a record |
 | `GET` | [`/platform/records/{recordId}/history`](/api-reference/platform/endpoint/records/get-record-history) | Activity/audit log for a record (created, versioned, deleted…) |
 | `GET` | [`/platform/records/{recordId}/validations`](/api-reference/platform/endpoint/records/get-record-validations) | Integrity validation history for a record |

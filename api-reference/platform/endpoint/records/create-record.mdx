@@ -11,8 +11,9 @@ openapi: post /platform/records
     database-style update). The new version's `parentId` is set to the existing entity's
     root record automatically — you don't send it.
 
-  So to update an entity, simply `POST` the same primary key again. To version a known
-  record explicitly, use [`POST /platform/records/{parentId}/versions`](/api-reference/platform/endpoint/records/create-record-versions).
+  So to update an entity, simply `POST` the same primary key again — there is **no
+  separate version-creation endpoint**. Versioning is a built-in behaviour of this route,
+  driven entirely by the primary key.
 
   See the [Records overview → Versioning](/api-reference/platform/endpoint/records/overview#versioning)
   for the full model and how to read a record's `id` back.
