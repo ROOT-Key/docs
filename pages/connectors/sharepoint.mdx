@@ -7,7 +7,7 @@ icon: microsoft
 
 ## How It Works
 
-The SharePoint connector is a self-contained integration that runs **entirely inside your Azure subscription**. ROOTKey publishes a [Terraform module](https://github.com/rootkey-ai/rootkey-connectors/tree/main/sharepoint) that you deploy once per site. The module wires up an Azure Function App that:
+The SharePoint connector is a self-contained integration that runs **entirely inside your Azure subscription**. ROOTKey publishes a [Terraform module](https://github.com/ROOT-Key/rootkey-connectors/tree/main/sharepoint) that you deploy once per site. The module wires up an Azure Function App that:
 
 1. Resolves your SharePoint **site URL** to a Graph site ID.
 2. Enumerates **every document library** (drive) on the site.
@@ -235,7 +235,7 @@ The setup has a natural ordering: the dashboard requires the Tenant/Client/Site 
 
     ```hcl
     module "rootkey_sharepoint_connector" {
-      source = "github.com/rootkey-ai/rootkey-connectors//sharepoint"
+      source = "github.com/ROOT-Key/rootkey-connectors//sharepoint"
 
       resource_group_name = "rootkey-connectors"
       azure_location      = "westeurope"
@@ -430,7 +430,7 @@ To anchor only specific files (e.g., only PDFs, or exclude temporary files), con
   <Accordion title="A large file fails to upload" icon="file-zipper">
     The Function App's memory and `max_file_size_bytes` together cap the maximum file size. The default is **500 MiB** on a Consumption plan instance.
 
-    To support larger files: raise `max_file_size_bytes` in the Terraform module input and consider moving to a Premium or App Service plan with a higher memory ceiling. Open an issue on the [connector repository](https://github.com/rootkey-ai/rootkey-connectors) if you need help.
+    To support larger files: raise `max_file_size_bytes` in the Terraform module input and consider moving to a Premium or App Service plan with a higher memory ceiling. Open an issue on the [connector repository](https://github.com/ROOT-Key/rootkey-connectors) if you need help.
   </Accordion>
 
   <Accordion title="How do I rotate the Connector API Key?" icon="arrows-spin">
@@ -470,7 +470,7 @@ To anchor only specific files (e.g., only PDFs, or exclude temporary files), con
 
 ## Source code
 
-The Terraform module and Function App source live in the public [rootkey-ai/rootkey-connectors](https://github.com/rootkey-ai/rootkey-connectors) repository under the [`sharepoint/`](https://github.com/rootkey-ai/rootkey-connectors/tree/main/sharepoint) directory. The code is licensed under the Apache License 2.0 — you are free to fork it, audit it, or pin to a specific commit if your change-management process requires it.
+The Terraform module and Function App source live in the public [ROOT-Key/rootkey-connectors](https://github.com/ROOT-Key/rootkey-connectors) repository under the [`sharepoint/`](https://github.com/ROOT-Key/rootkey-connectors/tree/main/sharepoint) directory. The code is licensed under the Apache License 2.0 — you are free to fork it, audit it, or pin to a specific commit if your change-management process requires it.
 
 ---
 

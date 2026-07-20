@@ -7,7 +7,7 @@ icon: cloud
 
 ## How It Works
 
-The OneDrive connector is a self-contained integration that runs **entirely inside your Azure subscription**. ROOTKey publishes a [Terraform module](https://github.com/rootkey-ai/rootkey-connectors/tree/main/onedrive) that you deploy once. The module wires up an Azure Function App that subscribes to Microsoft Graph webhook notifications for one OneDrive drive. When the drive changes, the function runs a Graph delta query to identify the new/updated files and streams each file to the ROOTKey API authenticated with your **Connector API Key**.
+The OneDrive connector is a self-contained integration that runs **entirely inside your Azure subscription**. ROOTKey publishes a [Terraform module](https://github.com/ROOT-Key/rootkey-connectors/tree/main/onedrive) that you deploy once. The module wires up an Azure Function App that subscribes to Microsoft Graph webhook notifications for one OneDrive drive. When the drive changes, the function runs a Graph delta query to identify the new/updated files and streams each file to the ROOTKey API authenticated with your **Connector API Key**.
 
 ROOTKey stores the file and anchors it on-chain, enabling both integrity verification and **full file recovery** in the event of corruption, ransomware, or accidental deletion.
 
@@ -218,7 +218,7 @@ The setup has a natural ordering: the dashboard requires the Tenant/Client/Drive
 
     ```hcl
     module "rootkey_onedrive_connector" {
-      source = "github.com/rootkey-ai/rootkey-connectors//onedrive"
+      source = "github.com/ROOT-Key/rootkey-connectors//onedrive"
 
       resource_group_name = "rootkey-connectors"
       azure_location      = "westeurope"
@@ -378,7 +378,7 @@ To anchor only specific files (e.g., only PDFs, or exclude temporary files), con
   <Accordion title="A large file fails to upload" icon="file-zipper">
     The Function App's memory and `max_file_size_bytes` together cap the maximum file size. The default is **500 MiB** on a Consumption plan instance.
 
-    To support larger files: raise `max_file_size_bytes` in the Terraform module input and consider moving to a Premium or App Service plan with a higher memory ceiling. Open an issue on the [connector repository](https://github.com/rootkey-ai/rootkey-connectors) if you need help.
+    To support larger files: raise `max_file_size_bytes` in the Terraform module input and consider moving to a Premium or App Service plan with a higher memory ceiling. Open an issue on the [connector repository](https://github.com/ROOT-Key/rootkey-connectors) if you need help.
   </Accordion>
 
   <Accordion title="How do I rotate the Connector API Key?" icon="arrows-spin">
@@ -418,7 +418,7 @@ To anchor only specific files (e.g., only PDFs, or exclude temporary files), con
 
 ## Source code
 
-The Terraform module and Function App source live in the public [rootkey-ai/rootkey-connectors](https://github.com/rootkey-ai/rootkey-connectors) repository under the [`onedrive/`](https://github.com/rootkey-ai/rootkey-connectors/tree/main/onedrive) directory. The code is licensed under the Apache License 2.0 — you are free to fork it, audit it, or pin to a specific commit if your change-management process requires it.
+The Terraform module and Function App source live in the public [ROOT-Key/rootkey-connectors](https://github.com/ROOT-Key/rootkey-connectors) repository under the [`onedrive/`](https://github.com/ROOT-Key/rootkey-connectors/tree/main/onedrive) directory. The code is licensed under the Apache License 2.0 — you are free to fork it, audit it, or pin to a specific commit if your change-management process requires it.
 
 ---
 

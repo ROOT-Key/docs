@@ -7,7 +7,7 @@ icon: aws
 
 ## How It Works
 
-The S3 connector is a self-contained integration that runs **entirely inside your AWS account**. ROOTKey publishes a [Terraform module](https://github.com/rootkey-ai/rootkey-connectors/tree/main/aws-s3) that you deploy once. The module wires up a Lambda function to receive Amazon EventBridge events emitted by your S3 bucket whenever a new object is created.
+The S3 connector is a self-contained integration that runs **entirely inside your AWS account**. ROOTKey publishes a [Terraform module](https://github.com/ROOT-Key/rootkey-connectors/tree/main/aws-s3) that you deploy once. The module wires up a Lambda function to receive Amazon EventBridge events emitted by your S3 bucket whenever a new object is created.
 
 When a new file is uploaded to the monitored bucket (and matches your [filtering rules](/pages/connectors/rules), if configured), the Lambda streams the file content directly from S3 to the ROOTKey API authenticated with your **Connector API Key**. ROOTKey stores the file and anchors it on-chain, enabling both integrity verification and **full file recovery** in the event of corruption, ransomware, or accidental deletion.
 
@@ -218,7 +218,7 @@ The setup has a natural ordering dependency: the dashboard requires the **IAM Ro
 
     ```hcl
     module "rootkey_s3_connector" {
-      source = "github.com/rootkey-ai/rootkey-connectors//aws-s3"
+      source = "github.com/ROOT-Key/rootkey-connectors//aws-s3"
 
       bucket_name     = "my-company-documents"
       aws_region      = "eu-west-1"

@@ -7,7 +7,7 @@ icon: cloudflare
 
 ## How It Works
 
-The R2 connector is a self-contained integration that runs **entirely inside your Cloudflare account**. ROOTKey publishes a [Terraform module](https://github.com/rootkey-ai/rootkey-connectors/tree/main/r2) that you deploy once per bucket. The module wires a Cloudflare Worker to a Cloudflare Queue that receives R2 event notifications whenever a new object is created.
+The R2 connector is a self-contained integration that runs **entirely inside your Cloudflare account**. ROOTKey publishes a [Terraform module](https://github.com/ROOT-Key/rootkey-connectors/tree/main/r2) that you deploy once per bucket. The module wires a Cloudflare Worker to a Cloudflare Queue that receives R2 event notifications whenever a new object is created.
 
 When a new file is uploaded to the monitored bucket (and matches your [filtering rules](/pages/connectors/rules), if configured), the Worker reads the object directly from R2 via an in-cluster binding (zero egress) and streams it to the ROOTKey API authenticated with your **Connector API Key**. ROOTKey stores the file and anchors it on-chain, enabling both integrity verification and **full file recovery** in the event of corruption, ransomware, or accidental deletion.
 
@@ -167,7 +167,7 @@ The setup has a natural ordering dependency: the dashboard requires the Cloudfla
 
     ```hcl
     module "rootkey_r2_connector" {
-      source = "github.com/rootkey-ai/rootkey-connectors//r2"
+      source = "github.com/ROOT-Key/rootkey-connectors//r2"
 
       cloudflare_account_id = "00112233445566778899aabbccddeeff"
       bucket_name           = "my-company-documents"
@@ -336,7 +336,7 @@ You can also restrict at the R2 side by setting the **Prefix** field, which tran
 
 ## Source code
 
-The Terraform module and Worker source live in the public [rootkey-ai/rootkey-connectors](https://github.com/rootkey-ai/rootkey-connectors) repository under the [`r2/`](https://github.com/rootkey-ai/rootkey-connectors/tree/main/r2) directory. The code is licensed under the Apache License 2.0 — you are free to fork it, audit it, or pin to a specific commit if your change-management process requires it.
+The Terraform module and Worker source live in the public [ROOT-Key/rootkey-connectors](https://github.com/ROOT-Key/rootkey-connectors) repository under the [`r2/`](https://github.com/ROOT-Key/rootkey-connectors/tree/main/r2) directory. The code is licensed under the Apache License 2.0 — you are free to fork it, audit it, or pin to a specific commit if your change-management process requires it.
 
 ---
 
