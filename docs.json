@@ -57,6 +57,13 @@
             ]
           },
           {
+            "group": "Integrations",
+            "pages": [
+              "pages/integrations/claude-mcp",
+              "agent-setup/prompt"
+            ]
+          },
+          {
             "group": "Ecosystem Guides",
             "pages": [
               "pages/environments",
