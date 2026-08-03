@@ -59,7 +59,8 @@
           {
             "group": "Integrations",
             "pages": [
-              "pages/integrations/claude-mcp"
+              "pages/integrations/claude-mcp",
+              "agent-setup/prompt"
             ]
           },
           {

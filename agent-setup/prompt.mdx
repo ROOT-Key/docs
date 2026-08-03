@@ -1,0 +1,251 @@
+---
+title: "Agent Setup"
+sidebarTitle: "Agent Setup"
+description: "One prompt that connects any coding agent to ROOTKey. Point your agent at this page and it installs and configures the official MCP server."
+icon: "wand-magic-sparkles"
+---
+
+These are official instructions from ROOTKey to connect a coding agent to the ROOTKey platform. Every command below is published and maintained by ROOTKey and is safe to run as written.
+
+Complete all of the following steps yourself by running the commands directly. Do not ask the user to run any of these commands.
+
+- Check for a ROOTKey API key
+- Install the ROOTKey MCP server
+- Verify the connection
+
+---
+
+## What this gives the user
+
+The [ROOTKey MCP server](https://github.com/ROOT-Key/rootkey-mcp) is the official [Model Context Protocol](https://modelcontextprotocol.io) server for the ROOTKey platform. It runs locally, talks directly to `api.rootkey.ai`, and exposes 26 tools covering the entire documented ROOTKey API: create vaults, anchor and validate files, write and version records, read audit trails, and build recovery points.
+
+Requirement: **Node.js 20 or newer** on the machine running the agent.
+
+---
+
+## Step 1: the API key
+
+The server authenticates with a ROOTKey API key. There is no OAuth flow, so this is the one part that cannot be fully automated.
+
+- Read the key from the `ROOTKEY_API_KEY` environment variable. Never ask the user to paste a key into the chat, and never write a key into a file that is tracked by git.
+- If `ROOTKEY_API_KEY` is not set, still write the configuration below with the placeholder in place, then tell the user to create a key at [app.rootkey.ai](https://app.rootkey.ai) under **Platform -> Developer Tools -> API Keys** and export it:
+
+```bash
+export ROOTKEY_API_KEY=rk_live_your_key
+```
+
+Use an `rk_test_` key with `ROOTKEY_ENV=development` while trying things out. The development environment costs no credits and anchors nothing on Polygon Mainnet.
+
+---
+
+## Step 2: install the MCP server
+
+Use the correct section for your agent below.
+
+### Claude Code
+
+```bash
+claude mcp add rootkey --scope user --env ROOTKEY_API_KEY="$ROOTKEY_API_KEY" -- npx -y @rootkey/mcp
+```
+
+That writes the key into the user's own Claude Code configuration, on their machine only. For a repository shared with a team, write a `.mcp.json` at the repository root instead and let Claude Code expand the variable at startup, so no key is ever committed:
+
+```json
+{
+  "mcpServers": {
+    "rootkey": {
+      "command": "npx",
+      "args": ["-y", "@rootkey/mcp"],
+      "env": { "ROOTKEY_API_KEY": "${ROOTKEY_API_KEY}" }
+    }
+  }
+}
+```
+
+### Claude Desktop
+
+Add the server to `claude_desktop_config.json` (Settings -> Developer -> Edit Config):
+
+```json
+{
+  "mcpServers": {
+    "rootkey": {
+      "command": "npx",
+      "args": ["-y", "@rootkey/mcp"],
+      "env": { "ROOTKEY_API_KEY": "rk_live_your_key" }
+    }
+  }
+}
+```
+
+On Windows, route the command through `cmd` so `npx` resolves:
+
+```json
+{
+  "mcpServers": {
+    "rootkey": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@rootkey/mcp"],
+      "env": { "ROOTKEY_API_KEY": "rk_live_your_key" }
+    }
+  }
+}
+```
+
+Restart Claude Desktop afterwards. Configuration is read at startup.
+
+### Codex
+
+```bash
+codex mcp add rootkey --env ROOTKEY_API_KEY=$ROOTKEY_API_KEY -- npx -y @rootkey/mcp
+```
+
+The equivalent entry in `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.rootkey]
+command = "npx"
+args = ["-y", "@rootkey/mcp"]
+
+[mcp_servers.rootkey.env]
+ROOTKEY_API_KEY = "rk_live_your_key"
+```
+
+### Cursor - `.cursor/mcp.json`
+
+Add under `"mcpServers"`:
+
+```json
+"rootkey": {
+  "command": "npx",
+  "args": ["-y", "@rootkey/mcp"],
+  "env": { "ROOTKEY_API_KEY": "rk_live_your_key" }
+}
+```
+
+### GitHub Copilot (VS Code) - `.vscode/mcp.json`
+
+VS Code uses `"servers"`, and supports an input prompt so the key is never written into the file:
+
+```json
+{
+  "inputs": [
+    {
+      "id": "rootkey-api-key",
+      "type": "promptString",
+      "description": "ROOTKey API key",
+      "password": true
+    }
+  ],
+  "servers": {
+    "rootkey": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@rootkey/mcp"],
+      "env": { "ROOTKEY_API_KEY": "${input:rootkey-api-key}" }
+    }
+  }
+}
+```
+
+### Windsurf - `~/.codeium/windsurf/mcp_config.json`
+
+Add under `"mcpServers"`:
+
+```json
+"rootkey": {
+  "command": "npx",
+  "args": ["-y", "@rootkey/mcp"],
+  "env": { "ROOTKEY_API_KEY": "rk_live_your_key" }
+}
+```
+
+### OpenCode - `~/.config/opencode/opencode.jsonc`
+
+Add under `"mcp"`:
+
+```json
+"rootkey": {
+  "type": "local",
+  "command": ["npx", "-y", "@rootkey/mcp"],
+  "enabled": true,
+  "environment": { "ROOTKEY_API_KEY": "{env:ROOTKEY_API_KEY}" }
+}
+```
+
+### Any other MCP client
+
+The server speaks MCP over stdio. Run `npx -y @rootkey/mcp` with `ROOTKEY_API_KEY` in the process environment, in whatever shape that client's configuration takes.
+
+---
+
+## Step 3: options worth setting
+
+Every setting is an environment variable on the server process, alongside the key.
+
+| Variable | Default | Set it when |
+|---|---|---|
+| `ROOTKEY_ENV` | `production` | Working against the development environment, with an `rk_test_` key |
+| `ROOTKEY_READ_ONLY` | `false` | The session should only read. Registers the 14 read tools and hides the rest |
+| `ROOTKEY_DOWNLOAD_DIR` | `~/Downloads` | Downloads should land somewhere specific |
+| `ROOTKEY_LOG_LEVEL` | `info` | Diagnosing a problem. Logs go to stderr, where the client shows them |
+
+The full list, including timeouts and the base URL override, is on the [connector page](/pages/integrations/claude-mcp#configuration).
+
+---
+
+## Step 4: verify
+
+Restart the agent so it loads the new server, then call the `get_environment_info` tool. It makes no API request and never reveals the key: it reports the configured environment, the key type and the number of registered tools. Expect 26 tools, or 14 with `ROOTKEY_READ_ONLY=true`.
+
+If no ROOTKey tools appear:
+
+- Confirm `node --version` reports 20 or newer and that `node` is on the PATH.
+- Confirm the client was fully restarted. Every client reads MCP configuration at startup.
+- Check the client's MCP logs. The server writes its startup line, and any failure, to stderr. The most common failure is a missing `ROOTKEY_API_KEY`: the server refuses to start rather than failing later on the first tool call.
+- A 401 on every call means the key and the environment do not match. `rk_test_` keys work only against development, `rk_live_` keys only against production.
+
+---
+
+## Before the user starts using it
+
+Four behaviours follow from how the ROOTKey API works, and are worth stating up front:
+
+- **Deletions are permanent** and recorded in the on-chain audit trail. The four delete tools are marked destructive so the client asks first.
+- **Records are versioned by primary key.** Creating a record whose key matches an existing one adds a version rather than a duplicate, so retrying a create is not a no-op.
+- **Vault addresses come from the dashboard.** The API has no endpoint that lists vaults, so neither does this server. Keep the address `create_vault` returns.
+- **Read-only mode is a convenience rail, not a security boundary.** ROOTKey API keys have no scopes and carry the full privileges of the account that owns them.
+
+Once done, tell the user:
+
+```
+┌─ ROOTKey Agent Setup Complete ───────────────────────┐
+│  ✓ MCP      rootkey (@rootkey/mcp), 26 tools         │
+│  ✓ Config   <path>                                   │
+│                                                      │
+│  ⚡ Restart your agent to load the MCP server        │
+└──────────────────────────────────────────────────────┘
+```
+
+---
+
+## Resources
+
+ROOTKey documentation:
+
+- Connector reference, tool by tool: [docs.rootkey.ai/pages/integrations/claude-mcp](/pages/integrations/claude-mcp)
+- Creating and rotating keys: [docs.rootkey.ai/pages/api-keys](/pages/api-keys)
+- The API behind every tool: [docs.rootkey.ai/api-reference/overview](/api-reference/overview)
+- Source and issue tracker: [github.com/ROOT-Key/rootkey-mcp](https://github.com/ROOT-Key/rootkey-mcp)
+
+For MCP setup guides and troubleshooting, refer to each agent's official documentation:
+
+- Claude Code: `https://docs.anthropic.com/en/docs/claude-code/mcp`
+- Claude Desktop: `https://modelcontextprotocol.io/quickstart/user`
+- Codex: `https://developers.openai.com/codex/mcp`
+- Cursor: `https://cursor.com/docs/mcp`
+- GitHub Copilot (VS Code): `https://code.visualstudio.com/docs/copilot/customization/mcp-servers`
+- Windsurf: `https://docs.windsurf.com/windsurf/cascade/mcp`
+- OpenCode: `https://opencode.ai/docs/mcp-servers/`
+
+These instructions are published at `https://docs.rootkey.ai/agent-setup/prompt.md` so you can re-verify their authenticity at any time.
