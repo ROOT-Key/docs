@@ -1,0 +1,126 @@
+---
+title: On-Premise Installation
+sidebarTitle: Overview
+description: Install the ROOTKey Data Plane inside your own infrastructure — one Linux host or an existing Kubernetes cluster, with egress-only or fully air-gapped connectivity.
+icon: server
+---
+
+## What Gets Installed
+
+An on-premise installation places the complete ROOTKey Data Plane inside your perimeter. Users authenticate against it, files are stored in it, and anchoring transactions are signed by wallets that never leave it.
+
+The installer deploys **26 workloads** as a single Helm umbrella chart, plus three stateful dependencies it runs in-cluster:
+
+| Component | Where it runs | Why |
+|---|---|---|
+| **Data Plane services** (26 workloads) | In-cluster, one Helm release | The platform itself: API, frontend, workers, schedulers. |
+| **Redis** | In-cluster | Queues and caches. Self-owned so the installation has no external dependency. |
+| **Kafka** | In-cluster | Event bus between services. Self-owned for the same reason. |
+| **MinIO** | In-cluster | Object storage, S3-compatible. This is where uploaded files live. |
+| **PostgreSQL** | **Outside the cluster** | Databases outlive clusters. Running it as a pod makes a restore a Kubernetes problem rather than a database one. |
+
+<Note>
+  PostgreSQL is deliberately **not** a container. In Scenario C the installer provisions it natively on the host with systemd; in Scenario B you supply a managed or dedicated endpoint. Either way it is external to Kubernetes, so a cluster rebuild never touches your data.
+</Note>
+
+---
+
+## How It Works
+
+```
+Your Network Perimeter                                    ROOTKey Control Plane
+──────────────────────                                    ─────────────────────
+  Users ──HTTPS──► Platform frontend                       Issues the licence
+                        │                                  Receives heartbeats
+                        ▼                                  Publishes the catalogue
+                   ROOTKey Data Plane
+                   26 workloads, one Helm release
+                        │
+        ┌───────────────┼───────────────┐
+        ▼               ▼               ▼
+     Redis           Kafka           MinIO           ──mTLS/443──►  (egress-only mode)
+                                        │                            or no link at all
+                                        ▼                            (air-gapped mode)
+                                  PostgreSQL
+                                  (outside the cluster)
+```
+
+The Data Plane runs independently. The Control Plane link carries **licensing, telemetry and catalogue updates only** — never your files, never your users, never file content or metadata.
+
+---
+
+## Choosing a Scenario
+
+Two questions decide almost the entire installation: **what infrastructure will you provide**, and **what network connectivity is permitted**.
+
+<CardGroup cols={2}>
+  <Card title="Scenario B — Existing cluster" icon="dharmachakra">
+    You already run Kubernetes and hand over a kubeconfig. The installer deploys the Helm charts into it and installs nothing else.
+  </Card>
+  <Card title="Scenario C — One Linux host" icon="server">
+    You hand over SSH access to a single Linux machine. The installer sets up k3s, PostgreSQL, and the full platform on it. **The most common choice** for banking, defence and other conservative environments.
+  </Card>
+</CardGroup>
+
+| | Scenario B | Scenario C |
+|---|---|---|
+| You provide | A Kubernetes cluster + kubeconfig | One Linux host + SSH access |
+| Kubernetes | Yours | k3s, installed by us |
+| PostgreSQL | Yours (managed or dedicated endpoint) | Installed natively on the host |
+| Deployed artefact | The Helm chart | The Helm chart |
+| Typical for | Cloud-native organisations | Conservative IT, regulated sectors |
+
+---
+
+## Choosing a Connectivity Mode
+
+| Mode | Inbound | Outbound | Licensing | Updates |
+|---|---|---|---|---|
+| **Egress-only** *(default)* | None | Allowlist to the ROOTKey Control Plane (mTLS, 443) | Online heartbeat | Pulled from the Control Plane |
+| **Air-gapped** | None | None | Offline signed licence, supplied in the vault | New bundle delivered by hand |
+
+Egress-only suits most regulated clients: nothing reaches in, and the single outbound destination is one you can name in a firewall rule. Air-gapped suits defence and isolated core networks, at the cost of updating by hand.
+
+<Warning>
+  In egress-only mode the licence is renewed over the Control Plane link. A deployment whose egress rules omit the Control Plane fails in the most misleading way available: it **enrols, goes quiet, and reports healthy** until the grace period expires, because serving from a cached licence is normal operation rather than an error. Confirm the allowlist before the install, not after.
+</Warning>
+
+---
+
+## What the Installation Does Not Do
+
+Stated plainly, because scoping an on-premise install is mostly about what stays yours:
+
+- It does **not** send file content, file metadata, user records or organisation data to ROOTKey. The Control Plane link carries the licence, heartbeat counters and catalogue versions.
+- It does **not** require inbound access from the internet. Nothing outside your network needs to reach the installation.
+- It does **not** manage your DNS or issue your certificates. You supply the hostname and the TLS certificate; the installer consumes them.
+- It does **not** modify infrastructure outside the namespace it installs into, other than the host-level packages Scenario C explicitly needs (k3s, PostgreSQL, a firewall rule).
+
+---
+
+## Installation Guides
+
+<CardGroup cols={2}>
+  <Card title="Requirements" icon="clipboard-check" href="/pages/on-premise/requirements">
+    Hardware, operating system, network, PostgreSQL, DNS and TLS — everything to have ready before the install starts.
+  </Card>
+  <Card title="Installation" icon="terminal" href="/pages/on-premise/installation">
+    The step-by-step install, from unpacking the bundle to a running platform.
+  </Card>
+  <Card title="Configuration Reference" icon="sliders" href="/pages/on-premise/configuration">
+    Every value you must supply: the vault secrets, the Helm values, and the inventory.
+  </Card>
+  <Card title="Verification" icon="circle-check" href="/pages/on-premise/verification">
+    How to prove the installation actually works, in the order the milestones depend on each other.
+  </Card>
+  <Card title="Operations" icon="wrench" href="/pages/on-premise/operations">
+    Upgrades, licence renewal, backups, logs, and what to do during a maintenance window.
+  </Card>
+  <Card title="Troubleshooting" icon="triangle-exclamation" href="/pages/on-premise/troubleshooting">
+    Every failure we have hit on a real installation, with the command that identifies it.
+  </Card>
+</CardGroup>
+
+---
+
+→ Looking for the commercial overview instead? See [On-Premise Deployment](/pages/deployment/on-premise).

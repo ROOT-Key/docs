@@ -1,0 +1,164 @@
+---
+title: Verification
+sidebarTitle: Verification
+description: Prove the installation actually works, in the order the milestones depend on each other — workloads, licence, file serving, and a real upload end to end.
+icon: circle-check
+---
+
+An installation that reports success is not the same as an installation that works. Three of the four milestones below fail **silently** — the pods stay Ready, Helm reports success, and nothing appears in any log.
+
+Check them in this order. Each depends on the one before it, so a failure at step 2 makes step 3 meaningless.
+
+---
+
+## 1. The Workloads
+
+```bash
+kubectl -n rootkey get pods
+```
+
+Every pod `Running` and ready. A `CrashLoopBackOff` here is the loud, easy case — the pod's logs name the cause:
+
+```bash
+kubectl -n rootkey logs deploy/auth-service --tail=50
+```
+
+Then confirm the release itself:
+
+```bash
+helm -n rootkey list
+```
+
+The Data Plane release should be `deployed`. A release stuck in `pending-upgrade` means a previous run was interrupted.
+
+---
+
+## 2. The Licence
+
+The deployment enrols with the Control Plane, receives a signed licence, and renews it automatically. Until that happens the platform runs on the enrolment latch and will eventually drop to read-only.
+
+```bash
+kubectl -n rootkey logs deploy/licence-sync-worker --tail=30
+```
+
+<Warning>
+  A deployment that cannot reach the Control Plane **does not report an error**. It enrols if the rules were open at install time, then goes quiet and reports itself healthy right up to the end of the grace period, because serving from a cached licence is normal operation rather than a failure.
+
+  If the egress allowlist is in doubt, test it explicitly rather than waiting:
+
+  ```bash
+  kubectl -n rootkey exec deploy/auth-service -- \
+    curl -sS -o /dev/null -w '%{http_code}\n' https://control-api.rootkey.ai/v1/healthz
+  ```
+</Warning>
+
+A licence has a 24-hour TTL and a 7-day grace period. Renewal happens automatically well before expiry, so a healthy deployment never approaches either.
+
+---
+
+## 3. File Serving
+
+This is the milestone that most often fails silently, and the one worth checking before you let anyone use the platform.
+
+### The Ingress exists
+
+```bash
+kubectl -n rootkey get ingress
+```
+
+You need a `rootkey-minio-files` entry with **the same host** as the platform frontend. If it is absent, `rootkey_public_host` was empty or `rootkey_minio_ingress_enabled` was off, and the Ingress was never rendered.
+
+### The workloads received the URL
+
+```bash
+kubectl -n rootkey get deploy auth-service \
+  -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PUBLIC_FILE_BASE_URL")].value}{"\n"}'
+```
+
+It must print `https://<your host>/files`. If it prints the shipped example, the override did not apply — check that it is under `global.envOverrides` in your values file and not nested inside a workload.
+
+### The path reaches MinIO
+
+```bash
+curl -sI https://rootkey.acme.example/files/ | head -1
+```
+
+<Note>
+  A **403 or 404 from MinIO is the good result**. It means the request reached object storage. If you get the platform's HTML instead, the MinIO Ingress does not exist and the frontend is answering the request.
+</Note>
+
+### Objects are readable without credentials
+
+A browser fetching an image sends no S3 credentials and never will. If the anonymous read policy was not applied, every avatar, logo and file link returns `AccessDenied`.
+
+The bucket job prints which it did:
+
+```bash
+kubectl -n rootkey logs job/rootkey-minio-create-bucket
+```
+
+Look for `bucket ready: <name> (anonymous download enabled)`. If it says `anonymous read NOT granted`, re-run the MinIO chart — the policy is re-applied on every upgrade.
+
+---
+
+## 4. End to End
+
+The only check that proves the whole chain. Nothing above substitutes for it.
+
+<Steps>
+  <Step title="Sign in">
+    Open `https://<your host>` and sign in. On a single-tenant deployment the first user creates the organisation; everyone after that joins by invitation.
+  </Step>
+  <Step title="Upload a file">
+    Upload any file through the interface. It should appear in the vault and, within a few seconds, show its blockchain anchor.
+
+    A **500 on the first upload** with nothing in the gateway log is the signature of a missing contract seed. Re-run it:
+
+    ```bash
+    ./install.sh --scenario C --values values-acme.yaml \
+      --vault-pass-file .vault_pass --tags contract-seed
+    ```
+  </Step>
+  <Step title="Open the file again">
+    Click through to the file and open it. This is what proves the file-serving chain: the URL was built correctly, the Ingress routes it, and MinIO serves it without credentials.
+
+    Check that the avatar and organisation logo render too — they travel the same path.
+  </Step>
+  <Step title="Verify the anchor">
+    Open the file's detail view and confirm the blockchain proof is present and verifiable. This proves the contract seed, the wallet, and the blockchain RPC endpoint are all working together.
+  </Step>
+</Steps>
+
+---
+
+## Quick Reference
+
+Everything above, as one block you can paste:
+
+```bash
+NS=rootkey
+HOST=rootkey.acme.example
+
+kubectl -n $NS get pods
+helm -n $NS list
+kubectl -n $NS get ingress
+kubectl -n $NS get deploy auth-service \
+  -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PUBLIC_FILE_BASE_URL")].value}{"\n"}'
+curl -sI https://$HOST/files/ | head -1
+kubectl -n $NS logs job/rootkey-minio-create-bucket | tail -1
+kubectl -n $NS logs deploy/licence-sync-worker --tail=10
+```
+
+| Check | Expected |
+|---|---|
+| Pods | All `Running` |
+| Helm release | `deployed` |
+| Ingress | Includes `rootkey-minio-files` on your host |
+| `PUBLIC_FILE_BASE_URL` | `https://<your host>/files` |
+| `curl /files/` | `403` or `404` from MinIO — **not** the platform's HTML |
+| Bucket job | `anonymous download enabled` |
+| Licence worker | Renewing, no repeated errors |
+
+---
+
+→ Next: [Operations](/pages/on-premise/operations) · Something wrong? [Troubleshooting](/pages/on-premise/troubleshooting)

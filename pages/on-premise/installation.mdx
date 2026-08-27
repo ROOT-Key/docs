@@ -1,0 +1,214 @@
+---
+title: Installation
+sidebarTitle: Installation
+description: The step-by-step on-premise install, from unpacking the release bundle to a running platform, with the value gate that refuses a deployment configured to fail.
+icon: terminal
+---
+
+## Before You Start
+
+Work through [Requirements](/pages/on-premise/requirements) first. The installer validates most of it and refuses to run rather than failing halfway, but a missing certificate or an unopened firewall rule still costs you the slot.
+
+Everything below runs from your **control machine** — your laptop, a jump host, or a CI runner. It is not the target.
+
+---
+
+## The Value Gate
+
+Before Ansible is invoked at all, the installer refuses to run a deploy while any of the following is true:
+
+| Condition | Why it is fatal |
+|---|---|
+| An image field still holds a shipped placeholder (`<commit-sha>`, `registry.example.com`, `CHANGE_ME`) | Every pod sits in `ImagePullBackOff` until the timeout, then Helm rolls the release back and deletes the evidence. You get a timeout, not a diagnosis. |
+| The vault has `CHANGE_ME` on a key the application parses | A guaranteed runtime crash in a pod that has already reported Running. |
+| `PUBLIC_FILE_BASE_URL` is unset, is still the example, or names a host no Ingress serves | The install **succeeds** and the platform is unusable: no avatar, logo, file link or report opens, and nothing appears in any log. |
+
+<Note>
+  There is no flag to skip the gate. It exists because each of these produces a failure that is either silent or destroys its own evidence.
+</Note>
+
+---
+
+## Setup
+
+<Steps>
+  <Step title="Unpack the release bundle">
+    ROOTKey delivers a release as a single archive. Unpack it somewhere you can write to on the control machine:
+
+    ```bash
+    tar xzf rootkey-onprem-<version>.tar.gz
+    cd rootkey-onprem-<version>
+    ```
+
+    The bundle carries the Helm charts, the Ansible roles, the installer, and — for an air-gapped install — every container image plus the k3s and Helm binaries.
+
+    Verify the signature before trusting it:
+
+    ```bash
+    sha256sum -c SHA256SUMS
+    ```
+  </Step>
+
+  <Step title="Run the preflight, before touching anything">
+    The preflight is **read-only**. It changes nothing on the target and is deliberately not blocked by the value gate, so you can run it before anything is filled in.
+
+    ```bash
+    ./install.sh --scenario C --tags preflight
+    ```
+
+    It reports PASS, WARN or FAIL for CPU, RAM, disk, operating system, and the required ports. Resolve every FAIL before continuing. Treat a WARN on vCPUs as a FAIL if you can: four cores install, but throttle badly enough to time out file anchoring.
+  </Step>
+
+  <Step title="Fill in the inventory">
+    Copy the example and edit your copy. The real file is git-ignored, so it never travels back into the repository.
+
+    ```bash
+    cp ansible/inventory/hosts.example.ini ansible/inventory/hosts.ini
+    ```
+
+    For Scenario C, one host with SSH details. For Scenario B, `ansible_connection=local` and the kubeconfig passed on the command line.
+
+    Then set the platform hostname in the same file, under `[rootkey:vars]`:
+
+    ```ini
+    [rootkey:vars]
+    rootkey_region=eu-lisbon
+    rootkey_tenant=acme
+    rootkey_public_host=rootkey.acme.example
+    ```
+
+    <Warning>
+      `rootkey_public_host` must be the **same hostname** you set on the platform Ingress in the values file, and must match the host in `PUBLIC_FILE_BASE_URL`. The installer compares all three and refuses to deploy if they disagree — because a mismatch produces a working application where every file returns 404, with nothing naming the cause.
+    </Warning>
+  </Step>
+
+  <Step title="Fill in the vault">
+    Copy the example vault and fill in every value. See [Configuration Reference](/pages/on-premise/configuration) for what each key is and where it comes from.
+
+    ```bash
+    cp ansible/group_vars/all/vault.example.yml ansible/group_vars/all/vault.yml
+    # edit vault.yml
+    ansible-vault encrypt ansible/group_vars/all/vault.yml
+    ```
+
+    Store the vault password in a file the installer can read, and keep that file out of version control:
+
+    ```bash
+    echo 'your-vault-password' > .vault_pass
+    chmod 600 .vault_pass
+    ```
+
+    <Warning>
+      The gate type-checks only the keys the application parses — `control-plane.deployment_id` must be a UUID, and every `*Url` key must be an absolute URL. A `CHANGE_ME` left on `BUCKET_NAME` or an HMAC secret passes the gate and fails later, far from its cause. Fill in everything.
+    </Warning>
+  </Step>
+
+  <Step title="Create your values file">
+    Copy the example and edit your copy:
+
+    ```bash
+    cp helm/values-onprem.example.yaml values-acme.yaml
+    ```
+
+    Three things must be set:
+
+    1. **Every image `repository` and `tag`** — the registry ROOTKey gave you and the released commit SHA of each service. The gate rejects the shipped placeholders.
+    2. **The platform hostname**, on the `platform-frontend` Ingress.
+    3. **`PUBLIC_FILE_BASE_URL`**, under `global.envOverrides`:
+
+    ```yaml
+    global:
+      envOverrides:
+        PUBLIC_FILE_BASE_URL: https://rootkey.acme.example/files
+    ```
+
+    <Note>
+      Do **not** append the bucket name to that URL. The MinIO Ingress prepends it from the vault, so the bucket name lives in exactly one place. Two copies drift, and the failure when they do is a 404 on every file.
+    </Note>
+  </Step>
+
+  <Step title="Load the TLS certificate into the cluster">
+    The installer consumes a Secret; it does not create one. Load your certificate for the platform hostname:
+
+    ```bash
+    kubectl -n rootkey create secret tls rootkey-tls \
+      --cert=/path/to/fullchain.pem \
+      --key=/path/to/privkey.pem
+    ```
+
+    The Secret name must match `ingress.tls[].secretName` in your values file and `rootkey_tls_secret_name` in the inventory. `rootkey-tls` is the default both expect.
+
+    In Scenario C the namespace does not exist until the install creates it — run this step after the first install pass, or create the namespace by hand first.
+  </Step>
+
+  <Step title="Run the installation">
+    <Tabs>
+      <Tab title="Scenario C">
+        ```bash
+        ./install.sh --scenario C \
+          --values values-acme.yaml \
+          --vault-pass-file .vault_pass
+        ```
+
+        For an air-gapped host, add `--airgap true` to load images from the bundle instead of pulling them.
+      </Tab>
+      <Tab title="Scenario B">
+        ```bash
+        ./install.sh --scenario B \
+          --kubeconfig ~/acme.kubeconfig \
+          --values values-acme.yaml \
+          --vault-pass-file .vault_pass
+        ```
+      </Tab>
+    </Tabs>
+
+    The `--values` flag is not optional in practice: without it the installer falls back to the shipped example, which is full of placeholders, and the gate refuses.
+
+    The run executes ten stages in order — preflight, Kubernetes runtime, secrets, database, chart staging, in-cluster stateful services, the Data Plane itself, the plan seed, the contract seed, and host hardening.
+
+    <Tip>
+      For a **first** install, running it in phases is much easier to diagnose than one long run. Use `--tags` to stop after each stage: `--tags preflight`, then `--tags k3s`, then `--tags secrets`, and so on. For an upgrade, run the whole thing — two of the stages are idempotent seeds that must not be forgotten.
+    </Tip>
+  </Step>
+
+  <Step title="Watch for the lines that matter">
+    Three messages tell you whether the parts that fail silently actually worked.
+
+    **`contract-seed`** — on a fresh install you want `contratos semeados`. On a re-install you want `skip: já há contratos`, which means the guard held. If you see `skip: o fixture não veio no bundle`, the platform will install cleanly and return **500 on the first file upload**, with no cause in the gateway log.
+
+    **The bucket job** — `bucket ready: <name> (anonymous download enabled)`. If it says `anonymous read NOT granted`, stored files will return `AccessDenied` to every browser.
+
+    **The MinIO precondition** — it runs before any Helm command in the stateful stage. If it fails, it names which of the three values is missing and nothing has been installed yet.
+  </Step>
+</Steps>
+
+---
+
+## What Runs, In Order
+
+| Stage | Tag | What it does |
+|---|---|---|
+| 1 | `preflight` | Read-only validation of the target. |
+| 2 | `k3s`, `runtime` | Installs k3s (Scenario C only). |
+| 3 | `secrets` | Creates the named Kubernetes Secrets from the vault. |
+| 4 | `postgres`, `database` | Installs and configures PostgreSQL, natively on the host. |
+| 5 | `charts` | Stages the Helm charts onto the target. |
+| 6 | `stateful` | Deploys Redis, Kafka and MinIO in-cluster. |
+| 7 | `deploy` | Deploys the Data Plane umbrella — all 26 workloads. |
+| 8 | `plan-seed` | Seeds the free plan. **Re-runnable**, and must be re-run after the licence reconciles the catalogue. |
+| 9 | `contract-seed` | Seeds the smart contracts. **Re-runnable**, and must be re-run if it was skipped because the migrations had not finished. |
+| 10 | `hardening` | Host firewall, time sync, kernel hardening. |
+
+---
+
+## Re-running the Installation
+
+Every stage is idempotent, and an upgrade is the same command as an install.
+
+- **Helm** uses `upgrade --install`. On a release that is already `deployed`, `--atomic` is on, so a failure rolls back rather than leaving the platform half-changed. On a **first** install it is deliberately off: a rollback there would delete the pods, logs and events that explain what went wrong.
+- **PostgreSQL** is rotation-safe. It reads the passwords from your vault and applies them; it never generates its own, so a re-run cannot orphan your credentials.
+- **The seeds** check before they write. The contract seed skips with a message when contracts already exist rather than duplicating them.
+
+---
+
+→ Next: [Configuration Reference](/pages/on-premise/configuration) · [Verification](/pages/on-premise/verification)

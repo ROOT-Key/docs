@@ -1,0 +1,209 @@
+---
+title: Configuration Reference
+sidebarTitle: Configuration
+description: Every value the installation needs — the vault secrets, the Helm values, and the inventory variables — with what supplies each one and what breaks when it is wrong.
+icon: sliders
+---
+
+An on-premise installation is configured in **three files**, each holding a different kind of value. Knowing which file owns what is most of the work.
+
+| File | Holds | In version control? |
+|---|---|---|
+| `ansible/group_vars/all/vault.yml` | Secrets: passwords, keys, tokens | **No** — encrypted with `ansible-vault`, git-ignored |
+| `values-<client>.yaml` | Helm values: images, hostnames, resources | **No** — git-ignored, one per deployment |
+| `ansible/inventory/hosts.ini` | The target host and deployment-wide variables | **No** — git-ignored |
+
+<Warning>
+  All three are per-deployment and all three stay out of the repository. A values file committed to the repo becomes the file the next installation is accidentally run against.
+</Warning>
+
+---
+
+## The Vault
+
+Copy `ansible/group_vars/all/vault.example.yml` to `vault.yml`, fill it in, and encrypt it. Every top-level key becomes one Kubernetes Secret in the release namespace.
+
+### `root-services`
+
+| Key | What it is |
+|---|---|
+| `app_url` | The platform's own URL — `https://<your hostname>`. |
+| `ip_geo_location_url`, `ip_location_key` | Geo-IP lookup for the audit trail. Supplied by you or left pointing at a service you run. |
+| `better_auth_secret` | Signing secret for sessions. Generate a long random string; changing it invalidates every session. |
+| `externalApiUsername`, `externalApiPassword` | Credentials for the platform's outbound integrations. |
+| `internal_service_token` | Shared secret for service-to-service calls inside the cluster. Generate randomly. |
+
+### `database`
+
+Five connection strings, one per database. In Scenario C the installer creates all five on the host it provisions; in Scenario B you point them at your own endpoint.
+
+| Key | Database |
+|---|---|
+| `dbauth` | Identity, organisations, files, vaults |
+| `dbmail` | Outbound email |
+| `dbManagement` | Platform management |
+| `dbSmartContracts` | Smart contracts and anchoring |
+| `dbNotifications` | In-app notifications |
+
+<Note>
+  In Scenario C you also supply `vault_postgres_passwords` — five role passwords the installer applies to the database. It never generates its own, so re-running the install re-asserts exactly what your vault says rather than rotating anything behind your back.
+</Note>
+
+### `aws-bucket`
+
+Object storage. In an on-premise installation this is MinIO running in your cluster, not AWS — the key names are historical.
+
+| Key | What it is |
+|---|---|
+| `BUCKET_NAME` | The bucket the platform writes to. Created on first start. Must be a valid S3 bucket name: lowercase, 3–63 characters, no underscores. |
+| `PUBLIC_ACCESS_KEY` | MinIO root user. **Minimum 3 characters** or MinIO refuses to start. |
+| `PRIVATE_ACCESS_KEY` | MinIO root password. **Minimum 8 characters**, same. |
+| `S3_REGION` | The region MinIO is started with and the applications sign requests against. |
+| `CLOUDFRONT_ID` | Unused on-premise. Present because the same configuration module serves both deployments. |
+
+<Warning>
+  `BUCKET_NAME` is one of the keys the value gate does **not** type-check. A `CHANGE_ME` left here passes the gate, and the installation then fails at the MinIO Ingress precondition — which is loud and early, but only because that check was added for exactly this.
+</Warning>
+
+### `control-plane`
+
+| Key | What it is |
+|---|---|
+| `deployment_id` | The UUID ROOTKey issues for this deployment. The gate rejects anything that is not a UUID. |
+| `enrollment_token` | One-time token that enrols the deployment with the Control Plane. |
+
+### The rest
+
+| Secret | Holds | Notes |
+|---|---|---|
+| `redis` | `host`, `password` | In-cluster Redis. |
+| `kafka` | `brokers`, `username`, `password` | In-cluster Kafka, SASL. |
+| `aws-ses` | Access key pair | Email delivery, if you use SES. |
+| `email` | `host`, `port`, `user`, `password` | SMTP, as an alternative to SES. |
+| `blockchain` | `RPC_URL`, `TESTNET_RPC_URL`, `WEB3_API_KEY`, `TESTNET_WEB3_API_KEY` | Where anchoring transactions are sent. |
+| `azure` | `clientId`, `tenantId` | Azure AD, when used for staff access. |
+| `social-providers` | Microsoft, Google and LinkedIn client id/secret pairs | **Yours, not ours.** Register your own applications; their redirect URIs point at your hostname. |
+| `observability` | `log_level` | |
+| `container-config` | `port`, `env` | |
+
+<Note>
+  Social sign-in is optional and per-provider. A deployment that configures none simply does not offer social sign-in — the providers are registered only when configured, rather than half-registered with empty credentials.
+</Note>
+
+---
+
+## The Helm Values File
+
+Copy `helm/values-onprem.example.yaml`. Everything below is per-deployment.
+
+### Images
+
+Every one of the 26 workloads needs a real `repository` and `tag`. The tag is the released commit SHA of that service, which ROOTKey publishes with each release.
+
+```yaml
+auth-service:
+  image:
+    repository: <registry>/auth-service
+    tag: "68a44018e520d96b3c595d3c6f49db2a6466f4c7"
+  imagePullSecrets:
+    - name: rootkey-registry
+```
+
+The value gate rejects `<commit-sha>`, `registry.example.com` and `CHANGE_ME` in any image field.
+
+### The file base URL
+
+```yaml
+global:
+  envOverrides:
+    PUBLIC_FILE_BASE_URL: https://rootkey.acme.example/files
+```
+
+This is where a browser fetches a stored file from. It reaches every workload that declares the variable.
+
+<Warning>
+  Getting this wrong is the single most common way an installation "succeeds" and is unusable. Every pod is Ready, Helm reports success, users register, files upload and anchor — and then no avatar, logo, file link or compliance report opens, with **nothing in any log**, because the URL is only ever dereferenced by the user's browser and never reaches the cluster.
+</Warning>
+
+Three rules:
+
+1. The host must be the **same** as the platform frontend Ingress host, and the same as `rootkey_public_host`.
+2. The path must be `/files`.
+3. Do **not** include the bucket name. The MinIO Ingress prepends it from the vault.
+
+### Ingress
+
+```yaml
+platform-frontend:
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: rootkey.acme.example
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: rootkey-tls
+        hosts:
+          - rootkey.acme.example
+```
+
+The TLS Secret must already exist in the namespace. There is no ACME issuer.
+
+### Resources
+
+The CPU and memory limits shipped in the chart are sized for the multi-tenant cloud, where a tight per-pod limit stops one customer starving another. An on-premise box is the opposite: it is dedicated to one client, and the same limit becomes a brake with no beneficiary.
+
+<Warning>
+  This is measured, not estimated. On an eight-core box at 16% utilisation, a service limited to `200m` accumulated **84 throttling events and 4.69 seconds of throttled time during a 3-second test**, with 6.7 cores idle beside it. The visible symptom is file creation timing out after five seconds on a machine that looks unloaded.
+</Warning>
+
+Raise the limits in your values file. The example file ships with values already raised for a dedicated host and explains each one.
+
+---
+
+## The Inventory
+
+`ansible/inventory/hosts.ini` — the target, plus variables that belong to the deployment rather than to Helm.
+
+```ini
+[rootkey]
+acme-node-1 ansible_host=10.0.0.10 ansible_user=rootkey ansible_ssh_private_key_file=~/.ssh/acme
+
+[rootkey:vars]
+rootkey_region=eu-lisbon
+rootkey_tenant=acme
+rootkey_public_host=rootkey.acme.example
+```
+
+| Variable | What it is |
+|---|---|
+| `rootkey_public_host` | The platform hostname. The MinIO chart is a separate top-level chart with no values file, so this is the only place it can learn the host. |
+| `rootkey_region`, `rootkey_tenant` | Data-residency labels. They surface in the install manifest for audit. |
+
+<Note>
+  Values set here win over `ansible/group_vars/all/main.yml`, which ships with `rootkey_public_host` empty. That file is shared and versioned; the inventory is yours.
+</Note>
+
+---
+
+## Deployment-Wide Variables
+
+Set in `ansible/group_vars/all/main.yml`, or overridden per deployment with `-e KEY=VALUE`.
+
+| Variable | Default | What it controls |
+|---|---|---|
+| `rootkey_namespace` | `rootkey` | The Kubernetes namespace everything installs into. |
+| `rootkey_redis_in_cluster` | `true` | Set false only when you supply your own Redis. |
+| `rootkey_kafka_in_cluster` | `true` | Same, for Kafka. |
+| `rootkey_minio_in_cluster` | `true` | Set false only when you supply your own S3-compatible endpoint. |
+| `rootkey_minio_ingress_enabled` | `true` | Publishes stored files at `<host>/files`. Turn off only when something else already fronts MinIO. |
+| `rootkey_tls_secret_name` | `rootkey-tls` | The Secret holding the certificate for `rootkey_public_host`. |
+| `rootkey_control_plane_url` | `https://control-api.rootkey.ai` | Where the deployment enrols and renews its licence. |
+| `rootkey_control_plane_endpoints` | `control-api.rootkey.ai` | The host the firewall rule needs. Must contain the host of the URL above. |
+| `rootkey_contract_seed_enabled` | `true` | Seeds the smart contracts. With this off, creating a file returns 500. |
+
+---
+
+→ Next: [Verification](/pages/on-premise/verification)

@@ -1,0 +1,175 @@
+---
+title: Requirements
+sidebarTitle: Requirements
+description: Everything to have ready before the installation starts — hardware, operating system, network, PostgreSQL, DNS and TLS, and registry access.
+icon: clipboard-check
+---
+
+Have all of this ready before the install begins. The installer refuses to run rather than start and fail halfway, so a missing item costs you a message rather than a rollback — but it still costs a scheduling slot.
+
+---
+
+## Hardware
+
+The installer measures these on the target and reports each one as PASS, WARN or FAIL.
+
+| Resource | Minimum | Recommended | What happens below the minimum |
+|---|---|---|---|
+| **vCPUs** | 4 | 8 | Install fails. Below the recommendation it installs but throttles — see the warning below. |
+| **RAM** | 15.5 GB | 30 GB | Install fails. |
+| **Free disk** | 100 GB | 250 GB | Install fails. Object storage grows with your files; size this against how much you intend to store. |
+
+<Warning>
+  Four vCPUs is a floor, not a target. On a host at the minimum, the CPU limits that ship with the workloads cause enough CFS throttling to time out blockchain anchoring: a file upload can exceed its five-second budget while the machine sits mostly idle, because the limit is per-container rather than per-host. Plan for eight.
+</Warning>
+
+---
+
+## Operating System
+
+**Scenario C only.** Scenario B installs nothing on a host, so the operating system underneath your cluster is your concern.
+
+| Distribution | Supported versions |
+|---|---|
+| Ubuntu | 22.04, 24.04, 26.04 |
+| Debian | 12 |
+| RHEL / Rocky / AlmaLinux / CentOS | 8, 9 |
+
+Anything else fails the preflight check. The requirement comes from the k3s and PostgreSQL packages the installer uses, not from ROOTKey itself.
+
+---
+
+## Network
+
+### Ports on the host
+
+| Port | Purpose |
+|---|---|
+| `6443` | Kubernetes API (k3s) |
+| `443` | HTTPS — the platform's only user-facing entry point |
+| `80` | HTTP — redirects to 443 |
+
+These must be **free on a virgin host**. On a host that already runs k3s from a previous install, the preflight accepts them as held by the existing ingress rather than treating it as a conflict.
+
+### Outbound
+
+In **egress-only** mode the deployment needs exactly one outbound destination:
+
+```
+control-api.rootkey.ai   (HTTPS/443, mTLS)
+```
+
+That is the whole allowlist. Add it to your firewall before the install.
+
+<Warning>
+  A deployment whose egress rules omit the Control Plane does not fail loudly. It enrols, then goes quiet, and **reports itself healthy** until the grace period runs out — serving from a cached licence is normal operation, not an error. Verify the rule is in place rather than assuming it.
+</Warning>
+
+In **air-gapped** mode there is no outbound requirement. The licence arrives as an offline signed artefact in the vault, and updates arrive as a new bundle.
+
+### Inbound
+
+None from outside your network. Users reach the platform over your own network or VPN.
+
+---
+
+## PostgreSQL
+
+PostgreSQL runs **outside** Kubernetes. A database that outlives its cluster is a database whose restore is a database problem, not a Kubernetes one.
+
+<Tabs>
+  <Tab title="Scenario C">
+    The installer provisions PostgreSQL natively on the host with systemd, creates the roles and databases, and renders the connection Secret from the credentials in your vault. Nothing to prepare beyond the disk space.
+
+    You supply the passwords in the vault under `vault_postgres_passwords` — five of them, one per database role. The installer applies exactly those; it never generates its own.
+  </Tab>
+  <Tab title="Scenario B">
+    You supply a reachable PostgreSQL endpoint — managed or dedicated — and its credentials in the vault. Requirements:
+
+    - Reachable from the cluster's pod network.
+    - A superuser or a role able to create databases and roles.
+    - Version 14 or later.
+
+    If your database enforces IP allowlisting, the cluster's egress addresses need to be on it.
+  </Tab>
+</Tabs>
+
+---
+
+## DNS and TLS
+
+You supply both. The installer consumes them and creates neither.
+
+**One hostname**, resolvable from wherever your users are — inside the corporate network, over the VPN, or on the internet for a reseller deployment. The whole platform answers on it, including stored files at `/files`.
+
+**One TLS certificate** for that hostname, loaded into the cluster as a Kubernetes Secret in the release namespace before the install runs.
+
+```bash
+kubectl -n rootkey create secret tls rootkey-tls \
+  --cert=/path/to/fullchain.pem \
+  --key=/path/to/privkey.pem
+```
+
+<Note>
+  There is no ACME issuer in the installation. A network that may not reach Let's Encrypt cannot depend on one, so the certificate is yours to provide and renew. Name the Secret consistently — `rootkey-tls` is the default the values file expects.
+</Note>
+
+---
+
+## Container Registry Access
+
+The images are published to a distribution registry that partners are given access to. It is deliberately **not** the registry holding everything ROOTKey has ever built.
+
+You need:
+
+- The registry hostname and credentials, supplied by ROOTKey.
+- Either outbound access from the cluster to pull them, or an **air-gapped bundle** containing the images pre-pulled.
+
+For an air-gapped install the bundle carries every image, the Helm charts, and the k3s and Helm binaries. Nothing is fetched at install time.
+
+---
+
+## Control Machine
+
+The machine you run the installer *from* — your laptop, a jump host, or a CI runner. It is not the target.
+
+| Requirement | Notes |
+|---|---|
+| **Ansible** | The installer refuses to start without `ansible-playbook` on PATH. |
+| **SSH access to the target** | Scenario C only. Key-based; the installer does not prompt for passwords. |
+| **`kubectl` reach to the cluster** | Scenario B only, via the kubeconfig you pass with `--kubeconfig`. |
+| **The release bundle** | Unpacked into a directory you can write to. |
+
+<Note>
+  Helm and `kubectl` do **not** need to be on the control machine in Scenario C. The installer places them on the target and runs them there.
+</Note>
+
+---
+
+## Checklist
+
+Everything above, in the order the installation consumes it:
+
+<AccordionGroup>
+  <Accordion title="Infrastructure" icon="server">
+    - [ ] Host or cluster meets the CPU, RAM and disk requirements — eight vCPUs, not four.
+    - [ ] Operating system is on the supported list (Scenario C).
+    - [ ] Ports 6443, 443 and 80 are free.
+    - [ ] SSH key access to the target (Scenario C) or a working kubeconfig (Scenario B).
+  </Accordion>
+  <Accordion title="Network" icon="network-wired">
+    - [ ] `control-api.rootkey.ai` is on the egress allowlist (egress-only mode).
+    - [ ] The platform hostname resolves from wherever your users are.
+    - [ ] The cluster can reach the container registry, or you have the air-gapped bundle.
+  </Accordion>
+  <Accordion title="Data and secrets" icon="key">
+    - [ ] PostgreSQL endpoint and credentials (Scenario B), or disk space for it (Scenario C).
+    - [ ] TLS certificate loaded as a Secret in the release namespace.
+    - [ ] Registry credentials from ROOTKey.
+    - [ ] The vault filled in — see [Configuration Reference](/pages/on-premise/configuration).
+  </Accordion>
+</AccordionGroup>
+
+---
+
+→ Next: [Installation](/pages/on-premise/installation)
