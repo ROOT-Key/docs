@@ -9,6 +9,23 @@ Have all of this ready before the install begins. The installer refuses to run r
 
 ---
 
+## What ROOTKey Must Provide
+
+Four things cannot be derived, generated or looked up. Request them before you schedule the installation, because without any one of them the install cannot start.
+
+| Artefact | What it is | Where it goes |
+|---|---|---|
+| **The release bundle** | The signed archive containing the installer, charts, images and binaries. | Unpacked on the control machine. |
+| **Distribution registry credentials** | Username and password for the registry the images are published to. Deliberately separate from ROOTKey's main registry. | The `container-config` values in your vault, and the image `repository` fields. |
+| **Image tags** | The released commit SHA of each of the 26 workloads. | The `tag` field of every workload in your values file. |
+| **`deployment_id` and `enrollment_token`** | The UUID identifying this deployment and the one-time token that enrols it with the Control Plane. | The `control-plane` Secret in your vault. |
+
+<Warning>
+  The **image tags** are the one most likely to stop you mid-setup. The values file needs a tag for every one of the 26 workloads, the value gate rejects the shipped placeholders, and there is no way to discover them from the bundle. Ask for the tag manifest at the same time you ask for the bundle.
+</Warning>
+
+---
+
 ## Hardware
 
 The installer measures these on the target and reports each one as PASS, WARN or FAIL.

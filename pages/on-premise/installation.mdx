@@ -138,7 +138,21 @@ Before Ansible is invoked at all, the installer refuses to run a deploy while an
 
     The Secret name must match `ingress.tls[].secretName` in your values file and `rootkey_tls_secret_name` in the inventory. `rootkey-tls` is the default both expect.
 
-    In Scenario C the namespace does not exist until the install creates it — run this step after the first install pass, or create the namespace by hand first.
+    **The ordering, precisely.** The namespace is created by the `secrets` stage (stage 3), and the certificate is not consumed until the Ingress is created in the `deploy` stage (stage 7). So you have two correct options:
+
+    ```bash
+    # Option A - let the installer create the namespace, then load the certificate
+    ./install.sh --scenario C --values values-acme.yaml \
+      --vault-pass-file .vault_pass --tags preflight,k3s,secrets
+    kubectl -n rootkey create secret tls rootkey-tls --cert=... --key=...
+    # then continue with the full run
+
+    # Option B - create the namespace yourself first, then run everything at once
+    kubectl create namespace rootkey
+    kubectl -n rootkey create secret tls rootkey-tls --cert=... --key=...
+    ```
+
+    A Secret in the wrong namespace is invisible to the Ingress, and the failure looks like a certificate problem rather than a placement one.
   </Step>
 
   <Step title="Run the installation">

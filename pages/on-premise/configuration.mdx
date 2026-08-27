@@ -45,8 +45,19 @@ Five connection strings, one per database. In Scenario C the installer creates a
 | `dbSmartContracts` | Smart contracts and anchoring |
 | `dbNotifications` | In-app notifications |
 
+**Scenario C** also needs `vault_postgres_passwords`, a separate top-level block naming one password per role:
+
+```yaml
+vault_postgres_passwords:
+  dbauth: "..."
+  dbmail: "..."
+  dbManagement: "..."
+  dbSmartContracts: "..."
+  dbNotifications: "..."
+```
+
 <Note>
-  In Scenario C you also supply `vault_postgres_passwords` — five role passwords the installer applies to the database. It never generates its own, so re-running the install re-asserts exactly what your vault says rather than rotating anything behind your back.
+  The installer applies exactly these with `ALTER ROLE`; it never generates its own. Re-running an install therefore re-asserts what your vault says rather than rotating anything behind your back, which is also what makes rotating a password a matter of editing the vault and re-running.
 </Note>
 
 ### `aws-bucket`
@@ -80,7 +91,7 @@ Object storage. In an on-premise installation this is MinIO running in your clus
 | `kafka` | `brokers`, `username`, `password` | In-cluster Kafka, SASL. |
 | `aws-ses` | Access key pair | Email delivery, if you use SES. |
 | `email` | `host`, `port`, `user`, `password` | SMTP, as an alternative to SES. |
-| `blockchain` | `RPC_URL`, `TESTNET_RPC_URL`, `WEB3_API_KEY`, `TESTNET_WEB3_API_KEY` | Where anchoring transactions are sent. |
+| `blockchain` | `RPC_URL`, `TESTNET_RPC_URL`, `WEB3_API_KEY`, `TESTNET_WEB3_API_KEY` | Where anchoring transactions are sent. **Yours or ours — see below.** |
 | `azure` | `clientId`, `tenantId` | Azure AD, when used for staff access. |
 | `social-providers` | Microsoft, Google and LinkedIn client id/secret pairs | **Yours, not ours.** Register your own applications; their redirect URIs point at your hostname. |
 | `observability` | `log_level` | |
@@ -89,6 +100,27 @@ Object storage. In an on-premise installation this is MinIO running in your clus
 <Note>
   Social sign-in is optional and per-provider. A deployment that configures none simply does not offer social sign-in — the providers are registered only when configured, rather than half-registered with empty credentials.
 </Note>
+
+### Who owns the blockchain endpoint
+
+The `blockchain` values can be **yours or ROOTKey's**, and it is a deliberate choice rather than a default:
+
+| You want | You supply |
+|---|---|
+| To run the blockchain infrastructure yourself | Your own RPC endpoints and Web3 API keys. Anchoring traffic leaves your perimeter only towards a node you control. |
+| To delegate it to ROOTKey | Endpoints and keys ROOTKey provides. One fewer piece of infrastructure to operate, at the cost of an outbound dependency on it. |
+
+Either way the **wallet that signs** stays inside your deployment: the RPC endpoint is where transactions are sent, not who signs them. Decide this during scoping, because it changes both the egress allowlist and who is responsible for the node's availability.
+
+### The offline licence (air-gapped only)
+
+Air-gapped deployments have no Control Plane link, so the licence arrives as a signed artefact you paste into a **top-level** vault key:
+
+```yaml
+vault_rootkey_offline_license: "<the signed licence ROOTKey issues>"
+```
+
+Leave it **empty** in egress-only mode, where the licence is fetched and renewed over the link instead.
 
 ---
 
