@@ -1,0 +1,180 @@
+---
+title: Trust and Verification
+sidebarTitle: Trust
+description: The signing keys ROOTKey releases are signed with, how to verify a release bundle before installing it, and how release artefacts and credentials are delivered.
+icon: shield-check
+---
+
+Every ROOTKey on-premise release is signed. This page is how you check that the release you
+received is the one we published, and it is deliberately the only page you need to trust before
+trusting anything else.
+
+<Warning>
+  **ROOTKey never sends secrets by email, chat, or a support ticket.** Not registry passwords,
+  not enrolment tokens, not certificates. If you receive something that looks like a ROOTKey
+  secret through one of those channels, it did not come from us — do not use it, and tell us.
+</Warning>
+
+---
+
+## Verify a release before you install it
+
+Run this before unpacking the archive. It needs `sha256sum` and `cosign`, and it changes
+nothing.
+
+<Steps>
+  <Step title="Get the verifier and the public key from this page">
+    Both are published here rather than only inside the bundle. A verifier that ships inside the
+    thing it verifies answers the wrong question: if the archive had been tampered with, so had
+    the script.
+
+    ```bash
+    curl -O https://docs.rootkey.ai/files/verify-bundle.sh
+    curl -O https://docs.rootkey.ai/files/cosign.pub
+    chmod +x verify-bundle.sh
+    ```
+  </Step>
+
+  <Step title="Check the key fingerprint against your contract">
+    The fingerprint below is also written into your SOW or contract. Two independent channels,
+    so the verification is never circular: a page and a signature that both came from the same
+    place prove nothing to each other.
+
+    ```bash
+    sha256sum cosign.pub
+    ```
+
+    <Note>
+      If the fingerprint on this page and the one in your contract disagree, stop and contact us
+      through the channel in your delivery record. Do not resolve the disagreement by trusting
+      whichever one is more convenient.
+    </Note>
+  </Step>
+
+  <Step title="Verify the bundle">
+    ```bash
+    ./verify-bundle.sh rootkey-onprem-<version>.tar.gz
+    ```
+
+    It prints the archive's SHA-256, checks the cosign signature over `SHA256SUMS`, and confirms
+    every file inside matches. It exits non-zero if any of those fail.
+  </Step>
+
+  <Step title="Compare the archive checksum against what we told you">
+    The script prints the archive's SHA-256. Compare it against the value in the message that
+    announced the release — **not** against a value that travelled with the file. A checksum
+    shipped alongside the thing it checksums proves only that the two arrived together.
+  </Step>
+</Steps>
+
+If you would rather run the steps by hand:
+
+```bash
+cosign verify-blob --key cosign.pub --signature SHA256SUMS.sig SHA256SUMS
+sha256sum -c SHA256SUMS
+```
+
+---
+
+## What a failed check means
+
+<AccordionGroup>
+  <Accordion title="SHA256SUMS.sig is missing">
+    The release was not signed. Every ROOTKey release is, so an unsigned bundle either did not
+    come from us or was built incorrectly. **Do not install it.** Contact us.
+  </Accordion>
+
+  <Accordion title="The signature does not verify">
+    Either the archive was altered after we signed it, or you are checking against the wrong
+    key. Re-download the bundle and re-check the key fingerprint against your contract. If it
+    fails a second time, contact us — do not install it in the meantime.
+  </Accordion>
+
+  <Accordion title="Contents do not match SHA256SUMS">
+    Files have been added, removed or changed since the bundle was built. The usual innocent
+    cause is unpacking a new release over an old one in the same directory. Unpack into a clean
+    directory and re-check. If it still fails, re-download.
+  </Accordion>
+
+  <Accordion title="A file called UNSIGNED is present">
+    That marker is stamped only on an internal development build, which must never be delivered.
+    Report it to us — it means something went wrong on our side, not yours.
+  </Accordion>
+
+  <Accordion title="cosign is not installed">
+    The content check still runs, but the signature check — the one that matters — does not. A
+    checksum file proves the archive is internally consistent; only the signature proves it came
+    from us. Install cosign before installing the platform.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Signing keys
+
+| | |
+|---|---|
+| **Algorithm** | ECDSA P-256 (cosign default) |
+| **Rotation** | Annually, and immediately on any suspected compromise |
+| **Revocation** | Announced on this page and by direct notice to every active client |
+| **Custody** | Two named holders; the private half never leaves its key store |
+
+Superseded keys stay published below rather than being removed, so that a bundle you archived
+years ago can still be verified against the key it was actually signed with.
+
+<Note>
+  **The current key fingerprint and the archive of superseded keys are published alongside this
+  page.** If you are reading this before the key material has been attached, ask your ROOTKey
+  contact for the fingerprint and check it against your contract — the two-channel rule applies
+  either way.
+</Note>
+
+The Control Plane's **licence signing keys** are a different set with a different lifecycle, and
+you do not need them: your deployment fetches the public half from the Control Plane and verifies
+each licence locally. They are custodied under a two-person ceremony.
+
+---
+
+## How things reach you
+
+Everything that crosses the boundary has one named channel. Nothing uses email.
+
+| Artefact | Channel | When |
+|---|---|---|
+| **Release bundle** | File-transfer service, or physical media with a signed chain-of-custody form for air-gapped sites | 5 business days before the install |
+| **Archive SHA-256** | The release announcement, separately from the file | with the release |
+| **Registry credentials** | One-time secret link, or a shared password-manager item | with the release |
+| **Image tags** | The release notes, and pre-filled in the bundle's own example values file | with the release |
+| **Enrolment token** | One-time secret link | as late as possible before the install |
+| **Licence** | Fetched by your deployment from the Control Plane; nothing to hand over | after enrolment |
+
+<Note>
+  **The enrolment token is single-use and expires**, 24 hours by default and 7 days at most,
+  enforced when it is issued and again when it is consumed. That is why a one-time link is
+  enough: the link cannot outlive the secret it carries.
+</Note>
+
+### Registry credentials
+
+Yours are issued per client: scoped to exactly the repositories your Data Plane pulls, pull-only
+— no push, no delete, no catalogue listing — and with an expiry date. Rotation is a single
+operation on our side and does not interrupt you, because the previous password keeps working
+until you confirm the new one.
+
+Pulls are recorded in the registry's audit log against your token's identity. That record is
+what lets either of us answer "which release is deployed, and when was it fetched" without asking
+the other.
+
+---
+
+## Reporting a security issue
+
+If you believe you have found a vulnerability in the ROOTKey platform, in a release bundle, or in
+this verification process, contact us through the channel named in your delivery record and mark
+it severity 1. We will acknowledge within one business day.
+
+Please do not open a public issue for a suspected vulnerability.
+
+---
+
+→ Next: [Requirements](/pages/on-premise/requirements) · [Installation](/pages/on-premise/installation)

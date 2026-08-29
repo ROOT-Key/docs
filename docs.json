@@ -114,6 +114,7 @@
             "group": "On-Premise Installation",
             "pages": [
               "pages/on-premise/overview",
+              "pages/on-premise/trust",
               "pages/on-premise/requirements",
               "pages/on-premise/installation",
               "pages/on-premise/configuration",

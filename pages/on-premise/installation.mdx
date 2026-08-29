@@ -42,11 +42,22 @@ Before Ansible is invoked at all, the installer refuses to run a deploy while an
 
     The bundle carries the Helm charts, the Ansible roles, the installer, and — for an air-gapped install — every container image plus the k3s and Helm binaries.
 
-    Verify the signature before trusting it:
+    **Verify it before trusting anything inside it.** `sha256sum -c` alone proves the archive
+    is internally consistent, not that it came from ROOTKey — only the signature does that:
 
     ```bash
+    cosign verify-blob --key cosign.pub --signature SHA256SUMS.sig SHA256SUMS
     sha256sum -c SHA256SUMS
     ```
+
+    Or run the standalone verifier, which does both and tells you what a failure means:
+
+    ```bash
+    ./verify-bundle.sh rootkey-onprem-<version>.tar.gz
+    ```
+
+    See [Trust and Verification](/pages/on-premise/trust) for the public key, its fingerprint,
+    and what to do when a check fails.
   </Step>
 
   <Step title="Run the preflight, before touching anything">

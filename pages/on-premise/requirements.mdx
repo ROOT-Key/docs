@@ -18,6 +18,7 @@ Four things cannot be derived, generated or looked up. Request them before you s
 | **The release bundle** | The signed archive containing the installer, charts, images and binaries. | Unpacked on the control machine. |
 | **Distribution registry credentials** | Username and password for the registry the images are published to. Deliberately separate from ROOTKey's main registry. | The `container-config` values in your vault, and the image `repository` fields. |
 | **Image tags** | The released commit SHA of each of the 24 workloads. | The `tag` field of every workload in your values file. |
+| **The cosign public key** | Published on [Trust and Verification](/pages/on-premise/trust), with its fingerprint also written into your contract. | Verifying the bundle before you unpack it. |
 | **`deployment_id` and `enrollment_token`** | The UUID identifying this deployment and the one-time token that enrols it with the Control Plane. | The `control-plane` Secret in your vault. |
 
 <Warning>
