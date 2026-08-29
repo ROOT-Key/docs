@@ -1,0 +1,159 @@
+---
+title: Operations
+sidebarTitle: Operations
+description: Running an on-premise installation day to day — upgrades, licence renewal, backups, logs, and what the platform does when it cannot reach the Control Plane.
+icon: wrench
+---
+
+## Upgrades
+
+An upgrade is the same command as an install. Every stage is idempotent.
+
+```bash
+./install.sh --scenario C \
+  --values values-acme.yaml \
+  --vault-pass-file .vault_pass
+```
+
+### What changes between releases
+
+ROOTKey publishes a new bundle with new image tags. Two files must move together:
+
+1. **Your values file** — the `tag` of every workload the release rebuilt.
+2. **`bundle/images.txt`** — the same tags, for an air-gapped install.
+
+<Warning>
+  A bundle that ships one build and a chart that asks for another is an `ImagePullBackOff` on an air-gapped host, where there is no registry to explain the miss. The two files must name the same tags.
+</Warning>
+
+### Running the whole thing, not a subset
+
+For an upgrade, run every stage. Two of them are seeds that are easy to forget and whose absence is silent:
+
+- **`plan-seed`** must be re-run after the licence reconciles the catalogue, and after every catalogue bump.
+- **`contract-seed`** must be re-run if it was skipped on a previous run because the migrations had not finished.
+
+Both are guarded: they check before they write, and skip with a message when there is nothing to do.
+
+### Safety during an upgrade
+
+Helm runs with `--atomic` on a release that is already `deployed`, so a failed upgrade rolls back to the previous revision rather than leaving the platform half-changed. On a first install `--atomic` is deliberately **off**, because rolling back would delete the pods, logs and events that explain the failure.
+
+---
+
+## Licensing
+
+The deployment holds a signed licence with a **24-hour TTL** and a **7-day grace period**. It renews automatically, well before expiry, over the Control Plane link.
+
+| State | What it means | What you see |
+|---|---|---|
+| Renewing normally | The link works. | Nothing. This is the quiet state. |
+| Inside the grace period | The link is down; the deployment serves from its cached licence. | Nothing, until the grace period ends. |
+| Grace expired | The deployment drops to **read-only**. | Writes fail. |
+
+<Warning>
+  The middle row is the dangerous one. A deployment that cannot reach the Control Plane reports itself **healthy** for up to seven days, because serving from a cached licence is normal operation rather than an error. If your firewall policy changes, verify the allowlist still contains `control-api.rootkey.ai` rather than waiting to find out.
+</Warning>
+
+In **air-gapped** mode there is no link. The licence is an offline signed artefact supplied in the vault, and a new one arrives with each bundle.
+
+---
+
+## Backups
+
+### PostgreSQL
+
+The installer configures **nightly logical backups**, kept for 7 days:
+
+| Setting | Default |
+|---|---|
+| Directory | `/var/backups/rootkey-postgres` |
+| Retention | 7 days |
+| Enabled | Yes |
+
+<Warning>
+  **Copying that directory off the box is your step, and nothing does it for you.** A backup that lives only on the machine it protects is not a backup — it survives a dropped table and not a lost disk. Wire the directory into whatever off-host backup you already run.
+
+  A backup that has never been restored is a hypothesis. Restore one into a scratch database and confirm it comes back before you need it to.
+</Warning>
+
+### Object storage
+
+MinIO holds the files themselves. Its persistent volume is not covered by the PostgreSQL backup. Back it up the way you back up any other volume on that host.
+
+The two must be restored **together**: the database holds the record of a file, MinIO holds its bytes, and a mismatched pair produces records pointing at objects that are not there.
+
+---
+
+## Logs
+
+```bash
+# One service
+kubectl -n rootkey logs deploy/auth-service --tail=100 -f
+
+# Everything, filtered
+kubectl -n rootkey logs -l app.kubernetes.io/managed-by=Helm --tail=50 --prefix
+
+# A job that ran once
+kubectl -n rootkey logs job/rootkey-minio-create-bucket
+```
+
+Services log structured JSON. Where an observability endpoint is configured in the vault, they ship there as well.
+
+<Note>
+  The scheduler workloads have no metrics endpoint by design, and report only through their logs. If a scheduled job's behaviour is in question — licence renewal, telemetry pruning, the expiry sweep — its log is the record.
+</Note>
+
+---
+
+## Adding Users
+
+On a **single-tenant** deployment, public sign-up is refused: the invitation is the only front door. One organisation owns the licence, and everyone joins it.
+
+An administrator invites by email address from within the platform. Somebody who tries to register without an invitation receives a clear message telling them to ask for one, rather than a generic error.
+
+<Note>
+  This is deliberate. Before it, the second person to sign up created a **second organisation**, which made the licence reconciler refuse to materialise entitlements onto any organisation at all — a silent failure whose only trace was one log line.
+</Note>
+
+---
+
+## Rotating Secrets
+
+Edit the vault, re-encrypt it, and re-run the install:
+
+```bash
+ansible-vault edit ansible/group_vars/all/vault.yml
+./install.sh --scenario C --values values-acme.yaml \
+  --vault-pass-file .vault_pass --tags secrets,deploy
+```
+
+The Secrets are recreated and the workloads restart onto them.
+
+**PostgreSQL passwords** are rotation-safe: the installer reads them from the vault and applies them with `ALTER ROLE`, so changing the vault and re-running is the whole rotation. It never generates its own credentials.
+
+<Warning>
+  Changing `better_auth_secret` invalidates every active session. Everyone is signed out. Schedule it.
+</Warning>
+
+---
+
+## Uninstalling
+
+```bash
+helm -n rootkey uninstall rootkey-dataplane
+helm -n rootkey uninstall rootkey-minio rootkey-redis rootkey-kafka
+```
+
+This removes the workloads. It does **not** remove:
+
+- The PostgreSQL databases, which live outside the cluster.
+- The MinIO persistent volume and the files in it.
+- The Secrets, unless you delete the namespace.
+- k3s itself, in Scenario C.
+
+That is deliberate. Uninstalling the application should not be able to destroy the data it was holding.
+
+---
+
+→ Something not behaving? [Troubleshooting](/pages/on-premise/troubleshooting)
