@@ -9,11 +9,11 @@ icon: server
 
 An on-premise installation places the complete ROOTKey Data Plane inside your perimeter. Users authenticate against it, files are stored in it, and anchoring transactions are signed by wallets that never leave it.
 
-The installer deploys **26 workloads** as a single Helm umbrella chart, plus three stateful dependencies it runs in-cluster:
+The installer deploys **24 workloads** as a single Helm umbrella chart, plus three stateful dependencies it runs in-cluster:
 
 | Component | Where it runs | Why |
 |---|---|---|
-| **Data Plane services** (26 workloads) | In-cluster, one Helm release | The platform itself: API, frontend, workers, schedulers. |
+| **Data Plane services** (24 workloads) | In-cluster, one Helm release | The platform itself: API, frontend, workers, schedulers. |
 | **Redis** | In-cluster | Queues and caches. Self-owned so the installation has no external dependency. |
 | **Kafka** | In-cluster | Event bus between services. Self-owned for the same reason. |
 | **MinIO** | In-cluster | Object storage, S3-compatible. This is where uploaded files live. |
@@ -34,7 +34,7 @@ Your Network Perimeter                                    ROOTKey Control Plane
                         │                                  Receives heartbeats
                         ▼                                  Publishes the catalogue
                    ROOTKey Data Plane
-                   26 workloads, one Helm release
+                   24 workloads, one Helm release
                         │
         ┌───────────────┼───────────────┐
         ▼               ▼               ▼
