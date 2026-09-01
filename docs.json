@@ -124,6 +124,19 @@
             ]
           },
           {
+            "group": "On-Premise Installation",
+            "pages": [
+              "pages/on-premise/overview",
+              "pages/on-premise/trust",
+              "pages/on-premise/requirements",
+              "pages/on-premise/installation",
+              "pages/on-premise/configuration",
+              "pages/on-premise/verification",
+              "pages/on-premise/operations",
+              "pages/on-premise/troubleshooting"
+            ]
+          },
+          {
             "group": "Developer Resources",
             "pages": [
               "pages/sdks",

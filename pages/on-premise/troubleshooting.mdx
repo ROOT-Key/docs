@@ -1,0 +1,273 @@
+---
+title: Troubleshooting
+sidebarTitle: Troubleshooting
+description: Every failure mode we have hit on a real on-premise installation, with the symptom that identifies it and the command that confirms it.
+icon: triangle-exclamation
+---
+
+Each entry below is a failure that happened on a real installation, not a hypothetical. They are grouped by **what you see**, because that is what you have when something goes wrong.
+
+---
+
+## The installation refuses to start
+
+<AccordionGroup>
+  <Accordion title="Refusing to install: image field(s) are still placeholders" icon="image">
+    The value gate found `<commit-sha>`, `registry.example.com` or `CHANGE_ME` in an image `repository` or `tag`. It names every offending key.
+
+    Fill them in your values file with the registry ROOTKey gave you and the released commit SHA of each service. **Every** workload needs both — not only `auth-service`.
+
+    This is a refusal, not a failure. Without it the pods sit in `ImagePullBackOff` until the timeout, Helm rolls the release back, and the evidence is deleted with it.
+  </Accordion>
+
+  <Accordion title="Refusing to install: stored files would be unreachable" icon="file-circle-xmark">
+    One of three things is wrong, and the message names which:
+
+    - `PUBLIC_FILE_BASE_URL` is unset or still the shipped example.
+    - `rootkey_public_host` is unset.
+    - The two name **different hosts**, or the base URL names a host no Ingress in your values file serves.
+
+    The third is the likely one, because the two values live in separate files. Set them to the same hostname:
+
+    ```ini
+    # ansible/inventory/hosts.ini
+    rootkey_public_host=rootkey.acme.example
+    ```
+
+    ```yaml
+    # your values file
+    global:
+      envOverrides:
+        PUBLIC_FILE_BASE_URL: https://rootkey.acme.example/files
+    ```
+  </Accordion>
+
+  <Accordion title="Timeout waiting for privilege escalation prompt" icon="user-lock">
+    The deploy account's `sudo` asks for a password and the installer is not configured to supply one.
+
+    ```bash
+    ./install.sh --scenario C --values values-acme.yaml \
+      --vault-pass-file .vault_pass --ask-become-pass
+    ```
+
+    A host whose `sudo` uses a custom PAM prompt may still be unreachable this way. There, a `NOPASSWD` sudoers drop-in for the deploy account is the reliable path.
+  </Accordion>
+
+  <Accordion title="ansible-playbook not found" icon="terminal">
+    Ansible must be on the **control machine** — the one you run `install.sh` from — not on the target. Helm and `kubectl` are the opposite: the installer places them on the target and runs them there, so they do not need to be local in Scenario C.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## The installation runs and something fails
+
+<AccordionGroup>
+  <Accordion title="ImagePullBackOff, without saying what is missing" icon="box-open">
+    Two different causes produce the same symptom.
+
+    **The tag does not exist in the registry.** Confirm the exact tag is published, and that your values file and `bundle/images.txt` name the same one.
+
+    **The pull secret is missing or wrong.** Every workload needs `imagePullSecrets` naming the Secret the installer created:
+
+    ```bash
+    kubectl -n rootkey get secret rootkey-registry
+    kubectl -n rootkey describe pod <pod> | tail -20
+    ```
+
+    The `describe` output carries the registry's actual response, which the pod status does not.
+  </Accordion>
+
+  <Accordion title="403 from the registry, and nothing in the server logs" icon="lock">
+    The credentials are valid but the account lacks pull permission on that specific repository. A 403 is an authorisation answer, not an authentication one — which is why the registry logs nothing that looks like a failed login.
+
+    Confirm with ROOTKey that the account has been granted access to every repository the release names, not only the first one you tested.
+  </Accordion>
+
+  <Accordion title="MinIO Ingress precondition failed" icon="circle-exclamation">
+    The stateful stage checks three values before running any Helm command, and names the one that is missing:
+
+    - `rootkey_public_host` — the inventory, or `group_vars/all/main.yml`.
+    - `rootkey_tls_secret_name` — the Secret holding that host's certificate.
+    - `BUCKET_NAME` under `rootkey_secret_data['aws-bucket']` in the vault, and not left as `CHANGE_ME`.
+
+    Nothing has been installed when this fires. Fix the value and re-run.
+  </Accordion>
+
+  <Accordion title="A migration fails with 'migration was modified after it was applied'" icon="database">
+    Prisma compares the checksum of every already-applied migration against the local file. A mismatch means the file changed after it ran.
+
+    Do not edit the migration to match. Contact ROOTKey with the migration name — resolving it requires knowing which build wrote the original.
+
+    A related warning is **harmless**: `applied to the database but missing from the local migrations directory` names migrations that ran on your database from an older build. It is a warning, not a failure, and the release notes say when to expect it.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## The installation succeeded and something does not work
+
+These are the ones worth reading before they happen. Each installs cleanly, reports success, and leaves the platform unusable in a way no log explains.
+
+<AccordionGroup>
+  <Accordion title="No file, avatar, logo or report opens — and there is nothing in any log" icon="file-image">
+    **The most common silent failure.** Everything else works: users register, files upload and anchor on-chain. Only fetching a stored object fails.
+
+    There is nothing in the logs because nothing of ours failed. The platform returns a URL, and it is the **user's browser** that tries to fetch it. If that URL names a host that does not exist, the request never reaches the cluster.
+
+    Three commands identify it:
+
+    ```bash
+    # 1. Does the Ingress exist, on the right host?
+    kubectl -n rootkey get ingress
+    # expect: rootkey-minio-files, same host as the frontend
+
+    # 2. Did the workloads receive the right URL?
+    kubectl -n rootkey get deploy auth-service \
+      -o jsonpath='{.spec.template.spec.containers[0].env[?(@.name=="PUBLIC_FILE_BASE_URL")].value}{"\n"}'
+    # expect: https://<your host>/files
+
+    # 3. Does the path reach MinIO?
+    curl -sI https://<your host>/files/ | head -1
+    # 403 or 404 is GOOD - it means MinIO answered.
+    # The platform's HTML means the Ingress does not exist.
+    ```
+
+    If step 2 prints the shipped example, the override is in the wrong place: it belongs under `global.envOverrides`, not inside a workload's own section.
+  </Accordion>
+
+  <Accordion title="Files resolve but return AccessDenied" icon="ban">
+    The Ingress works and the bucket has no anonymous read policy. A browser fetching an image sends no S3 credentials and never will.
+
+    ```bash
+    kubectl -n rootkey logs job/rootkey-minio-create-bucket
+    ```
+
+    Look for `anonymous download enabled`. If it says `anonymous read NOT granted`, `anonymousRead` was turned off. Re-run the MinIO chart — the policy is re-applied on every upgrade, so a `helm upgrade` restores it.
+
+    <Note>
+      This grants **read on objects only**. It does not grant listing the bucket, so a key has to be known rather than discovered. It is the same posture as the cloud deployment, where the same objects are served by a CDN without credentials.
+    </Note>
+  </Accordion>
+
+  <Accordion title="500 on the first file upload, nothing in the gateway log" icon="upload">
+    The contract seed did not run, so the smart-contract tables are empty and there is no contract to anchor against.
+
+    ```bash
+    ./install.sh --scenario C --values values-acme.yaml \
+      --vault-pass-file .vault_pass --tags contract-seed
+    ```
+
+    Watch the output. `contratos semeados` means it worked. `skip: já há contratos` means it was already done. **`skip: o fixture não veio no bundle`** means the seed file is missing from the release — contact ROOTKey rather than continuing, because the addresses cannot be invented.
+  </Accordion>
+
+  <Accordion title="Creating a file times out after five seconds, on an idle machine" icon="gauge-high">
+    CPU throttling. The limits shipped in the chart are sized for a shared multi-tenant cluster; on a dedicated host they become a brake with no beneficiary.
+
+    Confirm it directly:
+
+    ```bash
+    kubectl -n rootkey exec deploy/creation-service -- \
+      cat /sys/fs/cgroup/cpu.stat
+    ```
+
+    A rising `nr_throttled` and a large `throttled_usec` on a host that is mostly idle is the answer. On one measured case a service limited to `200m` accumulated 84 throttling events and **4.69 seconds of throttled time during a 3-second test**, with 6.7 cores free beside it.
+
+    Raise the CPU limits in your values file and re-run the deploy stage.
+
+    <Warning>
+      Raise them in the **values file**, not with `kubectl edit`. An in-cluster edit is reverted by the next `helm upgrade`, and the symptom returns with no memory of why.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Nobody can create an account: PlanNotFound" icon="user-slash">
+    The plan seed has not run, or ran before the licence reconciled the catalogue.
+
+    ```bash
+    ./install.sh --scenario C --values values-acme.yaml \
+      --vault-pass-file .vault_pass --tags plan-seed
+    ```
+
+    It is re-runnable by design and must be re-run after the licence reconciles, and after every catalogue bump.
+  </Accordion>
+
+  <Accordion title="A second user signs up and entitlements stop working" icon="users-slash">
+    On a **single-tenant** deployment, public sign-up used to create a second organisation, and the licence reconciler then refused to materialise entitlements onto any organisation at all.
+
+    Current releases refuse the sign-up instead: the invitation is the only front door, and somebody registering without one is told to ask for an invitation.
+
+    If you are on an older build and already have two organisations, contact ROOTKey — resolving it means deciding which organisation owns the licence.
+  </Accordion>
+
+  <Accordion title="502 on /api, or notifications return 401" icon="plug-circle-xmark">
+    Both are internal routing or contract mismatches between services, and both were fixed in releases during 2026. If you see either, you are on an older build:
+
+    - **502 on `/api`** — the frontend's nginx could not resolve the upstream service name.
+    - **401 with `missing_context` on notifications** — a service validated the acting user id as a UUID, and the identity provider does not issue UUIDs.
+
+    Upgrade. Neither has a configuration workaround.
+  </Accordion>
+
+  <Accordion title="The deployment reports healthy and then drops to read-only" icon="clock">
+    It could not reach the Control Plane, served from its cached licence for the seven-day grace period, and reported itself healthy the entire time — because serving from cache is normal operation rather than an error.
+
+    ```bash
+    kubectl -n rootkey exec deploy/auth-service -- \
+      curl -sS -o /dev/null -w '%{http_code}\n' https://control-api.rootkey.ai/v1/healthz
+    ```
+
+    Anything other than a 2xx means the egress allowlist does not contain `control-api.rootkey.ai`. Fix the firewall rule; the deployment recovers on the next renewal without intervention.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Certificates and DNS
+
+<AccordionGroup>
+  <Accordion title="The certificate is valid and the browser will not connect" icon="lock-open">
+    Almost always the hostname rather than the certificate.
+
+    - Does the name **resolve from where the user is** — the office network, the VPN? A record that exists only on the public internet does not help a user inside a closed network, and the reverse is also true.
+    - Does the certificate cover the **exact** name being used, including any subdomain?
+    - Is the TLS Secret in the **release namespace**? A Secret in `default` is invisible to an Ingress in `rootkey`.
+
+    ```bash
+    kubectl -n rootkey get secret rootkey-tls
+    kubectl -n rootkey get ingress -o wide
+    ```
+
+    <Tip>
+      This is why stored files are published as a **path** (`<host>/files`) rather than a `files.<host>` subdomain. A subdomain would need a second DNS record and a certificate covering the second name — two more chances for exactly this failure. The path rides the record and certificate the platform already uses.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Do I need a public DNS record?" icon="globe">
+    No. The name only has to resolve for the people using the platform. A single-tenant installation on a closed corporate network needs an internal record and nothing public.
+
+    A reseller deployment serving the reseller's own customers is the other case, and there the record and the exposure are public. The installation is identical; the network around it is not.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Getting Help
+
+When contacting ROOTKey support, include:
+
+```bash
+kubectl -n rootkey get pods -o wide
+kubectl -n rootkey get ingress
+helm -n rootkey list
+kubectl -n rootkey logs deploy/<failing-service> --tail=100
+```
+
+Plus the **release version** you installed and, if the failure was during the install, the output of the Ansible task that failed rather than the summary. The task name is what identifies the stage.
+
+<Note>
+  Never send your vault, your values file, or anything from `hosts.ini`. They hold credentials. If a value is relevant, name the key rather than pasting its content.
+</Note>
+
+---
+
+→ Back to [On-Premise Installation](/pages/on-premise/overview)
