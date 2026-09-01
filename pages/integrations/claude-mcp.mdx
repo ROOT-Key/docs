@@ -1,0 +1,280 @@
+---
+title: Claude (MCP)
+sidebarTitle: Claude
+description: Connect Claude to ROOTKey with the official MCP server and operate vaults, files, records and recovery points in plain language.
+icon: robot
+---
+
+The ROOTKey MCP server connects Claude to your ROOTKey workspace. It implements the [Model Context Protocol](https://modelcontextprotocol.io), the open standard Claude uses to talk to external systems, and exposes the entire documented ROOTKey REST API as tools Claude can call.
+
+Ask Claude to anchor a contract, check whether a file still matches its proof, pull the audit trail for a record, or build a recovery point, and it happens in your real workspace. Every tool call is an ordinary API request made with your own API key, so everything the server does is visible in the ROOTKey dashboard and subject to the same permissions, quotas and audit logging as any other API client.
+
+<Note>
+  The server runs locally on your machine and talks directly to `api.rootkey.ai`. Your API key stays in your own environment - it is never sent to Anthropic or to ROOTKey by any route other than the normal API call.
+</Note>
+
+---
+
+## Requirements
+
+- **Node.js 20 or newer** on the machine running Claude
+- **A ROOTKey API key**, created in the platform under **Platform -> Developer Tools -> API Keys**
+
+See [API Keys](/pages/api-keys) for how to create one. Use a development key (`rk_test_`) while you try things out: the development environment costs nothing and anchors nothing to Polygon Mainnet.
+
+---
+
+## Let your agent set it up
+
+If you already have a coding agent open, hand it this URL and it will install and configure the server itself, in whichever client you use:
+
+```
+https://docs.rootkey.ai/agent-setup/prompt.md
+```
+
+Those instructions are published as the [Agent Setup](/agent-setup/prompt) page, so you can read exactly what your agent is being told to do. To set it up by hand instead, follow the steps below.
+
+---
+
+## Install
+
+<Tabs>
+  <Tab title="Claude Code">
+    Run this once, from anywhere:
+
+    ```bash
+    claude mcp add rootkey --env ROOTKEY_API_KEY=rk_live_your_key -- npx -y @rootkey/mcp
+    ```
+
+    Start a new session and ask Claude what ROOTKey tools it has.
+  </Tab>
+
+  <Tab title="Claude Desktop">
+    Open **Settings -> Developer -> Edit Config** and add the server to `claude_desktop_config.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "rootkey": {
+          "command": "npx",
+          "args": ["-y", "@rootkey/mcp"],
+          "env": { "ROOTKEY_API_KEY": "rk_live_your_key" }
+        }
+      }
+    }
+    ```
+
+    On **Windows**, route the command through `cmd` so `npx` resolves correctly:
+
+    ```json
+    {
+      "mcpServers": {
+        "rootkey": {
+          "command": "cmd",
+          "args": ["/c", "npx", "-y", "@rootkey/mcp"],
+          "env": { "ROOTKEY_API_KEY": "rk_live_your_key" }
+        }
+      }
+    }
+    ```
+
+    Restart Claude Desktop for the change to take effect.
+  </Tab>
+
+  <Tab title="Shared with a team">
+    Commit a `.mcp.json` file at the root of your repository and let each person supply their own key from their environment:
+
+    ```json
+    {
+      "mcpServers": {
+        "rootkey": {
+          "command": "npx",
+          "args": ["-y", "@rootkey/mcp"],
+          "env": { "ROOTKEY_API_KEY": "${ROOTKEY_API_KEY}" }
+        }
+      }
+    }
+    ```
+
+    Never commit the key itself. API keys carry the full privileges of the account that created them.
+  </Tab>
+</Tabs>
+
+---
+
+## Configuration
+
+Every setting is an environment variable on the server process.
+
+| Variable | Default | Description |
+|---|---|---|
+| `ROOTKEY_API_KEY` | required | Your ROOTKey API key. The server exits immediately if it is missing. |
+| `ROOTKEY_ENV` | `production` | `production` or `development`. Selects the matching API base URL. |
+| `ROOTKEY_API_URL` | - | Full base URL including the `/api-v1/` path. Overrides `ROOTKEY_ENV`. |
+| `ROOTKEY_READ_ONLY` | `false` | When `true`, only the read tools are registered. |
+| `ROOTKEY_TIMEOUT_MS` | `30000` | Timeout for ordinary requests, in milliseconds. |
+| `ROOTKEY_TRANSFER_TIMEOUT_MS` | `300000` | Timeout for uploads and downloads, in milliseconds. |
+| `ROOTKEY_DOWNLOAD_DIR` | `~/Downloads` | Where downloads are saved when no path is given. |
+| `ROOTKEY_LOG_LEVEL` | `info` | `silent`, `error`, `warn`, `info` or `debug`. Logs are written to stderr. |
+
+To work against the development environment, set `ROOTKEY_ENV=development` and use an `rk_test_` key. See [Environments](/pages/environments) for the difference between the two.
+
+---
+
+## Available tools
+
+26 tools: every operation in the [API Reference](/api-reference/overview), plus one local diagnostic.
+
+### Vaults
+
+| Tool | What it does |
+|---|---|
+| `create_vault` | Create a vault or table and return its address |
+| `update_vault` | Rename a vault or change its description |
+| `delete_vault` | Permanently delete a vault |
+
+### Files
+
+| Tool | What it does |
+|---|---|
+| `list_files` | List files in a vault, filtered by name, date range or anchoring status |
+| `upload_file` | Upload a local file into a vault and anchor it |
+| `get_file` | Fetch one file with its hashes, transaction details and usage metrics |
+| `download_file` | Download a file to local disk |
+| `delete_file` | Permanently delete a file |
+| `list_file_versions` | List every version of a file |
+| `upload_file_version` | Upload a new version of an existing file |
+| `validate_file` | Check a local copy against the anchor and return ownership, integrity and validity |
+| `get_file_history` | Read the activity log for a file |
+| `get_file_validations` | List past validations, with current and previous hashes |
+| `generate_file_audit_report` | Queue a NIS2 or DORA compliance report |
+
+### Records
+
+| Tool | What it does |
+|---|---|
+| `list_records` | List records in a table with their metadata |
+| `create_record` | Write a record, or a new version of one, and anchor it |
+| `list_record_versions` | List every version of a record |
+| `get_record_history` | Read the activity log for a record |
+| `get_record_validations` | List past validations of a record |
+| `delete_record` | Permanently delete a record |
+
+### Data recovery
+
+| Tool | What it does |
+|---|---|
+| `list_recovery_points` | List all recovery points |
+| `create_recovery_point` | Start building an encrypted backup archive |
+| `get_recovery_point` | Check build status and progress |
+| `download_recovery_point` | Download the encrypted archive |
+| `delete_recovery_point` | Permanently delete a recovery point |
+
+### Diagnostics
+
+| Tool | What it does |
+|---|---|
+| `get_environment_info` | Report the configured environment, key type and tool count. Makes no API call and never reveals the key |
+
+---
+
+## What to expect when using it
+
+A few behaviours are worth knowing before your first session, because they follow from how the ROOTKey API works.
+
+**Vault addresses come from the dashboard.** The API has no endpoint that lists vaults, so the server cannot offer that tool. Claude will ask you for the address of the vault you mean. When `create_vault` makes a new one, keep the address it returns.
+
+**Files move through your own machine.** Uploads read from the local disk of the computer running the server, and downloads are written there and reported back as a file path. File contents are never pasted into the conversation, so a large PDF costs you nothing in context.
+
+**Anchoring is asynchronous.** A newly uploaded file or record starts as `PENDING` and becomes `REGISTERED` once the anchor is confirmed, or `FAILED` if something went wrong. The create call returns before that happens.
+
+**Records are versioned by primary key.** Creating a record whose key column matches an existing record adds a version to it rather than creating a duplicate. Asking Claude to "try that again" after a create will produce a second version, which is usually not what you want.
+
+**Compliance reports arrive in the dashboard.** `generate_file_audit_report` queues the job and returns a report id. There is no API endpoint that returns the finished report, so collect it from the platform.
+
+---
+
+## Safety
+
+<Warning>
+  **Deletions are permanent.** `delete_vault`, `delete_file`, `delete_record` and `delete_recovery_point` cannot be undone, and each one is recorded in the on-chain audit trail. These tools are marked as destructive so Claude asks for confirmation, but the final responsibility for approving them is yours.
+</Warning>
+
+<Warning>
+  **The recovery point password is shown exactly once.** `create_recovery_point` returns a decryption password that the API never returns again. The server displays it prominently and keeps it out of its own logs. Store it immediately - without it the downloaded archive cannot be opened.
+</Warning>
+
+### Read-only mode
+
+Setting `ROOTKEY_READ_ONLY=true` registers only the tools that read data. The write tools are not advertised at all, so Claude cannot call them.
+
+```json
+{
+  "mcpServers": {
+    "rootkey": {
+      "command": "npx",
+      "args": ["-y", "@rootkey/mcp"],
+      "env": {
+        "ROOTKEY_API_KEY": "rk_live_your_key",
+        "ROOTKEY_READ_ONLY": "true"
+      }
+    }
+  }
+}
+```
+
+This is useful for analysis and reporting sessions where nothing should change. Treat it as a convenience rail rather than a security control: ROOTKey API keys have no scopes and carry the full privileges of the account that owns them, so anything else holding the key can still write. If you need a genuine boundary, use a key belonging to an account with narrower access.
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Claude does not show any ROOTKey tools">
+    Confirm Node.js 20 or newer is installed and on the PATH (`node --version`), then restart the Claude client completely - configuration is read at startup. In Claude Desktop, check the MCP server logs under Settings -> Developer; the server writes its startup line and any failure to stderr, which is what those logs show.
+  </Accordion>
+
+  <Accordion title="The server exits immediately">
+    The most common cause is a missing key. The server refuses to start without `ROOTKEY_API_KEY` and says so on stderr, rather than failing later on the first tool call. Check that the variable is set inside the `env` block of the configuration, not only in your shell: Claude Desktop does not pass your shell environment to the server.
+  </Accordion>
+
+  <Accordion title="Every call returns 401 Unauthenticated">
+    The key and the environment do not match. `rk_test_` keys work only against the development API and `rk_live_` keys only against production. Ask Claude to run `get_environment_info` to see which environment the server is configured for, then align the key or set `ROOTKEY_ENV` accordingly.
+  </Accordion>
+
+  <Accordion title="Requests fail with 429 Too Many Requests">
+    You have exceeded the rate limit for that API key. The server automatically retries once the period indicated by the `Retry-After` header has passed, provided the wait is short. Repeated 429s mean the workload needs a higher plan limit - see [Rate Limits](/pages/rate-limits).
+  </Accordion>
+
+  <Accordion title="A tool reports the created file or record as null">
+    The write succeeded. Several ROOTKey create endpoints do not return the id of what they created, so the server looks it up immediately afterwards; when anchoring has not yet surfaced the item, that lookup comes back empty. Ask Claude to list the vault or table again in a moment and the item will be there.
+  </Accordion>
+
+  <Accordion title="Windows: npx is not recognised">
+    Use the `cmd /c` form of the Claude Desktop configuration shown in the Install section above. Windows needs the command routed through the shell for `npx` to resolve.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Current limits
+
+The connector runs **locally**, which is what makes API key authentication safe: the key never leaves your machine. That has two consequences worth stating plainly.
+
+- **It works in Claude Code and Claude Desktop**, not in the claude.ai web app. Web connectors require a hosted server with OAuth, which is on the roadmap.
+- **It covers the public API and nothing beyond it.** There are no tools for managing API keys, organisation members or webhooks, because the public API has no endpoints for them. Those arrive if and when the API does.
+
+---
+
+## Source and support
+
+The server is open source at [github.com/ROOT-Key/rootkey-mcp](https://github.com/ROOT-Key/rootkey-mcp) and published on npm as [`@rootkey/mcp`](https://www.npmjs.com/package/@rootkey/mcp). Bug reports and feature requests are welcome on the issue tracker.
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book-open-cover" href="/api-reference/overview">
+    Every endpoint the connector wraps, with interactive examples.
+  </Card>
+  <Card title="API Keys" icon="key" href="/pages/api-keys">
+    Create, rotate and revoke the key the connector uses.
+  </Card>
+</CardGroup>
