@@ -110,11 +110,12 @@ Every setting is an environment variable on the server process.
 |---|---|---|
 | `ROOTKEY_API_KEY` | required | Your ROOTKey API key. The server exits immediately if it is missing. |
 | `ROOTKEY_ENV` | `production` | `production` or `development`. Selects the matching API base URL. |
-| `ROOTKEY_API_URL` | - | Full base URL including the `/api-v1/` path. Overrides `ROOTKEY_ENV`. |
-| `ROOTKEY_READ_ONLY` | `false` | When `true`, only the read tools are registered. |
+| `ROOTKEY_API_URL` | - | Full base URL including the `/api-v1/` path. Overrides `ROOTKEY_ENV`. Plain `http://` is accepted only for loopback hosts, since the key travels in a header. |
+| `ROOTKEY_READ_ONLY` | `false` | When `true`, only the read tools are registered, and downloads may only write inside `ROOTKEY_DOWNLOAD_DIR`. |
 | `ROOTKEY_TIMEOUT_MS` | `30000` | Timeout for ordinary requests, in milliseconds. |
 | `ROOTKEY_TRANSFER_TIMEOUT_MS` | `300000` | Timeout for uploads and downloads, in milliseconds. |
 | `ROOTKEY_DOWNLOAD_DIR` | `~/Downloads` | Where downloads are saved when no path is given. |
+| `ROOTKEY_ALLOWED_DIRS` | home, temp, cwd | Directories uploads may read from, separated by `;` on Windows and `:` elsewhere. |
 | `ROOTKEY_LOG_LEVEL` | `info` | `silent`, `error`, `warn`, `info` or `debug`. Logs are written to stderr. |
 
 To work against the development environment, set `ROOTKEY_ENV=development` and use an `rk_test_` key. See [Environments](/pages/environments) for the difference between the two.
@@ -123,58 +124,76 @@ To work against the development environment, set `ROOTKEY_ENV=development` and u
 
 ## Available tools
 
-26 tools: every operation in the [API Reference](/api-reference/overview), plus one local diagnostic.
+27 tools: every operation in the [API Reference](/api-reference/overview), plus a wait helper and one local diagnostic.
+
+Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-named tool from another MCP server in the same session.
 
 ### Vaults
 
 | Tool | What it does |
 |---|---|
-| `create_vault` | Create a vault or table and return its address |
-| `update_vault` | Rename a vault or change its description |
-| `delete_vault` | Permanently delete a vault |
+| `rootkey_create_vault` | Create a vault or table and return its address |
+| `rootkey_update_vault` | Rename a vault or change its description |
+| `rootkey_delete_vault` | Move a vault and its files to the trash, recoverable until retention purges them |
 
 ### Files
 
 | Tool | What it does |
 |---|---|
-| `list_files` | List files in a vault, filtered by name, date range or anchoring status |
-| `upload_file` | Upload a local file into a vault and anchor it |
-| `get_file` | Fetch one file with its hashes, transaction details and usage metrics |
-| `download_file` | Download a file to local disk |
-| `delete_file` | Permanently delete a file |
-| `list_file_versions` | List every version of a file |
-| `upload_file_version` | Upload a new version of an existing file |
-| `validate_file` | Check a local copy against the anchor and return ownership, integrity and validity |
-| `get_file_history` | Read the activity log for a file |
-| `get_file_validations` | List past validations, with current and previous hashes |
-| `generate_file_audit_report` | Queue a NIS2 or DORA compliance report |
+| `rootkey_list_files` | List files in a vault, filtered by name, date range or anchoring status |
+| `rootkey_upload_file` | Upload a local file into a vault and anchor it |
+| `rootkey_get_file` | Fetch one file with its hashes, transaction details and usage metrics |
+| `rootkey_download_file` | Download a file to local disk |
+| `rootkey_delete_file` | Move a file to the trash, recoverable until retention purges it |
+| `rootkey_list_file_versions` | List every version of a file |
+| `rootkey_upload_file_version` | Upload a new version of an existing file |
+| `rootkey_validate_file` | Check a local copy against the anchor and return ownership, integrity and validity |
+| `rootkey_get_file_history` | Read the activity log for a file |
+| `rootkey_get_file_validations` | List past validations, with current and previous hashes |
+| `rootkey_generate_file_audit_report` | Queue a NIS2 or DORA compliance report |
 
 ### Records
 
 | Tool | What it does |
 |---|---|
-| `list_records` | List records in a table with their metadata |
-| `create_record` | Write a record, or a new version of one, and anchor it |
-| `list_record_versions` | List every version of a record |
-| `get_record_history` | Read the activity log for a record |
-| `get_record_validations` | List past validations of a record |
-| `delete_record` | Permanently delete a record |
+| `rootkey_list_records` | List records in a table with their metadata |
+| `rootkey_create_record` | Write a record, or a new version of one |
+| `rootkey_list_record_versions` | List every version of a record |
+| `rootkey_get_record_history` | Read the activity log for a record |
+| `rootkey_get_record_validations` | List past validations of a record |
+| `rootkey_delete_record` | Move a record to the trash, recoverable until retention purges it |
 
 ### Data recovery
 
 | Tool | What it does |
 |---|---|
-| `list_recovery_points` | List all recovery points |
-| `create_recovery_point` | Start building an encrypted backup archive |
-| `get_recovery_point` | Check build status and progress |
-| `download_recovery_point` | Download the encrypted archive |
-| `delete_recovery_point` | Permanently delete a recovery point |
+| `rootkey_list_recovery_points` | List all recovery points |
+| `rootkey_create_recovery_point` | Start building an encrypted backup archive |
+| `rootkey_get_recovery_point` | Check build status and progress |
+| `rootkey_wait_for_recovery_point` | Wait for the archive to finish building, reporting progress while it waits |
+| `rootkey_download_recovery_point` | Download the encrypted archive |
+| `rootkey_delete_recovery_point` | Permanently delete a recovery point |
 
 ### Diagnostics
 
 | Tool | What it does |
 |---|---|
-| `get_environment_info` | Report the configured environment, key type and tool count. Makes no API call and never reveals the key |
+| `rootkey_get_environment_info` | Report the configured environment, key type and tool count. Makes no API call and never reveals the key |
+
+---
+
+## Prompts
+
+Besides the tools, the server offers four prompts: whole workflows your client can list, so you do not have to remember the sequence.
+
+| Prompt | What it does |
+|---|---|
+| `anchor_folder` | Anchors every file in a local folder into a vault, confirming first and reporting what landed |
+| `compliance_evidence_pack` | Gathers the anchor, activity history, validations and version chain for one file, and writes it up |
+| `verify_local_copies` | Validates local files against their anchors and leads with the failures |
+| `backup_workspace` | Creates a recovery point, waits for it, downloads it, and handles the one-time password carefully |
+
+In read-only mode only `compliance_evidence_pack` is offered, since the other three write.
 
 ---
 
@@ -182,31 +201,35 @@ To work against the development environment, set `ROOTKEY_ENV=development` and u
 
 A few behaviours are worth knowing before your first session, because they follow from how the ROOTKey API works.
 
-**Vault addresses come from the dashboard.** The API has no endpoint that lists vaults, so the server cannot offer that tool. Claude will ask you for the address of the vault you mean. When `create_vault` makes a new one, keep the address it returns.
+**Vault addresses come from the dashboard.** The API has no endpoint that lists vaults, so the server cannot offer that tool. Claude will ask you for the address of the vault you mean. When `rootkey_create_vault` makes a new one, keep the address it returns.
 
 **Files move through your own machine.** Uploads read from the local disk of the computer running the server, and downloads are written there and reported back as a file path. File contents are never pasted into the conversation, so a large PDF costs you nothing in context.
 
-**Anchoring is asynchronous.** A newly uploaded file or record starts as `PENDING` and becomes `REGISTERED` once the anchor is confirmed, or `FAILED` if something went wrong. The create call returns before that happens.
+**File anchoring is asynchronous.** A newly uploaded file starts as `PENDING` and becomes `REGISTERED` once the anchor is confirmed, or `FAILED` if something went wrong. The create call returns before that happens.
+
+**Only files are anchored on chain.** Records are stored, hashed and audited, and come back `REGISTERED` immediately: there is no pending phase and no transaction hash for a record.
+
+**Uploads can only read from a few directories.** A file to be uploaded must sit in your home directory, the temp directory or wherever the server was started, and hidden directories inside those are refused. This matters because the path can be chosen by the model, and the model reads documents other people wrote. Widen it with `ROOTKEY_ALLOWED_DIRS`.
 
 **Records are versioned by primary key.** Creating a record whose key column matches an existing record adds a version to it rather than creating a duplicate. Asking Claude to "try that again" after a create will produce a second version, which is usually not what you want.
 
-**Compliance reports arrive in the dashboard.** `generate_file_audit_report` queues the job and returns a report id. There is no API endpoint that returns the finished report, so collect it from the platform.
+**Compliance reports arrive in the dashboard.** `rootkey_generate_file_audit_report` queues the job and returns a report id. There is no API endpoint that returns the finished report, so collect it from the platform.
 
 ---
 
 ## Safety
 
 <Warning>
-  **Deletions are permanent.** `delete_vault`, `delete_file`, `delete_record` and `delete_recovery_point` cannot be undone, and each one is recorded in the on-chain audit trail. These tools are marked as destructive so Claude asks for confirmation, but the final responsibility for approving them is yours.
+  **Deletions need your confirmation.** `rootkey_delete_vault`, `rootkey_delete_file` and `rootkey_delete_record` move the item to the trash: it leaves every listing at once and stays recoverable from the Restore Center until the retention policy purges it. `rootkey_delete_recovery_point` is the exception and cannot be undone by anyone. Every delete is recorded in the activity log; a file that was anchored keeps its on-chain proof either way. All four are marked as destructive so Claude asks for confirmation, but the final responsibility for approving them is yours.
 </Warning>
 
 <Warning>
-  **The recovery point password is shown exactly once.** `create_recovery_point` returns a decryption password that the API never returns again. The server displays it prominently and keeps it out of its own logs. Store it immediately - without it the downloaded archive cannot be opened.
+  **The recovery point password is shown exactly once.** `rootkey_create_recovery_point` returns a decryption password that the API never returns again. The server displays it prominently and keeps it out of its own logs. Store it immediately - without it the downloaded archive cannot be opened.
 </Warning>
 
 ### Read-only mode
 
-Setting `ROOTKEY_READ_ONLY=true` registers only the tools that read data. The write tools are not advertised at all, so Claude cannot call them.
+Setting `ROOTKEY_READ_ONLY=true` registers only the tools that read data. The write tools are not advertised at all, so Claude cannot call them, and the two download tools may only write inside the configured download directory.
 
 ```json
 {
@@ -239,7 +262,7 @@ This is useful for analysis and reporting sessions where nothing should change. 
   </Accordion>
 
   <Accordion title="Every call returns 401 Unauthenticated">
-    The key and the environment do not match. `rk_test_` keys work only against the development API and `rk_live_` keys only against production. Ask Claude to run `get_environment_info` to see which environment the server is configured for, then align the key or set `ROOTKEY_ENV` accordingly.
+    The key and the environment do not match. `rk_test_` keys work only against the development API and `rk_live_` keys only against production. Ask Claude to run `rootkey_get_environment_info` to see which environment the server is configured for, then align the key or set `ROOTKEY_ENV` accordingly.
   </Accordion>
 
   <Accordion title="Requests fail with 429 Too Many Requests">

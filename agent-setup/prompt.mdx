@@ -17,7 +17,7 @@ Complete all of the following steps yourself by running the commands directly. D
 
 ## What this gives the user
 
-The [ROOTKey MCP server](https://github.com/ROOT-Key/rootkey-mcp) is the official [Model Context Protocol](https://modelcontextprotocol.io) server for the ROOTKey platform. It runs locally, talks directly to `api.rootkey.ai`, and exposes 26 tools covering the entire documented ROOTKey API: create vaults, anchor and validate files, write and version records, read audit trails, and build recovery points.
+The [ROOTKey MCP server](https://github.com/ROOT-Key/rootkey-mcp) is the official [Model Context Protocol](https://modelcontextprotocol.io) server for the ROOTKey platform. It runs locally, talks directly to `api.rootkey.ai`, and exposes 27 tools covering the entire documented ROOTKey API: create vaults, anchor and validate files, write and version records, read audit trails, and build recovery points.
 
 Requirement: **Node.js 20 or newer** on the machine running the agent.
 
@@ -186,8 +186,9 @@ Every setting is an environment variable on the server process, alongside the ke
 | Variable | Default | Set it when |
 |---|---|---|
 | `ROOTKEY_ENV` | `production` | Working against the development environment, with an `rk_test_` key |
-| `ROOTKEY_READ_ONLY` | `false` | The session should only read. Registers the 14 read tools and hides the rest |
+| `ROOTKEY_READ_ONLY` | `false` | The session should only read. Registers the 15 read tools and hides the rest |
 | `ROOTKEY_DOWNLOAD_DIR` | `~/Downloads` | Downloads should land somewhere specific |
+| `ROOTKEY_ALLOWED_DIRS` | home, temp, cwd | A file to be uploaded lives outside those directories. Uploads are confined to them and refuse hidden directories inside them |
 | `ROOTKEY_LOG_LEVEL` | `info` | Diagnosing a problem. Logs go to stderr, where the client shows them |
 
 The full list, including timeouts and the base URL override, is on the [connector page](/pages/integrations/claude-mcp#configuration).
@@ -196,7 +197,9 @@ The full list, including timeouts and the base URL override, is on the [connecto
 
 ## Step 4: verify
 
-Restart the agent so it loads the new server, then call the `get_environment_info` tool. It makes no API request and never reveals the key: it reports the configured environment, the key type and the number of registered tools. Expect 26 tools, or 14 with `ROOTKEY_READ_ONLY=true`.
+Restart the agent so it loads the new server, then call the `rootkey_get_environment_info` tool. It makes no API request and never reveals the key: it reports the configured environment, the key type and the number of registered tools. Expect 27 tools, or 15 with `ROOTKEY_READ_ONLY=true`.
+
+Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-named tool from another server in the same session.
 
 If no ROOTKey tools appear:
 
@@ -209,18 +212,19 @@ If no ROOTKey tools appear:
 
 ## Before the user starts using it
 
-Four behaviours follow from how the ROOTKey API works, and are worth stating up front:
+A few behaviours follow from how the ROOTKey API works, and are worth stating up front:
 
-- **Deletions are permanent** and recorded in the on-chain audit trail. The four delete tools are marked destructive so the client asks first.
+- **Deleting a vault, file or record moves it to the trash.** It leaves every listing at once and stays recoverable from the Restore Center in the dashboard until the retention policy purges it. Deleting a *recovery point* is the exception and cannot be undone. All four delete tools are marked destructive so the client asks first.
+- **Only files are anchored on chain.** Records are stored, hashed and audited and come back `REGISTERED` immediately, with no pending phase and no transaction hash. Do not describe a record as being on a blockchain.
 - **Records are versioned by primary key.** Creating a record whose key matches an existing one adds a version rather than a duplicate, so retrying a create is not a no-op.
-- **Vault addresses come from the dashboard.** The API has no endpoint that lists vaults, so neither does this server. Keep the address `create_vault` returns.
+- **Vault addresses come from the dashboard.** The API has no endpoint that lists vaults, so neither does this server. Keep the address `rootkey_create_vault` returns.
 - **Read-only mode is a convenience rail, not a security boundary.** ROOTKey API keys have no scopes and carry the full privileges of the account that owns them.
 
 Once done, tell the user:
 
 ```
 ┌─ ROOTKey Agent Setup Complete ───────────────────────┐
-│  ✓ MCP      rootkey (@rootkey/mcp), 26 tools         │
+│  ✓ MCP      rootkey (@rootkey/mcp), 27 tools         │
 │  ✓ Config   <path>                                   │
 │                                                      │
 │  ⚡ Restart your agent to load the MCP server        │
