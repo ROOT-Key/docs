@@ -20,17 +20,18 @@ A custom retention policy can be assigned instead - at creation, or later from t
 |--------|----------|
 | Retention period | **3 years** from the point of deletion |
 | Legal basis | GDPR storage limitation principle (Art. 5(1)(e)) |
-| Prior notification | **None** - no advance notice is sent before data is removed at the end of the period |
+| Advance notice | **30 days** before the deadline, then **every 7 days** until it passes |
+| Who is notified | The organisation's owners and admins, by email and in-app notification |
 | Sensitive information | Deleted permanently once the 3-year period ends |
 | Statistical / business data | Preserved - aggregate data with business value is not deleted |
 
 <Note>
-  Because no advance notice precedes deletion, if your organisation needs a longer or shorter window, or a notification before removal, assign a custom retention policy to the Vault rather than relying on the default.
+  Every number above is a default, not a fixed rule. A custom retention policy can change the retention period, the size of the notice window, how often the reminder repeats, and who receives it - assign one to the Vault if any of those do not fit your organisation.
 </Note>
 
 ---
 
-## Why a 3-Year, No-Notice Default
+## Why Three Years
 
 GDPR's storage limitation principle (Article 5(1)(e)) requires that personal data not be kept longer than necessary for the purpose it was processed for - while permitting longer retention when data is processed **solely for archiving, statistical, or research purposes**, subject to appropriate safeguards.
 
@@ -40,7 +41,15 @@ ROOTKey's default policy is built around that distinction:
 - **After the window closes**, sensitive information - anything that could identify a person or expose confidential content - is permanently deleted.
 - **Aggregate statistical data** that carries no privacy exposure (for example, usage counts or validation totals) is preserved, consistent with GDPR's statistical-purposes allowance.
 
-The deletion at the end of the 3-year window happens automatically, without a prior notification to the user or organisation.
+---
+
+## Before the Deadline
+
+You are not left to track the date yourself. Once a Vault holds data whose deletion deadline falls inside the notice window - 30 days by default - ROOTKey alerts the organisation's owners and admins, by email and by in-app notification, and repeats the alert every 7 days until the deadline passes.
+
+A custom retention policy can name specific recipients instead. When it does not, or when no custom policy is assigned at all, the alert goes to the organisation's owners and admins.
+
+The deletion itself then happens automatically once the deadline is reached.
 
 ---
 
