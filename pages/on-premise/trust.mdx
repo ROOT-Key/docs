@@ -23,56 +23,48 @@ Run this before unpacking the archive. It needs `sha256sum` and `cosign`, and it
 nothing.
 
 <Steps>
-  <Step title="Get the verifier and the public key from this page">
-    Both are published here rather than only inside the bundle. A verifier that ships inside the
-    thing it verifies answers the wrong question: if the archive had been tampered with, so had
-    the script.
-
-    ```bash
-    curl -O https://docs.rootkey.ai/files/verify-bundle.sh
-    curl -O https://docs.rootkey.ai/files/cosign.pub
-    chmod +x verify-bundle.sh
-    ```
+  <Step title="Get the public key from your delivery record">
+    Take `cosign.pub` from the channel that announced the release, not from inside the archive. A
+    key that travels inside the thing it verifies answers the wrong question: if the archive had
+    been tampered with, so had the key.
   </Step>
 
   <Step title="Check the key fingerprint against your contract">
-    The fingerprint below is also written into your SOW or contract. Two independent channels,
-    so the verification is never circular: a page and a signature that both came from the same
-    place prove nothing to each other.
+    The key's fingerprint is written into your SOW or contract. Two independent channels, so the
+    verification is never circular: a key and a signature that both arrived by the same route
+    prove nothing to each other.
 
     ```bash
     sha256sum cosign.pub
     ```
 
     <Note>
-      If the fingerprint on this page and the one in your contract disagree, stop and contact us
+      If the fingerprint you compute and the one in your contract disagree, stop and contact us
       through the channel in your delivery record. Do not resolve the disagreement by trusting
       whichever one is more convenient.
     </Note>
   </Step>
 
   <Step title="Verify the bundle">
+    The signature first, then the contents. Only the first proves the bundle came from ROOTKey;
+    `sha256sum -c` on its own proves the archive is internally consistent, which a tampered
+    archive also is.
+
     ```bash
-    ./verify-bundle.sh rootkey-onprem-<version>.tar.gz
+    cosign verify-blob --key cosign.pub --signature SHA256SUMS.sig SHA256SUMS
+    sha256sum -c SHA256SUMS
     ```
 
-    It prints the archive's SHA-256, checks the cosign signature over `SHA256SUMS`, and confirms
-    every file inside matches. It exits non-zero if any of those fail.
+    Both exit non-zero on failure. Run them from the unpacked bundle directory, before running
+    the installer.
   </Step>
 
   <Step title="Compare the archive checksum against what we told you">
-    The script prints the archive's SHA-256. Compare it against the value in the message that
-    announced the release — **not** against a value that travelled with the file. A checksum
+    Compute the archive's SHA-256 with `sha256sum rootkey-onprem-<version>.tar.gz` and compare it
+    against the value in the message that announced the release — **not** against a value that travelled with the file. A checksum
     shipped alongside the thing it checksums proves only that the two arrived together.
   </Step>
 </Steps>
-
-If you would rather run the steps by hand:
-
-```bash
-cosign verify-blob --key cosign.pub --signature SHA256SUMS.sig SHA256SUMS
-sha256sum -c SHA256SUMS
-```
 
 ---
 
@@ -119,14 +111,14 @@ sha256sum -c SHA256SUMS
 | **Revocation** | Announced on this page and by direct notice to every active client |
 | **Custody** | Two named holders; the private half never leaves its key store |
 
-Superseded keys stay published below rather than being removed, so that a bundle you archived
-years ago can still be verified against the key it was actually signed with.
+A superseded key is retired but never destroyed, so that a bundle you archived years ago can
+still be verified against the key it was actually signed with.
 
 <Note>
-  **The current key fingerprint and the archive of superseded keys are published alongside this
-  page.** If you are reading this before the key material has been attached, ask your ROOTKey
-  contact for the fingerprint and check it against your contract — the two-channel rule applies
-  either way.
+  **Ask your ROOTKey contact for the current key fingerprint**, and check it against the value in
+  your contract. If you need to verify an older bundle, ask for the key it was signed with by
+  release version. The two-channel rule applies either way: the fingerprint and the signature must
+  never reach you by the same route.
 </Note>
 
 The Control Plane's **licence signing keys** are a different set with a different lifecycle, and

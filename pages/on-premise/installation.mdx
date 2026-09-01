@@ -50,14 +50,11 @@ Before Ansible is invoked at all, the installer refuses to run a deploy while an
     sha256sum -c SHA256SUMS
     ```
 
-    Or run the standalone verifier, which does both and tells you what a failure means:
+    `install.sh` does not do this for you. Verification is a deliberate step you take before
+    unpacking, and nothing later in the install will fail if you skip it.
 
-    ```bash
-    ./verify-bundle.sh rootkey-onprem-<version>.tar.gz
-    ```
-
-    See [Trust and Verification](/pages/on-premise/trust) for the public key, its fingerprint,
-    and what to do when a check fails.
+    See [Trust and Verification](/pages/on-premise/trust) for where the key comes from and what
+    to do when a check fails.
   </Step>
 
   <Step title="Run the preflight, before touching anything">
