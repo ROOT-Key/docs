@@ -107,6 +107,12 @@
             ]
           },
           {
+            "group": "Data Retention",
+            "pages": [
+              "pages/retention-policies"
+            ]
+          },
+          {
             "group": "Deployment Methods",
             "pages": [
               "pages/deployment/overview",
