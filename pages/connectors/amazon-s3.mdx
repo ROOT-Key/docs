@@ -81,7 +81,7 @@ Before starting, ensure you have:
 - Permissions to **create IAM Roles** in that account (or an existing Role you can dedicate to the connector).
 - Permissions to apply Terraform with `iam:PutRolePolicy` on the chosen Role and the rights to create Lambda, EventBridge, Secrets Manager, SQS, and CloudWatch Logs resources.
 - **EventBridge notifications enabled on the bucket** — a one-time switch (instructions in step 2).
-- [Terraform](https://developer.hashicorp.com/terraform/install) v1.3 or later installed locally (or in a CI/CD pipeline that runs `terraform apply`).
+- [Terraform](https://developer.hashicorp.com/terraform/install) **v1.11 or later** installed locally (or in a CI/CD pipeline that runs `terraform apply`). This is a hard floor, not a recommendation: the module uses write-only arguments to keep your secrets out of the Terraform state file, and those require 1.11. An older version fails at `terraform init` with an explicit version error rather than silently writing your secret to disk.
 - [Node.js](https://nodejs.org) v22 or later on the machine running Terraform — the Lambda source is compiled at apply time.
 
 ---
@@ -218,12 +218,20 @@ The setup has a natural ordering dependency: the dashboard requires the **IAM Ro
 
     ```hcl
     module "rootkey_s3_connector" {
-      source = "github.com/ROOT-Key/rootkey-connectors//aws-s3"
+      # Pinned to a release tag. Without a ?ref= the source resolves to whatever
+      # is on the default branch the moment you run terraform init, so two
+      # deployments a week apart can get different code. Most change-control
+      # processes will require the pin.
+      source = "github.com/ROOT-Key/rootkey-connectors//aws-s3?ref=v1.0.0"
 
       bucket_name     = "my-company-documents"
       aws_region      = "eu-west-1"
       iam_role_arn    = "arn:aws:iam::123456789012:role/rootkey-s3-connector-role"
       rootkey_api_key = "rk_conn_xxxxxxxxxxxxxxxxxxxx"
+
+      # Increment whenever you change rootkey_api_key above — see
+      # "Secrets and the Terraform state file" below.
+      rootkey_api_key_version = 1
 
       # Optional
       prefix              = "documents/"
@@ -279,6 +287,59 @@ The setup has a natural ordering dependency: the dashboard requires the **IAM Ro
 </Steps>
 
 ---
+
+---
+
+## Secrets and the Terraform state file
+
+Terraform records the attributes of everything it manages in a state file. By default that includes the *value* of any secret passed into a module — marking a variable `sensitive` only masks it in command output, it does not keep it off disk. In a regulated environment this is usually the first question asked about any infrastructure-as-code module, so it is worth being precise about what this one does.
+
+### Your secrets are never written to state
+
+Your ROOTKey API Key is written to Secrets Manager using `secret_string_wo`, a **write-only argument**. The provider receives the value, sends it to AWS Secrets Manager, and Terraform persists nothing. The value is equally absent from a saved plan file (`terraform plan -out=…`), because the corresponding input variables are declared `ephemeral` — worth knowing if you run the module from a CI/CD pipeline, where a saved plan is exactly the kind of thing that gets archived as a build artifact.
+
+You can verify this yourself after an apply. The following should return `0`:
+
+```bash
+grep -c "<the secret value you supplied>" terraform.tfstate
+```
+
+### The trade-off: Terraform cannot detect that a secret changed
+
+It never sees the value, so it has nothing to compare against. That is what `rootkey_api_key_version` is for.
+
+<Warning>
+  Change a secret **and** increment its counter, and the new value is written. Change a secret and leave the counter alone, and **the apply succeeds while silently doing nothing**. This is the one sharp edge of the design — the rotation procedures always name both steps for this reason.
+</Warning>
+
+### What does remain in the state file
+
+Being complete about this matters more than the headline:
+
+| What | Why it is there |
+|---|---|
+| Resource ARNs, names, IAM policy documents | Infrastructure metadata. The Lambda's `environment` block holds the secret's **ARN**, never its value — the function reads the value from Secrets Manager at cold start using its execution role. |
+| CloudWatch log group and SQS queue names | Infrastructure metadata. |
+
+None of these is a credential to your tenant or account, but list them anyway if you are producing an inventory for an audit.
+
+### Where to keep the state file
+
+Even with no secrets in it, the state is an accurate map of your deployment and should not live on an operator's laptop. Use a remote backend in your own cloud account — it also gives you state locking, so two people cannot apply at the same time:
+
+```hcl
+terraform {
+  backend "s3" {
+    bucket       = "my-tfstate-bucket"
+    key          = "rootkey-connector.tfstate"
+    region       = "eu-west-1"
+    encrypt      = true
+    use_lockfile = true # S3-native state locking
+  }
+}
+```
+
+The trust boundary is the one you already accepted when you let the module create AWS Secrets Manager inside your own account. If that is acceptable, the state file is acceptable in the same place.
 
 ## Reliability Model
 

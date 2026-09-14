@@ -167,7 +167,11 @@ The setup has a natural ordering dependency: the dashboard requires the Cloudfla
 
     ```hcl
     module "rootkey_r2_connector" {
-      source = "github.com/ROOT-Key/rootkey-connectors//r2"
+      # Pinned to a release tag. Without a ?ref= the source resolves to whatever
+      # is on the default branch the moment you run terraform init, so two
+      # deployments a week apart can get different code. Most change-control
+      # processes will require the pin.
+      source = "github.com/ROOT-Key/rootkey-connectors//r2?ref=v1.0.0"
 
       cloudflare_account_id = "00112233445566778899aabbccddeeff"
       bucket_name           = "my-company-documents"
