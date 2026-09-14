@@ -38,7 +38,7 @@ Full transparency on what lands in your account when you `terraform apply`:
 | Resource | Purpose | Cost impact |
 |---|---|---|
 | `cloudflare_workers_script` | The connector itself (TypeScript bundled to ~6 KB ESM, deployed as a Workers module). | Free tier covers 100 K invocations/day; paid plan is $5/month for 10M + $0.30/M after. |
-| `cloudflare_workers_secret` | Holds the ROOTKey Connector API Key. Encrypted at rest; **never visible in plaintext** through the dashboard or API after creation. | None (free with Workers). |
+| `secret_text` binding on the Worker | Holds the ROOTKey Connector API Key. Encrypted at rest by Cloudflare; **never readable back** through the dashboard or API after creation. Provider v5 removed the standalone `cloudflare_workers_secret` resource — a binding on the Worker script is its replacement, and is what the old resource compiled down to anyway. | None (free with Workers). |
 | `cloudflare_queue` (×2) | Main events queue + dead-letter queue. R2 publishes object-created events to the main queue; the Worker consumes from it. | ~$0.40 per million operations (R2 event + Worker ack = ~2 ops). |
 | `cloudflare_queue_consumer` | Binds the Worker as the consumer of the main queue with `max_retries = 5` and the DLQ as the failure destination. | None. |
 | `cloudflare_r2_bucket_event_notification` | Routes `PutObject`, `CompleteMultipartUpload`, and `CopyObject` events from your bucket into the queue. Supports server-side prefix filtering. | None. |
@@ -62,13 +62,15 @@ For a typical bucket with a few thousand uploads per month, the **total recurrin
     Yes. The whole purpose of the connector is to forward file content to ROOTKey so it can be anchored and recovered. Transport is HTTPS-only (the module rejects non-`https://` API URLs at plan time). Files are streamed from R2 to the ROOTKey API; the Worker never persists them anywhere else. Cloudflare bills $0 egress for this path.
   </Accordion>
   <Accordion title="What happens to my API key?" icon="key">
-    The Connector API Key you paste into Terraform is stored as a Cloudflare Workers Secret **in your own account**, encrypted at rest. After creation it cannot be read back through the dashboard or API — only rotated via `terraform apply` with a new value. The Worker reads it from `env.ROOTKEY_API_KEY` at runtime.
+    The Connector API Key you paste into Terraform is delivered to the Worker as a `secret_text` binding **in your own account**, encrypted at rest by Cloudflare. After creation it cannot be read back through the dashboard or API — only overwritten via `terraform apply` with a new value. The Worker reads it from `env.ROOTKEY_API_KEY` at runtime.
+
+    It is, however, written to your Terraform state file — unlike the SharePoint, OneDrive and Amazon S3 connectors. Read [Secrets and the Terraform state file](#secrets-and-the-terraform-state-file) below before deciding where that state lives.
   </Accordion>
   <Accordion title="What happens if the ROOTKey API is unreachable?" icon="circle-exclamation">
     The Worker calls `message.retry()` and Cloudflare Queues automatically retries the message with exponential backoff up to **5 times**. After exhaustion the message is moved to the dead-letter queue for human inspection. Permanent failures (oversize files, 4xx from ROOTKey) bypass the DLQ deliberately and surface via a stable log marker `rootkey.event.dlq_terminal_failure` for alerting.
   </Accordion>
   <Accordion title="Can I roll this back?" icon="rotate-left">
-    Yes. Running `terraform destroy` removes every resource the module created (Worker, secret, both queues, queue consumer, event notification). The R2 bucket itself is **not** deleted — it is your resource, not the module's.
+    Yes. Running `terraform destroy` removes every resource the module created (Worker and its bindings, both queues, queue consumer, event notification). The R2 bucket itself is **not** deleted — it is your resource, not the module's.
   </Accordion>
 </AccordionGroup>
 
@@ -82,7 +84,7 @@ Before starting, ensure you have:
 - A pre-existing **R2 bucket** to monitor. The module does not create the bucket.
 - A **Cloudflare API token** with permissions to manage Workers, Queues, R2 event notifications, and Workers Secrets in the target account. Generate one at [dash.cloudflare.com → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens).
 - Your **Cloudflare Account ID** (32-char hex, visible in the dashboard sidebar).
-- [Terraform](https://developer.hashicorp.com/terraform/install) v1.3 or later.
+- [Terraform](https://developer.hashicorp.com/terraform/install) **v1.11 or later**. Pinned to the same floor as the other three connectors so there is one Terraform version to support across the set.
 - [Node.js](https://nodejs.org) 22+ on the machine running Terraform (used to compile the Worker at `terraform apply` time).
 
 No additional Cloudflare-side configuration is needed. Unlike the AWS/Azure connectors, the Worker's scoping is implicit in the Terraform-declared bindings — there is no separate IAM role or App Registration to create.
@@ -271,11 +273,71 @@ curl -X POST \
 
 The module ships with a defensive default posture out of the box:
 
-- **API key in a Workers Secret, not in code.** Encrypted at rest, not readable after creation. Rotation = `terraform apply` with a new value.
+- **API key in a `secret_text` binding, not in code.** Encrypted at rest by Cloudflare, not readable back after creation. Rotation = `terraform apply` with a new value. It does reach your Terraform state file, though — see [Secrets and the Terraform state file](#secrets-and-the-terraform-state-file).
 - **HTTPS-only.** The module rejects non-`https://` API URLs at plan time.
 - **In-cluster R2 read.** The Worker reads R2 objects via a binding — no HTTP egress, no public network exposure for the data path.
 - **Bucket-scoped binding.** The Worker's R2 binding is scoped to one bucket. If the Worker is ever compromised, the blast radius is one bucket — not the customer's whole R2 footprint.
 - **No additional IAM model to manage.** Unlike the AWS/Azure connectors, there is no role or App Registration to audit; the Worker can only use the bindings declared in Terraform.
+
+---
+
+## Secrets and the Terraform state file
+
+Terraform records the attributes of everything it manages in a state file. By default that includes the *value* of any secret passed into a module — marking a variable `sensitive` only masks it in command output, it does not keep it off disk.
+
+<Warning>
+  **This connector behaves differently from the other three.** In the SharePoint, OneDrive and Amazon S3 modules your secrets are never written to state: those providers support *write-only arguments*, so the value reaches the vault and Terraform persists nothing.
+
+  The Cloudflare provider implements no equivalent, so `rootkey_api_key` **is** persisted to `terraform.tfstate`.
+</Warning>
+
+This is a limitation of the provider, not a choice of this module. It was verified against the schema the pinned provider version actually ships — the check reports `0` across all 264 resources of cloudflare/cloudflare v5.25.0:
+
+```bash
+terraform providers schema -json | jq '[.provider_schemas."registry.terraform.io/cloudflare/cloudflare" | .. | objects | select(.write_only == true)] | length'
+```
+
+Worth stating plainly what follows from it:
+
+- The API key appears in `terraform.tfstate` under `cloudflare_workers_script.connector`, in the `bindings` entry named `ROOTKEY_API_KEY`. It is also present in any saved plan file (`terraform plan -out=…`).
+- There is consequently no `rootkey_api_key_version` rotation counter here, and the variable is not `ephemeral`. Both exist in the other three connectors purely to serve write-only arguments.
+- The upside: Terraform *can* see this value, so rotation is a single step — change `rootkey_api_key` and apply. None of the silent-no-op sharp edge the other three connectors carry.
+
+You can confirm the exposure yourself after an apply. Unlike the other three connectors, this returns a non-zero count:
+
+```bash
+grep -c "rk_conn_" terraform.tfstate
+```
+
+### What else lives in the state file
+
+| What | Why it is there |
+|---|---|
+| `rootkey_api_key`, as a Worker binding | The provider limitation described above. |
+| The compiled Worker bundle | The built `dist/index.js`, read in so it can be uploaded. Not secret — it is the source published in our public repository. |
+| Queue IDs and names, the Worker name, the event-notification config | Infrastructure metadata, not credentials. |
+
+### What to do about it
+
+Treat the state file at the same classification as the API key itself, and keep it off operator laptops. R2 works as an S3-compatible backend, which keeps the state in the same account as the rest of this deployment:
+
+```hcl
+terraform {
+  backend "s3" {
+    bucket                      = "my-tfstate"
+    key                         = "rootkey-connector.tfstate"
+    region                      = "auto"
+    endpoints                   = { s3 = "https://<account-id>.r2.cloudflarestorage.com" }
+    skip_credentials_validation = true
+    skip_region_validation      = true
+    skip_requesting_account_id  = true
+    skip_s3_checksum            = true
+    use_lockfile                = true # state locking
+  }
+}
+```
+
+If your change-control process cannot accept a credential at rest in the state file at all, the alternative is to deploy this connector with an API key scoped to nothing else and rotate it on a schedule you control — the key grants upload rights to your own ROOTKey connector and nothing more.
 
 ---
 
