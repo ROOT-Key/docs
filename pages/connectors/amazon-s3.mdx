@@ -218,10 +218,6 @@ The setup has a natural ordering dependency: the dashboard requires the **IAM Ro
 
     ```hcl
     module "rootkey_s3_connector" {
-      # Pinned to a release tag. Without a ?ref= the source resolves to whatever
-      # is on the default branch the moment you run terraform init, so two
-      # deployments a week apart can get different code. Most change-control
-      # processes will require the pin.
       source = "github.com/ROOT-Key/rootkey-connectors//aws-s3?ref=v1.0.0"
 
       bucket_name     = "my-company-documents"
@@ -229,8 +225,6 @@ The setup has a natural ordering dependency: the dashboard requires the **IAM Ro
       iam_role_arn    = "arn:aws:iam::123456789012:role/rootkey-s3-connector-role"
       rootkey_api_key = "rk_conn_xxxxxxxxxxxxxxxxxxxx"
 
-      # Increment whenever you change rootkey_api_key above — see
-      # "Secrets and the Terraform state file" below.
       rootkey_api_key_version = 1
 
       # Optional

@@ -218,10 +218,6 @@ The setup has a natural ordering: the dashboard requires the Tenant/Client/Drive
 
     ```hcl
     module "rootkey_onedrive_connector" {
-      # Pinned to a release tag. Without a ?ref= the source resolves to whatever
-      # is on the default branch the moment you run terraform init, so two
-      # deployments a week apart can get different code. Most change-control
-      # processes will require the pin.
       source = "github.com/ROOT-Key/rootkey-connectors//onedrive?ref=v1.0.0"
 
       resource_group_name = "rootkey-connectors"
@@ -235,8 +231,6 @@ The setup has a natural ordering: the dashboard requires the Tenant/Client/Drive
 
       rootkey_api_key = "rk_conn_xxxxxxxxxxxxxxxxxxxx"
 
-      # Rotation counters. Increment the matching counter whenever you change
-      # the secret above — see "Secrets and the Terraform state file" below.
       graph_client_secret_version = 1
       rootkey_api_key_version     = 1
 
