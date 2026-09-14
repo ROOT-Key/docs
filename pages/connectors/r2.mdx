@@ -333,6 +333,18 @@ terraform {
 }
 ```
 
+The backend authenticates with an **R2 API token** — created under R2 → Manage API tokens, with Object Read & Write on the state bucket. It is a different token from the Cloudflare API token the module itself uses. Supply it through the environment rather than writing it into the block, which would put a second credential into a file you commit:
+
+```bash
+export AWS_ACCESS_KEY_ID="<R2 access key id>"
+export AWS_SECRET_ACCESS_KEY="<R2 secret access key>"
+terraform init
+```
+
+<Note>
+  Omitting these is the usual reason `terraform init` fails against an R2 backend with a signature or access-denied error. The `skip_*` flags above only suppress AWS-specific preflight calls that R2 does not implement — they do not make the backend anonymous.
+</Note>
+
 If your change-control process cannot accept a credential at rest in the state file at all, the alternative is to deploy this connector with an API key scoped to nothing else and rotate it on a schedule you control — the key grants upload rights to your own ROOTKey connector and nothing more.
 
 ---
