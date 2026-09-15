@@ -259,7 +259,7 @@ The setup has a natural ordering: the dashboard requires the Tenant/Client/Drive
   </Step>
 
   <Step title="Validate the connector">
-    Because the timer is registered with `runOnStartup: true`, the Function App registers the Graph subscription within seconds of deploy. You can confirm by inspecting the `connector-state` blob container:
+    **Allow 20–30 minutes before your first test.** The timer is registered with `runOnStartup: true`, but on the Flex Consumption plan Azure runs each trigger type on its own instance group, and the group that owns the timer is not provisioned the moment the app is created. In a measured deployment the gap between `terraform apply` finishing and the first run was **19 minutes**. During that window the Function App is healthy and answering HTTP, and no subscription exists yet — a file uploaded then is picked up by the next delta sync, not lost. You can confirm by inspecting the `connector-state` blob container:
 
     ```bash
     az storage blob list \
@@ -364,15 +364,35 @@ It never sees the value, so it has nothing to compare against. That is what `gra
 
 Being complete about this matters more than the headline:
 
-| What | Why it is there |
-|---|---|
-| The webhook `clientState` | A validation token the module generates so the Function App can reject forged Microsoft Graph notifications. It is not a credential to your tenant. It stays in state because it has to be stable across applies — regenerating it on every apply would invalidate notifications already in flight. |
-| The Application Insights connection string | Contains the instrumentation key. It grants telemetry ingestion and nothing else. |
-| Resource IDs, names, RBAC assignments, app settings | Infrastructure metadata. Note that `app_settings` holds Key Vault *references* (`@Microsoft.KeyVault(SecretUri=…)`), never resolved secret values. |
+This list was produced by walking the Terraform provider schema for every resource the module creates, taking each attribute marked `sensitive`, and checking it against a real applied state — not written from memory. You can reproduce it yourself; see below.
 
-None of these is a credential to your tenant or account, but list them anyway if you are producing an inventory for an audit.
+| What | Usable? | Why it is there |
+|---|---|---|
+| Storage Account `primary_access_key`, `secondary_access_key`, and the connection strings that embed them | **No** | Azure generates account keys whether or not you use them. The module sets `shared_access_key_enabled = false`, which stops them authenticating — an attempt returns `Key based authentication is not permitted on this storage account`. They are still recorded in state, so an auditor will find them. They are inert, not absent. |
+| Function App `site_credential[0].password` | **Yes** | The SCM/Kudu publishing password. Basic publishing authentication is on by default, so this grants deployment access to the Function App. The most significant item here — see the note below the table. |
+| Log Analytics `primary_shared_key`, `secondary_shared_key` | **Yes** | Allow writing data into the workspace. Ingestion only; no read access, and they reach nothing else. |
+| Application Insights `instrumentation_key` and connection string | **Yes** | Telemetry ingestion into this connector's Application Insights, and nothing else. |
+| The webhook `clientState` | n/a | A validation token the module generates so the Function App can reject forged Microsoft Graph notifications. Not a credential to your tenant. It stays in state because it has to be stable across applies — regenerating it would invalidate notifications already in flight. |
+| Resource IDs, names, RBAC assignments, app settings | n/a | Infrastructure metadata. `app_settings` holds Key Vault *references* (`@Microsoft.KeyVault(SecretUri=…)`), never resolved secret values. |
 
-Storage Account access keys are **not** present — the module sets `shared_access_key_enabled = false`, so there are none to record.
+<Warning>
+  None of these grants access to your Microsoft 365 tenant, to SharePoint, or to ROOTKey — they are scoped to the resources this module created. The one to treat as a real credential is the **SCM publishing password**: whoever holds it can deploy code to the Function App. If your policy does not allow that in a state file, set `webdeploy_publish_basic_authentication_enabled = false` on the Function App and it becomes inert, the same way the storage keys already are.
+</Warning>
+
+**Reproduce this against your own deployment.** Terraform marks every sensitive attribute itself:
+
+```bash
+terraform show -json > state.json
+```
+
+Open `state.json` and read each resource's `sensitive_values` block: every attribute set to `true` is one Terraform considers sensitive, and the matching entry under `values` is what was actually recorded. On a real deployment of this module that yields 19 entries — and the two that matter read like this:
+
+```
+azurerm_key_vault_secret.graph_client_secret   value   ""
+azurerm_key_vault_secret.rootkey_api_key       value   ""
+```
+
+Empty, because the module writes them with a write-only argument.
 
 ### Where to keep the state file
 
