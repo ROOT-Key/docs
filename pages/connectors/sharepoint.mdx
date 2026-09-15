@@ -103,7 +103,7 @@ Before starting, ensure you have:
 - Permissions to register applications in **Microsoft Entra ID** (Application Administrator or Global Administrator) and to grant admin consent.
 - Permissions to apply Terraform with `Contributor` and `User Access Administrator` (or equivalent) on the chosen Resource Group.
 - The **SharePoint site URL** of the site you want to monitor (e.g. `https://contoso.sharepoint.com/sites/legal`). The connector self-discovers every document library on the site — you do **not** need to provide library IDs.
-- [Terraform](https://developer.hashicorp.com/terraform/install) v1.3 or later installed locally (or in a CI/CD pipeline that runs `terraform apply`).
+- [Terraform](https://developer.hashicorp.com/terraform/install) **v1.11 or later** installed locally (or in a CI/CD pipeline that runs `terraform apply`). This is a hard floor, not a recommendation: the module uses write-only arguments to keep your secrets out of the Terraform state file, and those require 1.11. An older version fails at `terraform init` with an explicit version error rather than silently writing your secret to disk.
 - [Node.js](https://nodejs.org) v22 or later on the machine running Terraform — the Function App source is compiled at apply time.
 - Azure CLI authenticated (`az login`) or service principal credentials in the environment.
 
@@ -235,7 +235,7 @@ The setup has a natural ordering: the dashboard requires the Tenant/Client/Site 
 
     ```hcl
     module "rootkey_sharepoint_connector" {
-      source = "github.com/ROOT-Key/rootkey-connectors//sharepoint"
+      source = "github.com/ROOT-Key/rootkey-connectors//sharepoint?ref=v1.0.1"
 
       resource_group_name = "rootkey-connectors"
       azure_location      = "westeurope"
@@ -247,6 +247,9 @@ The setup has a natural ordering: the dashboard requires the Tenant/Client/Site 
       site_url            = "https://contoso.sharepoint.com/sites/legal"
 
       rootkey_api_key = "rk_conn_xxxxxxxxxxxxxxxxxxxx"
+
+      graph_client_secret_version = 1
+      rootkey_api_key_version     = 1
 
       # Optional
       max_file_size_bytes               = 524288000
@@ -273,7 +276,7 @@ The setup has a natural ordering: the dashboard requires the Tenant/Client/Site 
   </Step>
 
   <Step title="Validate the connector">
-    Because the timer is registered with `runOnStartup: true`, the Function App reconciles subscriptions within seconds of deploy. You can confirm by inspecting the `connector-state` blob container:
+    **Allow 20–30 minutes before your first test.** The timer is registered with `runOnStartup: true`, but on the Flex Consumption plan Azure runs each trigger type on its own instance group, and the group that owns the timer is not provisioned the moment the app is created. In a measured deployment the gap between `terraform apply` finishing and the first reconciliation was **19 minutes**. During that window the Function App is healthy and answering HTTP, and no subscription exists yet — a file uploaded then is picked up by the next delta sync, not lost. After the first run the hourly timer fires on schedule. You can confirm by inspecting the `connector-state` blob container:
 
     ```bash
     az storage blob list \
@@ -380,6 +383,82 @@ az storage message peek \
 
 ---
 
+## Secrets and the Terraform state file
+
+Terraform records the attributes of everything it manages in a state file. By default that includes the *value* of any secret passed into a module — marking a variable `sensitive` only masks it in command output, it does not keep it off disk. In a regulated environment this is usually the first question asked about any infrastructure-as-code module, so it is worth being precise about what this one does.
+
+### Your secrets are never written to state
+
+Both the Microsoft Graph client secret and your ROOTKey API Key are written to Key Vault using `value_wo`, a **write-only argument**. The provider receives the value, sends it to Azure Key Vault, and Terraform persists nothing. The value is equally absent from a saved plan file (`terraform plan -out=…`), because the corresponding input variables are declared `ephemeral` — worth knowing if you run the module from a CI/CD pipeline, where a saved plan is exactly the kind of thing that gets archived as a build artifact.
+
+You can verify this yourself after an apply. The following should return `0`:
+
+```bash
+grep -c "<the secret value you supplied>" terraform.tfstate
+```
+
+### The trade-off: Terraform cannot detect that a secret changed
+
+It never sees the value, so it has nothing to compare against. That is what `graph_client_secret_version` and `rootkey_api_key_version` are for.
+
+<Warning>
+  Change a secret **and** increment its counter, and the new value is written. Change a secret and leave the counter alone, and **the apply succeeds while silently doing nothing**. This is the one sharp edge of the design — the rotation procedures always name both steps for this reason.
+</Warning>
+
+### What does remain in the state file
+
+Being complete about this matters more than the headline:
+
+This list was produced by walking the Terraform provider schema for every resource the module creates, taking each attribute marked `sensitive`, and checking it against a real applied state — not written from memory. You can reproduce it yourself; see below.
+
+| What | Usable? | Why it is there |
+|---|---|---|
+| Storage Account `primary_access_key`, `secondary_access_key`, and the connection strings that embed them | **No** | Azure generates account keys whether or not you use them. The module sets `shared_access_key_enabled = false`, which stops them authenticating — an attempt returns `Key based authentication is not permitted on this storage account`. They are still recorded in state, so an auditor will find them. They are inert, not absent. |
+| Function App `site_credential[0].password` | **Yes** | The SCM/Kudu publishing password. Basic publishing authentication is on by default, so this grants deployment access to the Function App. The most significant item here — see the note below the table. |
+| Log Analytics `primary_shared_key`, `secondary_shared_key` | **Yes** | Allow writing data into the workspace. Ingestion only; no read access, and they reach nothing else. |
+| Application Insights `instrumentation_key` and connection string | **Yes** | Telemetry ingestion into this connector's Application Insights, and nothing else. |
+| The webhook `clientState` | n/a | A validation token the module generates so the Function App can reject forged Microsoft Graph notifications. Not a credential to your tenant. It stays in state because it has to be stable across applies — regenerating it would invalidate notifications already in flight. |
+| Resource IDs, names, RBAC assignments, app settings | n/a | Infrastructure metadata. `app_settings` holds Key Vault *references* (`@Microsoft.KeyVault(SecretUri=…)`), never resolved secret values. |
+
+<Warning>
+  None of these grants access to your Microsoft 365 tenant, to SharePoint, or to ROOTKey — they are scoped to the resources this module created. The one to treat as a real credential is the **SCM publishing password**: whoever holds it can deploy code to the Function App. If your policy does not allow that in a state file, set `webdeploy_publish_basic_authentication_enabled = false` on the Function App and it becomes inert, the same way the storage keys already are.
+</Warning>
+
+**Reproduce this against your own deployment.** Terraform marks every sensitive attribute itself:
+
+```bash
+terraform show -json > state.json
+```
+
+Open `state.json` and read each resource's `sensitive_values` block: every attribute set to `true` is one Terraform considers sensitive, and the matching entry under `values` is what was actually recorded. On a real deployment of this module that yields 19 entries — and the two that matter read like this:
+
+```
+azurerm_key_vault_secret.graph_client_secret   value   ""
+azurerm_key_vault_secret.rootkey_api_key       value   ""
+```
+
+Empty, because the module writes them with a write-only argument.
+
+### Where to keep the state file
+
+Even with no secrets in it, the state is an accurate map of your deployment and should not live on an operator's laptop. Use a remote backend in your own cloud account — it also gives you state locking, so two people cannot apply at the same time:
+
+```hcl
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "my-tfstate-rg"
+    storage_account_name = "mytfstate"
+    container_name       = "tfstate"
+    key                  = "rootkey-connector.tfstate"
+    use_azuread_auth     = true # no storage account keys
+  }
+}
+```
+
+The trust boundary is the one you already accepted when you let the module create Azure Key Vault inside your own account. If that is acceptable, the state file is acceptable in the same place.
+
+---
+
 ## Security considerations
 
 The module ships with a defensive default posture; a few choices have intentional trade-offs that are worth understanding upfront:
@@ -388,7 +467,7 @@ The module ships with a defensive default posture; a few choices have intentiona
 - **Key Vault purge protection is enabled by default.** Set `enable_key_vault_purge_protection = false` only for short pilots — once enabled it CANNOT be disabled and the vault cannot be fully purged for 7 days after `terraform destroy`.
 - **CORS is closed.** The webhook is server-to-server (Graph); browser access is explicitly disallowed.
 - **HTTPS-only, TLS 1.2 minimum, FTPS disabled, HTTP/2 enabled** on the Function App.
-- **`shared_access_key_enabled = true` on the Storage Account** is a known constraint of the Azure Functions Consumption plan: the runtime requires the legacy `AzureWebJobsStorage` connection string to bootstrap. **The connector's own state operations use RBAC via the managed identity, not the keys.** To remove the keys entirely, you need to move to a Premium / Flex Consumption / App Service plan that supports identity-based connections; that path is on the ROOTKey roadmap.
+- **Storage Account shared access keys are disabled** (`shared_access_key_enabled = false`). Every access — the Function App's deployment bundle, its own state blobs, and the dead-letter queue — goes through the user-assigned managed identity with RBAC, and `AzureWebJobsStorage` is wired identity-based via `AzureWebJobsStorage__accountName`. There are no storage keys to leak, rotate, or record in the Terraform state. This is one of the reasons the connector runs on the Flex Consumption plan; the older Linux Consumption plan required the legacy connection string and could not turn the keys off.
 
 ---
 
