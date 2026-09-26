@@ -140,10 +140,17 @@ The Secrets are recreated and the workloads restart onto them.
 
 ## Uninstalling
 
+### Removing the releases
+
 ```bash
-helm -n rootkey uninstall rootkey-dataplane
+helm -n rootkey uninstall rootkey
 helm -n rootkey uninstall rootkey-minio rootkey-redis rootkey-kafka
 ```
+
+<Note>
+  The umbrella release is named **`rootkey`**, not `rootkey-dataplane` — that is the chart's
+  name, not the release's. `helm -n rootkey list` shows you the four.
+</Note>
 
 This removes the workloads. It does **not** remove:
 
@@ -153,6 +160,34 @@ This removes the workloads. It does **not** remove:
 - k3s itself, in Scenario C.
 
 That is deliberate. Uninstalling the application should not be able to destroy the data it was holding.
+
+### Returning the host to its pre-install state
+
+For Scenario C, the bundle ships `tools/teardown.sh`, which undoes what the installer did to
+the **host** — k3s, the systemd units, the PostgreSQL configuration, the firewall rules — and
+not just the Helm releases. Run it on the target, as root.
+
+It has three modes, and the first one changes nothing:
+
+```bash
+./teardown.sh --plan      # print exactly what would be removed, and stop
+./teardown.sh --destroy   # do it
+./teardown.sh --verify    # check the host is actually clean afterwards
+```
+
+`--verify` is the one worth knowing about. It re-examines the host after the fact and ends
+with `ALL AUTOMATED CHECKS PASSED`, or names what is still there. A teardown that reported
+success while leaving residue is how the next install stops being a first install.
+
+<Warning>
+  Data is kept unless you ask for it to go. `--destroy-data` removes the MinIO volume and
+  `--purge-postgres` removes the databases; neither can be undone, and the script says so
+  before doing it.
+
+  `--revert-firewall` and `--restore-sshd` undo the hardening. Read what they will do with
+  `--plan` first — on a host you reach over SSH, a firewall change you did not expect is the
+  one mistake that locks you out of the machine you are fixing.
+</Warning>
 
 ---
 

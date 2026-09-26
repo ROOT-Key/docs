@@ -11,6 +11,31 @@ Check them in this order. Each depends on the one before it, so a failure at ste
 
 ---
 
+## Start with the checklist the installer already ran
+
+Stage 11 of every install renders a checklist onto the target, runs it, and prints one line
+per item. You do not have to work through this page by hand to find out where you stand — run
+it again on its own, as often as you like. It changes nothing:
+
+```bash
+./install.sh --scenario C --values values-acme.yaml \
+  --vault-pass-file .vault_pass --tags verify
+```
+
+A clean run ends with:
+
+```
+Nothing checked here is missing.   N item(s) still need confirming by hand.
+```
+
+Those remaining items are the ones no check inside the cluster can answer for you — whether
+your DNS resolves from where your users are, whether an owner can actually sign in. That is
+what the rest of this page is for.
+
+If the checklist names something missing, fix that first. Everything below assumes it passed.
+
+---
+
 ## 1. The Workloads
 
 ```bash

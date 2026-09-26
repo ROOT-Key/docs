@@ -165,24 +165,23 @@ One per line, never reused across deployments — `openssl rand -base64 24`. In 
 installer builds each connection string from the node address plus these, which is why the
 `database` block above may keep its placeholders.
 
-### Licensing in an air-gapped deployment
+### Licensing
 
-<Warning>
-  **There is no offline licence path today.** An air-gapped deployment has no way to reach the
-  Control Plane and therefore no way to obtain or renew a licence.
+The licence is issued by the Control Plane at `rootkey_control_plane_url`, and is fetched and
+renewed over that link.
 
-  A `vault_rootkey_offline_license` key used to appear in the example vault, described as the
-  air-gapped switch. Searched across the installer on 2026-09-22 it appeared exactly once — on
-  its own declaration line. No role, no template, no chart read it. Setting it did nothing, and
-  anyone who filled it in would reasonably have believed their deployment was licensed.
+<Info>
+  **Offline licensing — in development.** Licence delivery for deployments with no Control
+  Plane link is being built, with its own issuing and verification path.
 
-  It was removed rather than quietly left in place. Offline licensing is a product capability
-  with its own design and verification, not a configuration key. If your deployment is
-  air-gapped, raise licensing with ROOTKey during scoping — before the install, not after.
-</Warning>
+  In the meantime, there is nothing to configure for it in the vault, and an earlier
+  `vault_rootkey_offline_license` key has been removed so that nobody fills in a field that is
+  not yet wired to anything.
 
-The licence otherwise comes from the Control Plane at `rootkey_control_plane_url`, and is
-fetched and renewed over that link.
+  If your deployment is air-gapped, raise licensing with ROOTKey during scoping. It is a
+  conversation to have before the install rather than after, and we will tell you where the
+  offline path stands for your timeline.
+</Info>
 
 ---
 
