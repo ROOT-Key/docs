@@ -32,8 +32,34 @@ Before Ansible is invoked at all, the installer refuses to run a deploy while an
 ## Setup
 
 <Steps>
-  <Step title="Unpack the release bundle">
-    ROOTKey delivers a release as a single archive. Unpack it somewhere you can write to on the control machine:
+  <Step title="Verify the release, before you unpack it">
+    ROOTKey delivers a release as a single archive, and four files reach you by two different
+    routes. The archive comes through the delivery channel; `SHA256SUMS`, `SHA256SUMS.sig` and
+    `cosign.pub` come from [Trust and Verification](/pages/on-premise/trust). That separation is
+    the point: a checksum that travelled with the file it checksums proves only that the two
+    arrived together.
+
+    Put the archive and those three files in one directory, with the verifier, and run it:
+
+    ```bash
+    ./verify-bundle.sh rootkey-onprem-<version>.tar.gz
+    ```
+
+    It prints the archive's own SHA-256 for you to compare against the value we sent you
+    separately, checks the signature against `cosign.pub`, and checks every file **from inside
+    the archive without unpacking it**. It ends with `Verified. Safe to unpack.` or it tells you
+    what failed and says not to install.
+
+    <Warning>
+      Run it **before** `tar`. Unpacking writes paths chosen by whoever built the archive, and
+      until the signature checks out you do not know that was us.
+
+      If you run the verifier with the archive alone and none of the three files beside it, it
+      **fails** — deliberately. It used to report success in exactly the state where it had
+      verified nothing.
+    </Warning>
+
+    Only then unpack:
 
     ```bash
     tar xzf rootkey-onprem-<version>.tar.gz
@@ -42,19 +68,8 @@ Before Ansible is invoked at all, the installer refuses to run a deploy while an
 
     The bundle carries the Helm charts, the Ansible roles, the installer, and — for an air-gapped install — every container image plus the k3s and Helm binaries.
 
-    **Verify it before trusting anything inside it.** `sha256sum -c` alone proves the archive
-    is internally consistent, not that it came from ROOTKey — only the signature does that:
-
-    ```bash
-    cosign verify-blob --key cosign.pub --signature SHA256SUMS.sig SHA256SUMS
-    sha256sum -c SHA256SUMS
-    ```
-
-    `install.sh` does not do this for you. Verification is a deliberate step you take before
-    unpacking, and nothing later in the install will fail if you skip it.
-
-    See [Trust and Verification](/pages/on-premise/trust) for where the key comes from and what
-    to do when a check fails.
+    `install.sh` does not verify anything for you. This is a deliberate step, and nothing later
+    in the install will fail if you skip it.
   </Step>
 
   <Step title="Run the preflight, before touching anything">
@@ -216,7 +231,7 @@ Before Ansible is invoked at all, the installer refuses to run a deploy while an
 | 4 | `postgres`, `database` | Installs and configures PostgreSQL, natively on the host. |
 | 5 | `charts` | Stages the Helm charts onto the target. |
 | 6 | `stateful` | Deploys Redis, Kafka and MinIO in-cluster. |
-| 7 | `deploy` | Deploys the Data Plane umbrella — all 24 workloads. |
+| 7 | `deploy` | Deploys the Data Plane umbrella — all 22 workloads. |
 | 8 | `plan-seed` | Seeds the free plan. **Re-runnable**, and must be re-run after the licence reconciles the catalogue. |
 | 9 | `contract-seed` | Seeds the smart contracts. **Re-runnable**, and must be re-run if it was skipped because the migrations had not finished. |
 | 10 | `hardening` | Host firewall, time sync, kernel hardening. |

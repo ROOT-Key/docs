@@ -89,8 +89,7 @@ Object storage. In an on-premise installation this is MinIO running in your clus
 |---|---|---|
 | `redis` | `host`, `password` | In-cluster Redis. |
 | `kafka` | `brokers`, `username`, `password` | In-cluster Kafka, SASL. |
-| `aws-ses` | Access key pair | Email delivery, if you use SES. |
-| `email` | `host`, `port`, `user`, `password` | SMTP, as an alternative to SES. |
+| `email` | `host`, `port`, `user`, `password` | SMTP. |
 | `blockchain` | `RPC_URL`, `TESTNET_RPC_URL`, `WEB3_API_KEY`, `TESTNET_WEB3_API_KEY` | Where anchoring transactions are sent. **Yours or ours — see below.** |
 | `azure` | `clientId`, `tenantId` | Azure AD, when used for staff access. |
 | `social-providers` | Microsoft, Google and LinkedIn client id/secret pairs | **Yours, not ours.** Register your own applications; their redirect URIs point at your hostname. |
@@ -130,7 +129,7 @@ Copy `helm/values-onprem.example.yaml`. Everything below is per-deployment.
 
 ### Images
 
-Every one of the 24 workloads needs a real `repository` and `tag`. The tag is the released commit SHA of that service, which ROOTKey publishes with each release.
+Every one of the 22 workloads needs a real `repository` and `tag`. The tag is the released commit SHA of that service, which ROOTKey publishes with each release.
 
 ```yaml
 auth-service:
