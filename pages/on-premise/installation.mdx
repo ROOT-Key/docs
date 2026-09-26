@@ -201,7 +201,7 @@ Before Ansible is invoked at all, the installer refuses to run a deploy while an
 
     The `--values` flag is not optional in practice: without it the installer falls back to the shipped example, which is full of placeholders, and the gate refuses.
 
-    The run executes ten stages in order — preflight, Kubernetes runtime, secrets, database, chart staging, in-cluster stateful services, the Data Plane itself, the plan seed, the contract seed, and host hardening.
+    The run executes twelve stages in order — preflight, Kubernetes runtime, secrets, database, chart staging, in-cluster stateful services, the Data Plane itself, the plan seed, the contract seed, host hardening, the post-install checklist, and the healthcheck that writes the signed install manifest.
 
     <Tip>
       For a **first** install, running it in phases is much easier to diagnose than one long run. Use `--tags` to stop after each stage: `--tags preflight`, then `--tags k3s`, then `--tags secrets`, and so on. For an upgrade, run the whole thing — two of the stages are idempotent seeds that must not be forgotten.
@@ -235,6 +235,20 @@ Before Ansible is invoked at all, the installer refuses to run a deploy while an
 | 8 | `plan-seed` | Seeds the free plan. **Re-runnable**, and must be re-run after the licence reconciles the catalogue. |
 | 9 | `contract-seed` | Seeds the smart contracts. **Re-runnable**, and must be re-run if it was skipped because the migrations had not finished. |
 | 10 | `hardening` | Host firewall, time sync, kernel hardening. |
+| 11 | `verify` | The post-install checklist. Renders a script onto the target, runs it, and prints one line per item. This is the stage that tells you whether the installation is **usable**, as opposed to whether the steps ran. |
+| 12 | `healthcheck` | Cluster health, and the signed install manifest recording what was installed. |
+
+<Note>
+  **Stages 11 and 12 are not optional extras, and stage 11 is the one to read.** Everything
+  before it reports whether a step succeeded. The checklist asks a different question, and it
+  is the question you care about: every workload can be `Running`, Helm can report success, and
+  the deployment can still be unusable.
+
+  A clean run ends with `Nothing checked here is missing`, followed by a count of items that
+  need confirming by hand — things no check inside the cluster can see for you. Read those.
+
+  Re-run the checklist on its own at any time with `--tags verify`. It changes nothing.
+</Note>
 
 ---
 

@@ -94,11 +94,28 @@ Object storage. In an on-premise installation this is MinIO running in your clus
 | `azure` | `clientId`, `tenantId` | Azure AD, when used for staff access. |
 | `social-providers` | Microsoft, Google and LinkedIn client id/secret pairs | **Yours, not ours.** Register your own applications; their redirect URIs point at your hostname. |
 | `observability` | `log_level` | |
-| `container-config` | `port`, `env` | |
+| `container-config` | `port`, `env` | **Leave `port` at `3333`.** See the warning below. |
 
 <Note>
   Social sign-in is optional and per-provider. A deployment that configures none simply does not offer social sign-in — the providers are registered only when configured, rather than half-registered with empty credentials.
 </Note>
+
+<Warning>
+  **`container-config.port` must stay `3333`.** It looks like a free choice and it is not.
+
+  Twenty-one of the twenty-two workloads take their listening port from this one value, via
+  `BACKEND_PORT`, and the chart pins `containerPort: 3333` against it. Change it and every one
+  of them listens where its own Service does not point.
+
+  What makes it expensive is how it fails. Most of those workloads have no liveness or
+  readiness probe, so they come up, report `Running`, and serve nothing. Only one workload is
+  instrumented, and it is the only reason the misconfiguration is visible at all — it fails
+  its probe, restarts, and keeps restarting. We hit this with a value of `3000`: twenty
+  workloads looked healthy, one restarted 231 times, and the install timed out waiting for a
+  deployment that could never become ready.
+
+  The shipped `vault.example.yml` already has the right value. Copy it rather than retyping it.
+</Warning>
 
 ### Who owns the blockchain endpoint
 
@@ -111,15 +128,61 @@ The `blockchain` values can be **yours or ROOTKey's**, and it is a deliberate ch
 
 Either way the **wallet that signs** stays inside your deployment: the RPC endpoint is where transactions are sent, not who signs them. Decide this during scoping, because it changes both the egress allowlist and who is responsible for the node's availability.
 
-### The offline licence (air-gapped only)
+### Three top-level keys, outside `rootkey_secret_data`
 
-Air-gapped deployments have no Control Plane link, so the licence arrives as a signed artefact you paste into a **top-level** vault key:
+Everything above lives under `rootkey_secret_data` and becomes a Kubernetes Secret. These do
+not — they sit at the top level of the same file and are read by the installer itself. Miss
+them and the install fails while pulling the first image.
 
 ```yaml
-vault_rootkey_offline_license: "<the signed licence ROOTKey issues>"
+vault_image_pull_registry: "rootkeydist.azurecr.io"   # already correct — do not change it
+vault_image_pull_username: "<from ROOTKey>"
+vault_image_pull_password: "<from ROOTKey>"
 ```
 
-Leave it **empty** in egress-only mode, where the licence is fetched and renewed over the link instead.
+These are the registry credentials from your delivery record. They become the
+`rootkey-registry` pull secret that every workload references.
+
+<Note>
+  `vault_image_pull_registry` ships with the right value and is the one of the three that
+  looks filled in and is not checked as carefully as the other two. Leave it alone — a
+  changed hostname produces a pull secret registered for a registry nobody pulls from, and
+  the resulting `ImagePullBackOff` names the image rather than the secret.
+</Note>
+
+And, in **Scenario C only**, where the installer creates the PostgreSQL databases itself:
+
+```yaml
+vault_postgres_passwords:
+  dbauth: "..."
+  dbmail: "..."
+  dbManagement: "..."
+  dbSmartContracts: "..."
+  dbNotifications: "..."
+```
+
+One per line, never reused across deployments — `openssl rand -base64 24`. In this mode the
+installer builds each connection string from the node address plus these, which is why the
+`database` block above may keep its placeholders.
+
+### Licensing in an air-gapped deployment
+
+<Warning>
+  **There is no offline licence path today.** An air-gapped deployment has no way to reach the
+  Control Plane and therefore no way to obtain or renew a licence.
+
+  A `vault_rootkey_offline_license` key used to appear in the example vault, described as the
+  air-gapped switch. Searched across the installer on 2026-09-22 it appeared exactly once — on
+  its own declaration line. No role, no template, no chart read it. Setting it did nothing, and
+  anyone who filled it in would reasonably have believed their deployment was licensed.
+
+  It was removed rather than quietly left in place. Offline licensing is a product capability
+  with its own design and verification, not a configuration key. If your deployment is
+  air-gapped, raise licensing with ROOTKey during scoping — before the install, not after.
+</Warning>
+
+The licence otherwise comes from the Control Plane at `rootkey_control_plane_url`, and is
+fetched and renewed over that link.
 
 ---
 
@@ -206,12 +269,27 @@ acme-node-1 ansible_host=10.0.0.10 ansible_user=rootkey ansible_ssh_private_key_
 rootkey_region=eu-lisbon
 rootkey_tenant=acme
 rootkey_public_host=rootkey.acme.example
+rootkey_deployment_tenancy=single-tenant
 ```
 
 | Variable | What it is |
 |---|---|
 | `rootkey_public_host` | The platform hostname. The MinIO chart is a separate top-level chart with no values file, so this is the only place it can learn the host. |
+| `rootkey_deployment_tenancy` | `single-tenant` or `multi-tenant`. **Required — the install stops without it.** See below. |
 | `rootkey_region`, `rootkey_tenant` | Data-residency labels. They surface in the install manifest for audit. |
+
+<Warning>
+  **`rootkey_deployment_tenancy` has no default, on purpose, and the deploy stage asserts it.**
+  An install without it stops with a message naming the variable, rather than guessing.
+
+  There is no safe default because both values are wrong for somebody and neither failure
+  announces itself. A direct client left on `multi-tenant` never gets the licence's plan
+  materialised, so registration falls through to a local path and the deployment appears to
+  work until somebody looks at what plan the users are on.
+
+  If you are unsure which you are, it is in your contract — ask before installing rather than
+  picking one.
+</Warning>
 
 <Note>
   Values set here win over `ansible/group_vars/all/main.yml`, which ships with `rootkey_public_host` empty. That file is shared and versioned; the inventory is yours.
