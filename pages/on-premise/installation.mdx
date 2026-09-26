@@ -234,7 +234,7 @@ Before Ansible is invoked at all, the installer refuses to run a deploy while an
 | 7 | `deploy` | Deploys the Data Plane umbrella — all 22 workloads. |
 | 8 | `plan-seed` | Seeds the free plan. **Re-runnable**, and must be re-run after the licence reconciles the catalogue. |
 | 9 | `contract-seed` | Seeds the smart contracts. **Re-runnable**, and must be re-run if it was skipped because the migrations had not finished. |
-| 10 | `hardening` | Host firewall, time sync, kernel hardening. |
+| 10 | `hardening` | Host firewall, time sync, kernel hardening. **Changes the firewall of the host you are connected to** — see below. |
 | 11 | `verify` | The post-install checklist. Renders a script onto the target, runs it, and prints one line per item. This is the stage that tells you whether the installation is **usable**, as opposed to whether the steps ran. |
 | 12 | `healthcheck` | Cluster health, and the signed install manifest recording what was installed. |
 
@@ -249,6 +249,46 @@ Before Ansible is invoked at all, the installer refuses to run a deploy while an
 
   Re-run the checklist on its own at any time with `--tags verify`. It changes nothing.
 </Note>
+
+### The hardening stage, and the net underneath it
+
+Stage 10 reconfigures the firewall of the host you are connected to. That is the one stage
+that can, in principle, end your own SSH session — and on a remote host with no console, a
+firewall change that goes wrong is the difference between a failed install and a machine
+nobody can reach.
+
+**It is not left to chance.** Before the firewall is touched, the installer writes a small
+script to the target and arms a systemd timer against it. If the hardening pass completes and
+your connection survives, the timer is disarmed and you never know it was there. If it does
+not, the timer fires after **15 minutes** and puts your access back.
+
+What it inserts is one rule, for one address — the address you are connected from, on the port
+you are connected on:
+
+```
+iptables -I INPUT -p tcp --dport 22 -s <your address> -j ACCEPT
+```
+
+<Note>
+  It re-admits **you**, not everyone. An earlier version disabled the firewall instead, which
+  would have left the host open to the whole network as its idea of a safety net. If the
+  switch fires it also writes `/var/log/rootkey/FIREWALL-DEADMAN-FIRED`, so a host that let
+  you back in says so rather than looking like nothing happened.
+</Note>
+
+Two settings are worth knowing before you run it:
+
+| Setting | Default | Why you might change it |
+|---|---|---|
+| `harden_ssh_allow_from` | empty | Extra addresses that keep SSH access: a second operator, a jump host, a monitoring box. The address you are installing from is exempted automatically; anything else that needs SSH has to be named here, **before** the hardening runs. |
+| `harden_fw_deadman_minutes` | `15` | How long the switch waits. `0` disables it — a reasonable choice on a host where out-of-band console access is already arranged **and tested**, and a poor one anywhere else. |
+
+<Warning>
+  If you reach the host through a jump host, a VPN with a changing egress address, or a NAT
+  whose address is not the one the installer sees, put every address that needs SSH into
+  `harden_ssh_allow_from` before you start. The switch protects the connection the installer
+  is using. It knows nothing about the one you will use tomorrow.
+</Warning>
 
 ---
 
