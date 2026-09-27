@@ -45,18 +45,43 @@ nothing.
     </Note>
   </Step>
 
+  <Step title="Get the verifier, from outside the bundle">
+    `verify-bundle.sh` is published with the release artefacts, beside `SHA256SUMS` and the key.
+
+    A copy also travels inside the bundle, under `tools/`, and that copy is the wrong one to use
+    here for the same reason the key is: a verifier that arrived inside the archive it is
+    checking cannot tell you the archive is genuine. Use the inside copy only to re-check a
+    bundle you have already verified once.
+  </Step>
+
   <Step title="Verify the bundle">
-    The signature first, then the contents. Only the first proves the bundle came from ROOTKey;
-    `sha256sum -c` on its own proves the archive is internally consistent, which a tampered
-    archive also is.
+    Put the archive in a directory with the three files from this page — `SHA256SUMS`,
+    `SHA256SUMS.sig` and `cosign.pub` — and run the verifier:
+
+    ```bash
+    ./verify-bundle.sh rootkey-onprem-<version>.tar.gz
+    ```
+
+    It checks the signature and then every file **from inside the archive, without unpacking
+    it**, which is why it runs before `tar` rather than after. It exits non-zero on any failure
+    and ends with `Verified. Safe to unpack.` when it is clean.
+
+    <Warning>
+      With the archive alone and none of the three files beside it, the verifier **fails**. It
+      used to print a green result in exactly that state — no sums file, so no signature check
+      and no content check — which is the one state an attacker has a free move in.
+    </Warning>
+
+    If you would rather run the two commands yourself, they are what the script runs, from
+    inside the unpacked bundle directory:
 
     ```bash
     cosign verify-blob --key cosign.pub --signature SHA256SUMS.sig SHA256SUMS
     sha256sum -c SHA256SUMS
     ```
 
-    Both exit non-zero on failure. Run them from the unpacked bundle directory, before running
-    the installer.
+    Both exit non-zero on failure. Note the difference: done this way you have already unpacked
+    an archive you had not yet verified.
   </Step>
 
   <Step title="Compare the archive checksum against what we told you">
@@ -88,9 +113,19 @@ nothing.
     directory and re-check. If it still fails, re-download.
   </Accordion>
 
-  <Accordion title="A file called UNSIGNED is present">
-    That marker is stamped only on an internal development build, which must never be delivered.
-    Report it to us — it means something went wrong on our side, not yours.
+  <Accordion title="A marker file is present in the bundle root">
+    Our build stamps a file into the bundle for each thing that bundle is **not**, and every one
+    of them means it was built for internal testing and must never have reached you. The
+    verifier reports them by name. Report any of them to us — it means something went wrong on
+    our side, not yours.
+
+    | Marker | What that bundle is missing |
+    |---|---|
+    | `UNSIGNED` | No signature at all. Nothing about it can be verified. |
+    | `IMAGES-UNSIGNED` | The checksums are signed, the container images are not. In an install that pulls from a registry, the images never pass through `SHA256SUMS`, so nothing covers them. |
+    | `NO-SBOM` | No software bill of materials, which we state in writing that a release carries. |
+    | `IMAGES-NOT-INCLUDED` | No container images inside. It can install where the cluster can reach our registry, and **cannot** install air-gapped. |
+    | `IMAGES-FROM-CACHE` | Built from images on the build machine's local cache rather than fetched fresh, so the build is not reproducible elsewhere. |
   </Accordion>
 
   <Accordion title="cosign is not installed">

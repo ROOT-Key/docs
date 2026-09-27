@@ -101,6 +101,78 @@ Each entry below is a failure that happened on a real installation, not a hypoth
 
     A related warning is **harmless**: `applied to the database but missing from the local migrations directory` names migrations that ran on your database from an older build. It is a warning, not a failure, and the release notes say when to expect it.
   </Accordion>
+
+  <Accordion title="The deploy stage ends with 'context deadline exceeded'" icon="clock">
+    Helm waited for the release to become ready and gave up. The message names nothing on
+    purpose — it is Helm's, not ours, and it knows only that the clock ran out.
+
+    **Find the workload that never became ready.** It is almost always one, and it is still there:
+
+    ```bash
+    kubectl -n rootkey get pods --field-selector=status.phase!=Running
+    kubectl -n rootkey get pods --sort-by='.status.containerStatuses[0].restartCount' | tail -5
+    ```
+
+    A pod with a high restart count and no `CrashLoopBackOff` is the signature worth knowing:
+    the container starts cleanly, fails its readiness probe, is killed, shuts down cleanly,
+    and starts again. None of that looks like an error in a log.
+
+    ```bash
+    kubectl -n rootkey describe pod <name> | sed -n '/Events/,$p'
+    ```
+
+    <Warning>
+      **Most workloads carry no probe**, so "everything else is Running" is weak evidence. A
+      misconfiguration shared by the whole fleet can leave every pod reporting `Running` while
+      only the one instrumented workload restarts — and that one is then the entire signal. If
+      exactly one workload is restarting, suspect something shared rather than something wrong
+      with it.
+
+      The most common shared cause is `container-config.port`. It must be `3333`; any other
+      value leaves twenty-one workloads listening where their own Services do not point.
+    </Warning>
+
+    On a **first** install the evidence is kept for exactly this reason — the pods, their logs
+    and their events are still there. On an **upgrade**, Helm's `--atomic` rolls the release
+    back and deletes them, so capture the output above before re-running anything.
+
+    If the release is merely slow rather than stuck — a cold pull of 28 images over a
+    constrained link, or Kafka's consumer group settling — raise the budget instead of hunting
+    a fault:
+
+    ```bash
+    ./install.sh --scenario C --values values-acme.yaml \
+      --vault-pass-file .vault_pass --tags deploy \
+      -e rootkey_helm_timeout=30m
+    ```
+  </Accordion>
+
+  <Accordion title="A pod sits in CreateContainerConfigError" icon="key">
+    The kubelet cannot build the container because a Secret, or a key inside one, is not
+    there. The pod never starts, so there are no logs — the reason is in the events:
+
+    ```bash
+    kubectl -n rootkey describe pod <name> | sed -n '/Events/,$p'
+    ```
+
+    It names the Secret and the key. The usual cause is a vault block left out or a key
+    renamed: the installer creates one Secret per top-level key under `rootkey_secret_data`,
+    so a block you did not fill in becomes a Secret that does not exist, rather than a Secret
+    that is empty.
+
+    ```bash
+    kubectl -n rootkey get secrets
+    ```
+
+    Fix the vault and re-run the secrets stage on its own — it is idempotent:
+
+    ```bash
+    ./install.sh --scenario C --values values-acme.yaml \
+      --vault-pass-file .vault_pass --tags secrets
+    ```
+
+    Then delete the stuck pods so they are recreated with the Secret in place.
+  </Accordion>
 </AccordionGroup>
 
 ---
