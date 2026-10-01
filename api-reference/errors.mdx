@@ -126,6 +126,11 @@ Give a look to the list of all errors our API returns:
 - **Problem:** The API key is already set as the default key.
 - **Solution:** Ensure that you are not attempting to set an API key as the default if it is already the default key. If you need to change the default key, select a different API key.
 
+### `creation_outcome_unknown`
+- **Status:** 500
+- **Problem:** ROOTKey sent the file for anchoring but got no answer back, so it cannot tell whether the file was anchored. ROOTKey does not retry automatically: anchoring is not idempotent, and a repeat could anchor the same file twice.
+- **Solution:** Do not simply resend the same upload, and if your integration retries `500` responses automatically, exclude this `errorCode` from those retries. Check whether the file is already in the vault by [listing the vault's files](/api-reference/platform/endpoint/files/get-files) filtered by name (for a new version, [list the file's versions](/api-reference/platform/endpoint/files/get-file-versions)); if it is there, do not upload it again. <br/>A file that is not listed may still have been anchored, so before uploading it again, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId` from the error response.
+
 # Blockchain Error Codes
 
 ### `invalid_balance_parameter`
