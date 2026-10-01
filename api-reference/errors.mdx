@@ -7,18 +7,21 @@ description: Troubleshooting has never been easier than with this guide.
 
 ROOTKey API returns human readable error messages and a link to the docs to help you deal with that bug much faster.
 
-Here is how an error response looks like:
+Here is what an error response looks like:
 
 ```JSON
 {
   "error": {
-    "message": "Incorrect credentials",
-    "errorCode": "invalid-credentials",
-	  "timestamp": "2024-05-19T16:24:37.884Z",
-    "docUrl": "https://docs.rootkey.ai/api-reference/errors#invalid-credentials",
+    "requestId": "3f2b8c1e-5a7d-4e9b-9c2a-1d6e8f0a4b7c",
+    "message": "Invalid address submitted",
+    "errorCode": "invalid_wallet_address",
+    "docUrl": "https://docs.rootkey.ai/api-reference/errors#invalid-wallet-address",
+    "timestamp": "2024-05-19T16:24:37.884Z"
   }
 }
 ```
+
+Branch on `errorCode` rather than on `message` when you handle an error in code, and quote the `requestId` when you contact support about a failed request.
 
 # HTTP Codes
 
