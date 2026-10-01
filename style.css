@@ -2,4 +2,10 @@
     overflow: hidden;
     border-radius: 10px;
 }
-  
+
+/* api-reference/errors.mdx: the hidden alias above each error-code heading. Lands an
+   API docUrl (#max-resource-limit) where Mintlify lands its own heading links. */
+.error-alias {
+    display: block;
+    scroll-margin-top: var(--scroll-mt, 9.5rem);
+}
