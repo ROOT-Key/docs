@@ -50,11 +50,16 @@ On-chain records are **immutable** - they cannot be altered, deleted, or invalid
 | Parameter | Value |
 |-----------|-------|
 | Maximum requests per second | 10 |
-| Maximum concurrent operations | 5-10 |
 | Maximum payload size per request | 35 MB |
 | Burst allowance | 2x/10seconds |
 
 For plan-specific throughput limits, visit [Rate Limits](/pages/rate-limits).
+
+{/*
+  TODO: hidden until measured. Load tests (2026-09-30 / 2026-10-01, single-node on-prem, Polygon Amoy) did not
+  fix a concurrency limit - the test model was open-arrival, so "concurrent operations" was never measured.
+| Maximum concurrent operations | 5-10 |
+*/}
 
 ---
 
@@ -62,16 +67,24 @@ For plan-specific throughput limits, visit [Rate Limits](/pages/rate-limits).
 
 | Metric | Value |
 |--------|-------|
+| Polygon block time | ~2 s |
+
+{/*
+  TODO: hidden until measured. The 2026-09-30 / 2026-10-01 load tests found no support for these values:
+  - End-to-end latency to anchor confirmed was not measured as a distribution. A single smoke-test sample was ~9 s
+    with an empty queue, and anchoring throughput (~0.3-0.44 files/s, one runner sending one transaction at a time)
+    is well below the API acceptance rate, so time-to-anchor grows under sustained load.
+  - RTO and RPO were not measured (no node-failure, failover, or backup-restore test).
+  Restore these rows only with measured values.
 | Average end-to-end latency (request to anchor confirmed) | 3500 ms |
 | P95 end-to-end latency (request to anchor confirmed) | 5000 ms |
-| Polygon block confirmation time | 2-5 s |
 | Recovery time objective (RTO) | 10 minutes |
-
-{/* TODO: RPO hidden until it is measured. Restore as the last row of the table above once tested.
 | Recovery point objective (RPO) | 3.5s |
 */}
 
-> Performance is subject to Polygon network conditions. ROOTKey applies optimised gas pricing strategies to maintain predictable confirmation windows under variable network load.
+The API accepts a request and returns its transaction hash before the transaction is mined, so request latency is independent of anchoring. Time to anchor confirmation depends on the anchoring queue and on Polygon network conditions.
+
+> Confirmation time is subject to Polygon network conditions.
 
 ---
 
