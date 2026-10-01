@@ -1,13 +1,13 @@
 ---
 title: "RKP-2 Sovereign EU - Off-Chain, On-Premise EU"
-description: High-frequency off-chain anchoring deployed entirely within the customer's own EU infrastructure - no data leaves the organisation's perimeter, while integrity proofs are anchored to EBSI on demand.
+description: High-frequency off-chain integrity records deployed entirely within the customer's own EU infrastructure - no data leaves the organisation's perimeter.
 sidebarTitle: "RKP-2 Sovereign EU"
 icon: shield-halved
 mode: wide
 ---
 
 <Note>
-  This is the highest-sovereignty variant of [RKP-2 (Off-Chain)](/pages/protocols/rkp-2-off-chain). Unlike RKP-2 Enhanced EU, which uses OVH-hosted infrastructure, RKP-2 Sovereign EU runs entirely within the customer's own on-premise EU environment - with optional EBSI anchoring for audit-grade proofs.
+  This is the highest-sovereignty variant of [RKP-2 (Off-Chain)](/pages/protocols/rkp-2-off-chain). Unlike RKP-2 Enhanced EU, which uses OVH-hosted infrastructure, RKP-2 Sovereign EU runs entirely within the customer's own on-premise EU environment. Like every RKP-2 variant, it writes nothing to any blockchain.
 </Note>
 
 ## Sovereignty Profile
@@ -16,7 +16,6 @@ mode: wide
 |-----------|----------|-------------|-------|
 | **Off-chain storage** | Customer on-premise | Customer EU facility | Data never leaves the organisation's infrastructure |
 | **API processing** | Customer on-premise | Customer EU facility | ROOTKey deployed as a containerised workload |
-| **Blockchain (optional)** | EBSI | EU | Selective elevation of critical records to EBSI for audit-grade proofs |
 | **Sovereignty level** | **Full EU - Air-gapped capable** | 100% customer infrastructure | Maximum data control; no dependency on ROOTKey cloud |
 
 **When to choose this variant:** Your organisation cannot allow operational data to leave its own infrastructure perimeter - whether for national security, sector regulation, or contractual reasons - while still needing cryptographic integrity verification for audit and compliance purposes.
@@ -27,13 +26,13 @@ mode: wide
 
 | Property | RKP-2 Standard | RKP-2 Enhanced EU | RKP-2 Sovereign EU |
 |----------|---------------|------------------|--------------------|
-| Cloud provider | Azure / AWS | OVH | **None - on-premise** |
+| Cloud provider | Azure / AWS | OVH (dedicated deployment) | **None - on-premise** |
 | Data leaves organisation | Yes | Yes (to OVH) | **No** |
-| API processing location | ROOTKey cloud | ROOTKey OVH | **Customer infrastructure** |
-| Blockchain | None | None | **EBSI (optional, selective)** |
+| API processing location | ROOTKey cloud | Dedicated ROOTKey deployment on OVH | **Customer infrastructure** |
+| Blockchain | None | None | None |
 | Full sovereignty | No | Cloud sovereign | **Yes - air-gap capable** |
-| Deployment model | SaaS | SaaS on OVH | **[Container / On-Premise](/pages/deployment/on-premise)** |
-| Availability | Standard | Contact team | **Contact team** |
+| Deployment model | SaaS | Dedicated deployment on OVH | **[Container / On-Premise](/pages/deployment/on-premise)** |
+| Availability | Standard | On request | **On request** |
 
 ---
 
@@ -44,25 +43,14 @@ flowchart TD
     subgraph premise[Customer On-Premise Infrastructure · EU]
         A([Field Devices / Apps]) -->|MQTT or REST · Internal only| B[ROOTKey Container\nOn-Premise]
         B --> C[Off-Chain Integrity Records\nOn-Premise Storage\nSHA-256 · Timestamp · Device ID]
-        B -->|Optional · Audit-grade records only| D[(EBSI\nAlarms · Incidents · Thresholds)]
     end
 ```
 
 ---
 
-## Selective EBSI Anchoring
+## Need On-Chain Evidence for Some Records?
 
-RKP-2 Sovereign EU processes high-frequency data entirely on-premise. For records that require the highest level of audit defensibility - regulatory measurements, safety events, incident records, threshold breaches - the on-premise ROOTKey deployment can selectively elevate those records to EBSI:
-
-| Record type | Recommended anchoring |
-|-------------|----------------------|
-| Routine sensor readings | Off-chain only (on-premise) |
-| Threshold breach events | Selective EBSI anchor |
-| Alarm and safety events | Selective EBSI anchor |
-| Regulatory measurement records | Selective EBSI anchor |
-| Incident records | Selective EBSI anchor |
-
-This pattern preserves throughput and cost efficiency for bulk telemetry while ensuring that the records most likely to face regulatory scrutiny have the highest possible evidentiary standing.
+RKP-2 Sovereign EU keeps every record off-chain. If records such as threshold breaches, alarms, regulatory measurements, or incidents need independently verifiable on-chain evidence, that is the hybrid model - see [RKP-3 (Hybrid)](/pages/protocols/rkp-3-hybrid). Its fully on-premise variant, [RKP-3 Sovereign EU](/pages/protocols/rkp-3-sovereign), is on the roadmap.
 
 ---
 
@@ -73,8 +61,8 @@ This pattern preserves throughput and cost efficiency for bulk telemetry while e
 | **NIS2 - Critical Infrastructure (highest tier)** | On-premise deployment satisfies national sovereignty requirements where cloud infrastructure (even EU) is restricted |
 | **IEC 62443 - SL 3/SL 4** | Highest Security Level data integrity for IACS environments with strict perimeter requirements |
 | **EU Energy (classified measurements)** | Regulatory measurement data never leaves the operator's infrastructure |
-| **Defence-adjacent OT** | OT integrity anchoring without any external data dependency |
-| **Air-gapped environments** | EBSI anchoring can be configured for batched outbound-only connectivity - no inbound connection required |
+| **Defence-adjacent OT** | OT integrity records without any external data dependency |
+| **Air-gapped environments** | No blockchain or ROOTKey cloud dependency - integrity records are created and verified inside the perimeter |
 | **Healthcare (on-premise ICU/operating)** | Patient monitoring data stays within hospital infrastructure |
 
 ---
@@ -83,17 +71,16 @@ This pattern preserves throughput and cost efficiency for bulk telemetry while e
 
 RKP-2 Sovereign EU is deployed as a containerised workload within the customer's infrastructure:
 
-- Docker or Kubernetes environment on customer-controlled EU infrastructure
-- MQTT broker accessible within the customer network
-- Optional outbound HTTPS connection to EBSI for selective anchoring (no inbound required)
+- Kubernetes on customer-controlled EU infrastructure - an existing cluster, or a single Linux host the installer sets up
+- An MQTT broker within the customer network - only if you use the ROOTKey MQTT client connector to ingest data already published to that broker
 - Customer-managed storage for off-chain records
 
-→ [Container Deployment Guide](/pages/deployment/container) · [On-Premise Deployment](/pages/deployment/on-premise)
+→ [On-Premise Installation](/pages/on-premise/overview) · [Requirements](/pages/on-premise/requirements) · [On-Premise Deployment](/pages/deployment/on-premise)
 
 ---
 
 ## Availability
 
-RKP-2 Sovereign EU is available on request. Deployment involves a sizing assessment, container configuration, and optionally a EBSI node or gateway configuration for selective anchoring.
+RKP-2 Sovereign EU is available on request. Deployment involves a sizing assessment and container configuration.
 
 → [Request RKP-2 Sovereign EU deployment](https://rootkey.ai/contact?utm_source=api_docs&utm_medium=rkp2_sovereign&utm_content=demo_cta)

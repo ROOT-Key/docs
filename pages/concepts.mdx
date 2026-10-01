@@ -107,7 +107,7 @@ A **Protocol** defines how data is processed and anchored. ROOTKey uses a standa
 | Protocol | Name | Summary |
 |----------|------|---------|
 | RKP-1 | Full On-Chain | Every operation written directly to the blockchain |
-| RKP-2 | Off-Chain | High-throughput processing; proof anchored asynchronously |
+| RKP-2 | Off-Chain | High-throughput processing; off-chain integrity records, nothing written on-chain |
 | RKP-3 | Hybrid | On-chain for critical events; off-chain for volume |
 
 The protocol is configured at the vault level and applies to all assets within that vault.
@@ -162,7 +162,7 @@ See: [Pricing](/pages/pricing)
 
 ## Webhook
 
-A **Webhook** is an HTTP callback that ROOTKey sends to a client-defined endpoint when an asynchronous event completes - such as blockchain anchoring in RKP-2 or RKP-3, or a validation result.
+A **Webhook** is an HTTP callback that ROOTKey sends to a client-defined endpoint when an asynchronous event completes - such as blockchain anchoring in RKP-1 or RKP-3, or a validation result.
 
 Webhooks allow integrations to react to ROOTKey events in real time without polling the API.
 

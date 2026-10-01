@@ -39,6 +39,10 @@ On-chain anchors include:
 
 ---
 
+{/*
+  TODO: Request limits and performance figures are hidden until they are measured.
+  Restore these sections once the values are tested and calculated - do not publish estimates.
+
 ## Request Limits and Throughput
 
 | Parameter | Value |
@@ -49,7 +53,7 @@ On-chain anchors include:
 | Maximum payload size - off-chain path | XXX |
 | Burst allowance | XXX |
 
-For plan-specific throughput limits, visit [Pricing](/pages/pricing).
+For plan-specific throughput limits, visit [Rate Limits](/pages/rate-limits).
 
 ---
 
@@ -67,6 +71,8 @@ For plan-specific throughput limits, visit [Pricing](/pages/pricing).
 > Latency profile depends on routing - operations taking the on-chain path inherit blockchain confirmation times, while off-chain operations return near real-time. Routing is deterministic based on vault configuration.
 
 ---
+
+*/}
 
 ## Validation Capabilities
 
@@ -137,7 +143,7 @@ RKP-3 supports **dual-path validation**: verifiers can confirm the on-chain anch
 | **ISO 27001** *(in progress)* | Aligns with A.8.15 (logging), A.5.33 (protection of records), A.5.36 (compliance), A.8.12 (data leakage prevention) |
 | **GDPR** | Compatible by design - off-chain erasure capability with on-chain proof-of-existence preserved |
 | **DORA** | Supports digital operational resilience requirements - audit trail, incident logging, third-party risk documentation |
-| **eIDAS** | On-chain anchors provide qualified electronic evidence for critical operational events |
+| **eIDAS** | On-chain anchors provide timestamped electronic evidence for critical operational events (not a qualified electronic timestamp under Article 42) |
 | **IEC 62443** | Applicable for OT/IT convergence environments with mixed data classification requirements |
 
 <Note>

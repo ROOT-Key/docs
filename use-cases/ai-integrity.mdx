@@ -107,7 +107,7 @@ AI System Lifecycle
 |-----------|---------------|
 | **Protocol** | [RKP-1 (Full On-Chain)](/pages/protocols/rkp-1-on-chain) for conformity assessments and model release artifacts; [RKP-3 (Hybrid)](/pages/protocols/rkp-3-hybrid) for high-volume decision logging |
 | **Deployment** | [API Integration](/pages/deployment/api-integration) for cloud-native ML pipelines; [Container](/pages/deployment/container) for self-hosted inference infrastructure |
-| **Data sovereignty** | High-risk AI systems processing EU personal data should use [EU-sovereign deployment](/pages/data-sovereignty) (EBSI + OVH) to satisfy GDPR and EU AI Act combined requirements |
+| **Data sovereignty** | High-risk AI systems processing EU personal data should use an [EU-sovereign deployment](/pages/data-sovereignty) (dedicated OVH or on-premise) to satisfy GDPR and EU AI Act combined requirements |
 | **Anchor granularity** | Anchor each model version separately - do not overwrite; retain full version history for post-market audit |
 | **Decision logs** | For very high-frequency inference, anchor decision logs in batches with a merkle root - individual decision integrity is preserved while anchoring overhead scales |
 

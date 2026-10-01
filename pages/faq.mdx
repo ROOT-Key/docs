@@ -59,17 +59,19 @@ mode: wide
 
         For [RKP-1 (Full On-Chain)](/pages/protocols/rkp-1-on-chain), the cryptographic hash of your data is written to a public blockchain - the hash is not reversible to the original content, but it is publicly visible. The original data itself is not published.
 
-        For [RKP-2](/pages/protocols/rkp-2-off-chain) and [RKP-3](/pages/protocols/rkp-3-hybrid), data is stored off-chain within ROOTKey's encrypted infrastructure.
+        For [RKP-2](/pages/protocols/rkp-2-off-chain), nothing is written to a blockchain - data and its integrity records stay off-chain within ROOTKey's encrypted infrastructure. For [RKP-3](/pages/protocols/rkp-3-hybrid), data is stored off-chain and only the hashes of critical events are written on-chain.
       </Accordion>
 
       <Accordion title="What happens if ROOTKey goes offline?">
-        Previously anchored records remain valid and independently verifiable on the Polygon blockchain regardless of ROOTKey's availability. No ROOTKey infrastructure is required to verify a record - only the original data and a blockchain explorer (e.g. Polygonscan).
+        Records anchored on-chain ([RKP-1](/pages/protocols/rkp-1-on-chain), and the on-chain path of [RKP-3](/pages/protocols/rkp-3-hybrid)) remain valid and independently verifiable on the Polygon blockchain regardless of ROOTKey's availability. No ROOTKey infrastructure is required to verify them - only the original data and a blockchain explorer (e.g. Polygonscan).
 
-        This is by design: ROOTKey is not a trusted intermediary. It is a blockchain anchoring service. The trust is in the blockchain, not in ROOTKey.
+        Records kept off-chain ([RKP-2](/pages/protocols/rkp-2-off-chain)) are verified against ROOTKey's integrity record, so verifying them does depend on that record being available.
+
+        This is by design for on-chain records: ROOTKey is not a trusted intermediary for them - the trust is in the blockchain, not in ROOTKey.
       </Accordion>
 
       <Accordion title="Is ROOTKey GDPR compliant?">
-        Yes. ROOTKey's off-chain storage (used in RKP-2 and RKP-3) supports GDPR right-to-erasure - off-chain data can be deleted while the on-chain proof remains.
+        Yes. ROOTKey's off-chain storage (used in RKP-2 and RKP-3) supports GDPR right-to-erasure - off-chain data can be deleted. In RKP-3 the on-chain hash remains as evidence of prior existence; in RKP-2 there is nothing on-chain.
 
         For RKP-1 (Full On-Chain), personal data should not be written directly to the blockchain, as on-chain records are permanent. Use hash-only patterns: compute a hash of the personal data client-side and anchor only the hash. See [Security & Trust](/pages/security-and-compliance) for more detail.
       </Accordion>
@@ -104,7 +106,7 @@ mode: wide
         ROOTKey defines three protocols - RKP-1, RKP-2, and RKP-3 - each with a different balance of throughput, latency, and on-chain auditability.
 
         - **[RKP-1](/pages/protocols/rkp-1-on-chain)** - Full On-Chain: maximum auditability, every operation on the blockchain
-        - **[RKP-2](/pages/protocols/rkp-2-off-chain)** - Off-Chain: high throughput, cryptographic proof on-chain
+        - **[RKP-2](/pages/protocols/rkp-2-off-chain)** - Off-Chain: high throughput, off-chain integrity records, no blockchain
         - **[RKP-3](/pages/protocols/rkp-3-hybrid)** - Hybrid: enterprise balance, on-chain for critical events
 
         See the [Protocols overview](/pages/protocols/overview) for a decision guide.

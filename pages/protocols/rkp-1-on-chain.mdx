@@ -34,7 +34,7 @@ Client Application
   Publicly Queryable via Polygonscan
 ```
 
-Each API operation triggers a smart contract execution that writes a cryptographic record to the Polygon blockchain. The on-chain record includes:
+Each API operation triggers a smart contract transaction that writes a cryptographic record to the Polygon blockchain. Anchoring is asynchronous: the API responds immediately with the operation in `PENDING` state and its transaction hash, and the record is marked as anchored once the transaction is mined. The on-chain record includes:
 
 - **SHA-256 hash** of the data payload
 - **Timestamp** of the operation (block timestamp)
@@ -51,10 +51,10 @@ On-chain records are **immutable** - they cannot be altered, deleted, or invalid
 |-----------|-------|
 | Maximum requests per second | 10 |
 | Maximum concurrent operations | 5-10 |
-| Maximum payload size per request | 35 |
+| Maximum payload size per request | 35 MB |
 | Burst allowance | 2x/10seconds |
 
-For plan-specific throughput limits, visit [Pricing](/pages/pricing).
+For plan-specific throughput limits, visit [Rate Limits](/pages/rate-limits).
 
 ---
 
@@ -62,11 +62,14 @@ For plan-specific throughput limits, visit [Pricing](/pages/pricing).
 
 | Metric | Value |
 |--------|-------|
-| Average end-to-end latency | 3500 ms |
-| P95 end-to-end latency | 5000 ms |
+| Average end-to-end latency (request to anchor confirmed) | 3500 ms |
+| P95 end-to-end latency (request to anchor confirmed) | 5000 ms |
 | Polygon block confirmation time | 2-5 s |
 | Recovery time objective (RTO) | 10 minutes |
+
+{/* TODO: RPO hidden until it is measured. Restore as the last row of the table above once tested.
 | Recovery point objective (RPO) | 3.5s |
+*/}
 
 > Performance is subject to Polygon network conditions. ROOTKey applies optimised gas pricing strategies to maintain predictable confirmation windows under variable network load.
 
@@ -96,13 +99,13 @@ Any auditor, regulator, or counterparty can verify a record by querying the Poly
 - **Immutability by design** - cryptographic guarantees, not policy-based controls
 - **Independently verifiable** - auditors and regulators can verify without vendor cooperation
 - **Zero-trust compatible** - aligns with zero-trust architecture principles at the data layer
-- **Permanent record** - no dependency on storage availability or vendor continuity
+- **Permanent proof** - the on-chain record does not depend on ROOTKey storage or vendor continuity (verifying it still requires the original data)
 
 ---
 
 ## Weaknesses
 
-- **Higher latency** - each operation waits for blockchain block confirmation
+- **Higher latency to confirmation** - an operation is only anchored once its transaction is mined
 - **Higher cost per operation** - each write incurs a gas fee on the Polygon network
 - **Throughput constraints** - bounded by block time; not suitable for high-frequency write workloads
 - **No data deletion** - records are permanent; requires careful data classification to avoid writing personal data on-chain (GDPR implications)
@@ -140,7 +143,7 @@ Any auditor, regulator, or counterparty can verify a record by querying the Poly
 |-----------|-----------|
 | **NIS2 Directive** | Supports Article 21 obligations - integrity, availability, and auditability of critical information assets |
 | **ISO 27001** *(in progress)* | Aligns with Annex A controls: A.8.15 (logging and monitoring), A.5.33 (protection of records), A.5.36 (compliance with policies) |
-| **eIDAS** | On-chain timestamps provide electronic evidence suitable for qualified trust service workflows |
+| **eIDAS** | On-chain timestamps provide electronic evidence of existence at a point in time (not a qualified electronic timestamp under Article 42) |
 | **GDPR** | Requires architectural consideration - personal data must not be written on-chain; hash-only patterns are GDPR-compatible |
 | **DORA** | Supports digital operational resilience requirements for financial entities through immutable audit trails |
 

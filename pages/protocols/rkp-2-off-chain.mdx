@@ -1,6 +1,6 @@
 ---
 title: RKP-2 - Off-Chain
-description: High-throughput data processing with cryptographic proof anchored on-chain. Optimised for speed, volume, and cost - without sacrificing verifiability.
+description: High-throughput data processing with off-chain integrity records. Optimised for speed, volume, and cost - with no blockchain in the write path.
 sidebarTitle: RKP-2 - Off-Chain
 icon: bolt
 mode: wide
@@ -8,11 +8,11 @@ mode: wide
 
 ## Overview
 
-**RKP-2 (Off-Chain)** is ROOTKey's high-performance data processing protocol. Data is processed and stored off-chain through ROOTKey's infrastructure, while a cryptographic proof - a SHA-256 hash of the payload - is anchored asynchronously to the Polygon blockchain.
+**RKP-2 (Off-Chain)** is ROOTKey's high-performance data processing protocol. Data is processed and stored off-chain through ROOTKey's infrastructure, and each operation produces an off-chain integrity record - a SHA-256 hash of the payload with its timestamp and identifiers. Nothing is written to a blockchain.
 
-The result is near real-time API response times with blockchain-backed integrity guarantees. Verification relies on hash comparison between the original data and the on-chain proof, without requiring the full payload to be written to the chain.
+The result is near real-time API response times with hash-based integrity verification. Verification compares a fresh hash of the data against the integrity record held by ROOTKey.
 
-This protocol is designed for high-frequency write workloads, IoT and sensor data, operational telemetry, and any scenario where throughput and cost efficiency are primary constraints, but cryptographic integrity remains non-negotiable.
+This protocol is designed for high-frequency write workloads, IoT and sensor data, operational telemetry, and any scenario where throughput and cost efficiency are primary constraints, but cryptographic integrity remains non-negotiable. When some records need independently verifiable on-chain evidence, use [RKP-3 (Hybrid)](/pages/protocols/rkp-3-hybrid) or [RKP-1 (Full On-Chain)](/pages/protocols/rkp-1-on-chain).
 
 ---
 
@@ -22,21 +22,25 @@ This protocol is designed for high-frequency write workloads, IoT and sensor dat
 flowchart TD
     A([Client Application]) -->|HTTPS / JSON| B[ROOTKey REST API]
     B --> C[Off-Chain Processing\n& Storage]
-    B -->|Async| D[(Polygon Blockchain\nProof hash on-chain)]
+    C --> D[Off-Chain Integrity Record\nSHA-256 · Timestamp · Identifiers]
     C -->|Near real-time response| A
 ```
 
-The API returns a response immediately after off-chain processing completes. Blockchain anchoring occurs asynchronously within a defined window. This design decouples response latency from block confirmation time while preserving the integrity guarantee.
+The API returns a response as soon as off-chain processing completes. There is no blockchain confirmation in the write path, so latency is not tied to block times or network fees.
 
-Each anchored record includes:
+Each integrity record includes:
 
 - **SHA-256 hash** of the data payload
-- **Anchor timestamp** (block timestamp)
+- **Timestamp** of the operation
 - **Asset and operation identifiers**
 
-Integrity verification is performed by re-hashing the stored data and comparing against the on-chain record - a process that can be independently executed by any party with access to the data and blockchain.
+Integrity verification is performed by re-hashing the stored data and comparing it against the integrity record.
 
 ---
+
+{/*
+  TODO: Request limits and performance figures are hidden until they are measured.
+  Restore these sections once the values are tested and calculated - do not publish estimates.
 
 ## Request Limits and Throughput
 
@@ -47,7 +51,7 @@ Integrity verification is performed by re-hashing the stored data and comparing 
 | Maximum payload size per request | XXX |
 | Burst allowance | XXX |
 
-For plan-specific throughput limits, visit [Pricing](/pages/pricing).
+For plan-specific throughput limits, visit [Rate Limits](/pages/rate-limits).
 
 ---
 
@@ -57,45 +61,41 @@ For plan-specific throughput limits, visit [Pricing](/pages/pricing).
 |--------|-------|
 | Average API response latency | XXX ms |
 | P95 API response latency | XXX ms |
-| Async blockchain anchoring window | XXX ms |
 | Recovery time objective (RTO) | XXX |
 | Recovery point objective (RPO) | XXX |
 
-> The API response is independent of blockchain confirmation time. Anchoring occurs within a guaranteed window after the API call completes.
-
 ---
+*/}
 
 ## Validation Capabilities
 
 | Validation Type | Supported |
 |-----------------|-----------|
 | Hash-based integrity verification | Yes |
-| On-chain proof of existence | Yes |
-| On-chain proof of integrity (hash match) | Yes |
-| Independent verification by third parties | Yes (requires access to original data + blockchain) |
-| Full payload retrieval from blockchain | No (off-chain storage) |
+| Proof of existence (off-chain integrity record) | Yes |
+| On-chain proof of existence or integrity | No (no blockchain component) |
+| Independent verification by third parties | Partial (requires the original data and access to the ROOTKey integrity record) |
 | GDPR-compatible erasure of off-chain data | Yes |
 
-Verification requires access to the original data asset and the on-chain hash. Any party holding the data can independently confirm its integrity by recomputing the hash and comparing it to the on-chain record.
+Verification requires the original data asset and its integrity record. A party holding the data can confirm its integrity by recomputing the hash and comparing it to the record - but, unlike RKP-1 and RKP-3, the record is held by ROOTKey rather than on a public ledger.
 
 ---
 
 ## Strengths
 
 - **High throughput** - designed for large-scale, high-frequency write workloads
-- **Near real-time response** - API latency is decoupled from blockchain confirmation
-- **Lower cost per operation** - off-chain processing reduces gas fee exposure per request
-- **GDPR erasure compatibility** - off-chain data can be deleted; the on-chain proof remains as evidence of prior existence without containing personal data
+- **Near real-time response** - no blockchain confirmation in the write path
+- **Lowest cost per operation** - no gas fees, since nothing is written on-chain
+- **GDPR erasure compatibility** - all data is off-chain and can be deleted
 - **Scalable to IoT scale** - supports high-volume sensor and device data pipelines
-- **Same integrity guarantees** - cryptographic proof anchored on-chain regardless of throughput
 
 ---
 
 ## Weaknesses
 
-- **Partial on-chain footprint** - only the proof is on-chain; full record recovery requires ROOTKey off-chain storage or client-side copy
-- **Verification requires original data** - third-party verification is not self-contained from the blockchain alone
-- **Storage dependency** - integrity of the verification chain depends on the availability of the off-chain record
+- **No on-chain evidence** - there is no public-ledger record; verification relies on the ROOTKey integrity record rather than on a decentralised source of trust
+- **Verification requires original data** - third-party verification needs both the data and access to the integrity record
+- **Storage dependency** - verification depends on the availability of the off-chain integrity record
 
 ---
 
@@ -130,7 +130,7 @@ Verification requires access to the original data asset and the on-chain hash. A
 |-----------|-----------|
 | **NIS2 Directive** | Supports Article 21 requirements for data integrity and availability of critical infrastructure systems |
 | **ISO 27001** *(in progress)* | Aligns with A.8.15 (logging), A.8.12 (data leakage prevention), A.5.33 (protection of records) |
-| **GDPR** | Native compatibility - off-chain data is erasable; on-chain proof contains no personal data |
+| **GDPR** | Native compatibility - all data is off-chain and erasable; nothing is written to an immutable ledger |
 | **DORA** | Supports operational resilience logging and audit trail requirements for financial entities |
 | **IEC 62443** | Applicable to industrial control system data integrity requirements in OT environments |
 
