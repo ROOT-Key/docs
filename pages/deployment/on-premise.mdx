@@ -24,16 +24,16 @@ flowchart TD
         A([Client Application]) -->|Internal HTTPS| B[ROOTKey API\nOn-Premise Instance]
         B --> C[Protocol Processing Layer]
         B --> D[Local / Air-Gapped Storage]
-        B --> E[(Blockchain Anchoring\nControlled outbound\nor private node)]
+        B --> E[(Blockchain Anchoring\nRKP-1 / RKP-3 only\nControlled outbound)]
     end
 ```
 
-Blockchain anchoring options in on-premise deployments:
+Blockchain anchoring in on-premise deployments (RKP-1 and RKP-3 only - RKP-2 writes nothing on-chain):
 
-- **Controlled outbound** - ROOTKey communicates with the Polygon network through a defined, auditable outbound channel
-- **Private node** - a dedicated Polygon node is operated within the client's perimeter, eliminating external dependencies for anchoring
+- **Controlled outbound** - ROOTKey communicates with the Polygon network through a defined, auditable outbound channel, using ROOTKey's RPC endpoints or [your own](/pages/on-premise/configuration)
+- **Private chain** *(roadmap)* - a private blockchain deployed inside the client's perimeter by the installer, removing every external dependency for anchoring
 
-The anchoring model is scoped during the deployment design phase based on the client's network policy and regulatory requirements.
+Because anchoring to Polygon needs outbound connectivity, a fully air-gapped installation requires [RKP-2](/pages/protocols/rkp-2-sovereign), which is in development. The anchoring model is scoped during the deployment design phase based on the client's network policy and regulatory requirements.
 
 ---
 
@@ -46,7 +46,7 @@ The anchoring model is scoped during the deployment design phase based on the cl
 | API contract | Identical to cloud-hosted |
 | Data residency | Fully within client perimeter |
 | Protocol support | RKP-1, RKP-2, RKP-3 |
-| Blockchain anchoring | Controlled outbound or private node |
+| Blockchain anchoring | Controlled outbound (private chain on the roadmap) |
 | Update model | Coordinated with client operations team |
 
 ---

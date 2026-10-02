@@ -1,112 +1,47 @@
 ---
-title: "RKP-1 Sovereign EU - Full On-Chain, 100% EU"
-description: Full on-chain integrity anchoring on EBSI (European Blockchain Services Infrastructure), with all processing and storage on OVH. No data or proof leaves EU legal jurisdiction at any point.
+title: "RKP-1 Sovereign EU - Full On-Chain, 100% EU (Roadmap)"
+description: Planned variant of full on-chain anchoring where the whole stack - platform, storage, and a private blockchain - runs inside the customer's own EU infrastructure. Not available yet.
 sidebarTitle: "RKP-1 Sovereign EU"
 icon: shield-halved
 mode: wide
 ---
 
-<Note>
-  This is the highest-sovereignty variant of [RKP-1 (Full On-Chain)](/pages/protocols/rkp-1-on-chain). The anchoring mechanics are identical - the difference is that both the cloud infrastructure and the blockchain are EU-operated and EU-governed.
-</Note>
+<Warning>
+  **Roadmap - not available yet.** RKP-1 Sovereign EU depends on deploying a private blockchain inside the customer's infrastructure, which the on-premise installer does not do today. Until then, the highest-sovereignty option for on-chain anchoring is [RKP-1 Enhanced EU](/pages/protocols/rkp-1-eu), and [RKP-2 Sovereign EU](/pages/protocols/rkp-2-sovereign) (on-premise, no blockchain) is in development.
+</Warning>
 
-## Sovereignty Profile
+This is the planned highest-sovereignty variant of [RKP-1 (Full On-Chain)](/pages/protocols/rkp-1-on-chain). The anchoring mechanics stay the same - every operation is written on-chain - but the blockchain becomes a private chain operated inside the customer's perimeter instead of the public Polygon network.
+
+## Planned Sovereignty Profile
 
 | Component | Provider | Jurisdiction | Notes |
 |-----------|----------|-------------|-------|
-| **Blockchain** | EBSI | EU | European Blockchain Services Infrastructure - operated by the European Commission and EU member states |
-| **Cloud / API processing** | OVH | EU (France) | No US parent company; no CLOUD Act exposure; SecNumCloud certified |
-| **Off-chain storage** | OVH | EU | Data remains in EU jurisdiction at rest and in transit |
-| **Sovereignty level** | **Full EU** | 100% EU jurisdiction | No component subject to non-EU law |
-
-**When to choose this variant:** Your regulatory environment, national security classification, or contractual obligations require that no part of the integrity infrastructure - cloud, storage, or blockchain - is subject to non-EU jurisdiction or accessible by non-EU authorities.
+| **Blockchain** | Private chain, customer-operated | Customer EU facility | Deployed alongside the platform by the on-premise installer |
+| **API processing** | Customer on-premise | Customer EU facility | ROOTKey [on-premise installation](/pages/on-premise/overview) |
+| **Off-chain storage** | Customer on-premise | Customer EU facility | Data never leaves the organisation's infrastructure |
+| **Sovereignty level** | **Full EU** | 100% customer infrastructure | No component outside the customer's control |
 
 ---
 
-## What Is EBSI?
+## How It Will Differ from RKP-1 Standard and RKP-1 Enhanced EU
 
-**EBSI** (European Blockchain Services Infrastructure) is the EU's own blockchain network, operated by the European Commission in collaboration with EU member state governments. It was designed for EU public sector use cases - including the European Digital Identity Wallet (EUDIW), educational credential verification, and government document authenticity.
-
-| Property | Polygon | EBSI |
-|----------|---------|------|
-| Operator | Permissionless (no single operator) | European Commission + EU member states |
-| Governance | Decentralised community | EU public authorities |
-| Node location | Globally distributed | EU member state infrastructure |
-| Jurisdiction | No single jurisdiction | EU law |
-| Public verifiability | Yes - Polygonscan | Yes - EBSI explorer |
-| Primary use cases | General-purpose Web3 | EU government and regulated applications |
-| EU Digital Identity Wallet | No | Yes |
-
----
-
-## How It Differs from RKP-1 Standard and RKP-1 Enhanced EU
-
-| Property | RKP-1 Standard | RKP-1 Enhanced EU | RKP-1 Sovereign EU |
+| Property | RKP-1 Standard | RKP-1 Enhanced EU | RKP-1 Sovereign EU *(roadmap)* |
 |----------|---------------|------------------|-------------------|
-| Blockchain | Polygon | Polygon | **EBSI** |
-| Cloud provider | Azure / AWS | OVH | **OVH** |
-| Blockchain jurisdiction | Global | Global | **EU** |
-| Cloud jurisdiction | US-incorporated | EU-incorporated | **EU-incorporated** |
-| CLOUD Act exposure | Yes | No | **No** |
+| Blockchain | Polygon | Polygon | **Private chain (customer-operated)** |
+| Infrastructure | ROOTKey cloud (Azure / AWS) | Dedicated deployment on OVH | **Customer on-premise** |
+| Blockchain jurisdiction | Global | Global | **Customer EU facility** |
 | Full EU sovereignty | No | No | **Yes** |
-| Available on request | - | Contact team | **Contact team** |
+| Verification | Public (Polygonscan) | Public (Polygonscan) | **Within the private chain's participants** |
+| Availability | Standard | On request | **Roadmap** |
+
+<Note>
+  A private chain moves the trust boundary: verification is no longer possible from a public block explorer by any third party, only by parties given access to the chain. This is the trade-off for keeping every component under the customer's jurisdiction.
+</Note>
 
 ---
 
-## Anchoring Architecture
+## Interested?
 
-```mermaid
-flowchart TD
-    A([Your Application]) --> B[ROOTKey API\nOVH · EU Jurisdiction]
-    B --> C[Off-Chain Storage\nOVH · EU Jurisdiction]
-    B --> D[(EBSI\nEuropean Blockchain Services Infrastructure\nOperated by EU Member States)]
-    D --> E[Independent Verification\nEBSI Explorer · No cooperation needed]
-    note[No component outside\nEU legal jurisdiction] -.-> B
-```
+If your organisation needs on-chain anchoring with no component outside your perimeter, tell us about your requirements - they shape the roadmap.
 
----
-
-## Regulatory Frameworks Addressed
-
-| Framework | How RKP-1 Sovereign EU helps |
-|-----------|------------------------------|
-| **GDPR** | All processing on EU infrastructure - no transfer risk under Chapter V |
-| **NIS2 - Critical Infrastructure** | Satisfies national sovereignty requirements for essential entity operators where non-EU infrastructure is excluded |
-| **DORA** | Removes CLOUD Act risk entirely - no US-controlled infrastructure in the ICT supply chain |
-| **EU Cybersecurity Act (EUCS)** | Aligned with High assurance level requirements for sensitive EU-operated workloads |
-| **SecNumCloud (ANSSI)** | OVH certification satisfies French national cloud security requirements |
-| **BSI C5 (Germany)** | OVH holds BSI C5 attestation - satisfies German federal requirements |
-| **EU Digital Identity Wallet (EUDIW)** | EBSI is the native blockchain for EUDIW credential anchoring |
-| **Public sector procurement (EU)** | Satisfies EU preference for European digital infrastructure in regulated procurement |
-
----
-
-## Use Cases Best Suited to RKP-1 Sovereign EU
-
-<CardGroup cols={2}>
-  <Card title="National critical infrastructure" icon="tower-broadcast">
-    Energy, water, transport, and digital infrastructure operators subject to NIS2 with national classification requirements.
-  </Card>
-  <Card title="EU government and public sector" icon="landmark">
-    Public authorities anchoring administrative records, official documents, and regulatory filings under EU law.
-  </Card>
-  <Card title="EU Digital Identity Wallet workflows" icon="id-card">
-    Credential issuers and verifiers participating in the EUDIW ecosystem, where EBSI anchoring is native.
-  </Card>
-  <Card title="Defence-adjacent and classified environments" icon="shield-halved">
-    Organisations with obligations or preferences against relying on non-EU blockchain networks for integrity proofs.
-  </Card>
-</CardGroup>
-
----
-
-## Availability
-
-RKP-1 Sovereign EU is available **on request** for organisations with demonstrated sovereignty requirements. Deployment involves:
-
-1. Dedicated OVH tenancy for API processing and storage
-2. EBSI network configuration for blockchain anchoring
-3. EU-law-governed data processing agreement
-4. Modified API endpoints scoped to the sovereign deployment
-
-→ [Request RKP-1 Sovereign EU deployment](https://rootkey.ai/contact?utm_source=api_docs&utm_medium=rkp1_sovereign&utm_content=demo_cta)
+→ [Discuss RKP-1 Sovereign EU](https://rootkey.ai/contact?utm_source=api_docs&utm_medium=rkp1_sovereign&utm_content=demo_cta)

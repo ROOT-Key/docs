@@ -54,7 +54,7 @@ Rate limits are enforced at the API layer. Actual throughput for operations that
 | Protocol | API Rate Limit | Additional Constraint |
 |----------|---------------|----------------------|
 | RKP-1 | Per plan | Polygon block confirmation time |
-| RKP-2 | Per plan | None (async anchoring) |
+| RKP-2 | Per plan | None (no blockchain) |
 | RKP-3 | Per plan | Depends on routing path |
 
 For high-throughput workloads, [RKP-2](/pages/protocols/rkp-2-off-chain) or [RKP-3](/pages/protocols/rkp-3-hybrid) are recommended. [RKP-1](/pages/protocols/rkp-1-on-chain) is bounded by blockchain block times in addition to API rate limits.
