@@ -7,18 +7,21 @@ description: Troubleshooting has never been easier than with this guide.
 
 ROOTKey API returns human readable error messages and a link to the docs to help you deal with that bug much faster.
 
-Here is how an error response looks like:
+Here is what an error response looks like:
 
 ```JSON
 {
   "error": {
-    "message": "Incorrect credentials",
-    "errorCode": "invalid-credentials",
-	  "timestamp": "2024-05-19T16:24:37.884Z",
-    "docUrl": "https://docs.rootkey.ai/api-reference/errors#invalid-credentials",
+    "requestId": "3f2b8c1e-5a7d-4e9b-9c2a-1d6e8f0a4b7c",
+    "message": "Invalid address submitted",
+    "errorCode": "invalid_wallet_address",
+    "docUrl": "https://docs.rootkey.ai/api-reference/errors#invalid-wallet-address",
+    "timestamp": "2024-05-19T16:24:37.884Z"
   }
 }
 ```
+
+Branch on `errorCode` rather than on `message` when you handle an error in code, and quote the `requestId` when you contact support about a failed request.
 
 # HTTP Codes
 
@@ -51,102 +54,155 @@ Give a look to the list of all errors our API returns:
 
 # ROOTKey Error Codes
 
+{/* Every error-code entry on this page has a hidden alias above its heading. Most of the API's
+    docUrls spell the code with hyphens (#max-resource-limit), but Mintlify keeps the underscores
+    in heading ids (#max_resource_limit), so without the alias the link opens the top of the page.
+    Give every new entry one too; the error-alias class in style.css keeps it clear of the sticky
+    header. */}
+
+<span id="invalid-email" className="error-alias" />
+
 ### `invalid_email`
 - **Status:** 400
 - **Problem:** The email is invalid
 - **Solution:** Check if the email address is properly formatted and only includes [allowed characters](https://en.wikipedia.org/wiki/Email_address#Local-part).
+
+<span id="invalid-code" className="error-alias" />
 
 ### `invalid_code`
 - **Status:** 400
 - **Problem:** The secure code provided is invalid!
 - **Solution:** Make sure the code you provide is the same as the one sent to your email address!
 
+<span id="inactive-account" className="error-alias" />
+
 ### `inactive_account`
 - **Status:** 400
 - **Problem:** The user account has not been activated!
 - **Solution:** Activate the user account by accessing your email and navigating to the link sent to your email for this purpose!
+
+<span id="invalid-credentials" className="error-alias" />
 
 ### `invalid_credentials`
 - **Status:** 400
 - **Problem:** The credentials provided are invalid!
 - **Solution:** Make sure that the e-mail and password are the same as the ones you used to create a ROOTKey account!
 
+<span id="invalid-title" className="error-alias" />
+
 ### `invalid_title`
 - **Status:** 400
 - **Problem:** The title submmited is invalid and does not meet with our guidelines.
 - **Solution:** Make sure that the title is between 4 and 200 characters long.
+
+<span id="invalid-password" className="error-alias" />
 
 ### `invalid_password`
 - **Status:** 400
 - **Problem:** The password submmited is invalid and does not meet with our guidelines.
 - **Solution:** Make sure that the password is between 6 and 100 characters long.
 
+<span id="invalid-private-key" className="error-alias" />
+
 ### `invalid_private_key`
 - **Status:** 400
 - **Problem:** The private key submmited is invalid!
 - **Solution:** The private key must be associated with an existing wallet in the polygon blockchain and must follow the correct scheme. For more information check our [concepts page](docs.rootkey.ai/concepts#private-key)
+
+<span id="invalid-wallet-address" className="error-alias" />
 
 ### `invalid_wallet_address`
 - **Status:** 400
 - **Problem:** The wallet address submmited is invalid!
 - **Solution:** The wallet address must be associated with an existing wallet in the polygon's blockchain and must consist of 42 characters.
 
+<span id="invalid-subscription" className="error-alias" />
+
 ### `invalid_subscription`
 - **Status:** 400
 - **Problem:** The product subscription is invalid.
 - **Solution:** A product subscription is required. Ensure that the product subscription is provided and valid.
+
+<span id="max-resource-limit" className="error-alias" />
 
 ### `max_resource_limit`
 - **Status:** 400
 - **Problem:** You have reached the monthly limit of this resource for your subscription.
 - **Solution:** Upgrade your subscription to the next level or contact our team to define a customized plan for your needs.
 
+<span id="resource-not-found" className="error-alias" />
+
 ### `resource_not_found`
 - **Status:** 400
 - **Problem:** The resource specified by the submitted ID does not exist.
 - **Solution:** Ensure that the identifier provided is in the list of resources owned by your account.
+
+<span id="unsubmitted-file" className="error-alias" />
 
 ### `unsubmitted_file`
 - **Status:** 400
 - **Problem:** The file needed to complete the desired action was not submitted.
 - **Solution:** Make sure that you are attaching the file required for the desired action and that the argument is well specified. <br/>In addition, make sure you have set the `multipart/form-data` header correctly.
 
+<span id="code-expired" className="error-alias" />
+
 ### `code_expired`
 - **Status:** 400
 - **Problem:** The secure code provided has expired!
 - **Solution:** Request a new code from our app.
+
+<span id="default-api-key-deletion-forbidden" className="error-alias" />
 
 ### `default_api_key_deletion_forbidden`
 - **Status:** 400
 - **Problem:** The default API key cannot be deleted.
 - **Solution:** Ensure that you are not attempting to delete the default API key. If you need to manage API keys, consider creating and setting a new default key instead.
 
+<span id="already-default-api-key" className="error-alias" />
+
 ### `already_default_api_key`
 - **Status:** 400
 - **Problem:** The API key is already set as the default key.
 - **Solution:** Ensure that you are not attempting to set an API key as the default if it is already the default key. If you need to change the default key, select a different API key.
 
+<span id="creation-outcome-unknown" className="error-alias" />
+
+### `creation_outcome_unknown`
+- **Status:** 500
+- **Problem:** ROOTKey sent the file for anchoring but got no answer back, so it cannot tell whether the file was anchored. ROOTKey does not retry automatically: anchoring is not idempotent, and a repeat could anchor the same file twice.
+- **Solution:** Do not simply resend the same upload, and if your integration retries `500` responses automatically, exclude this `errorCode` from those retries. Check whether the file is already in the vault by [listing the vault's files](/api-reference/platform/endpoint/files/get-files) filtered by name (for a new version, [list the file's versions](/api-reference/platform/endpoint/files/get-file-versions)); if it is there, do not upload it again. <br/>A file that is not listed may still have been anchored, so before uploading it again, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId` from the error response.
+
 # Blockchain Error Codes
+
+<span id="invalid-balance-parameter" className="error-alias" />
 
 ### `invalid_balance_parameter`
 - **Status:** 400
 - **Problem:** The balance received as parameter, is invalid
 - **Solution:** Make sure that the value provided is a number and greater than 0
 
+<span id="insufficient-balance" className="error-alias" />
+
 ### `insufficient_balance`
 - **Status:** 400
 - **Problem:** The balance received as parameter, is invalid
 - **Solution:** Upgrade your subscription to the next level or contact our team to define a customized plan for your needs.
+
+<span id="smart-contract-exception" className="error-alias" />
 
 ### `smart_contract_exception`
 - **Status:** 400
 - **Problem:** An error occurred on the blockchain side of the operation.
 - **Solution:** Ensure that all provided values are correct and comply with the requirements.
 
+<span id="invalid-file-hash-format" className="error-alias" />
+
 ### `invalid_file_hash_format`
 - **Status:** 400
 - **Problem:** The submitted file hash has an invalid format!
 - **Solution:** Check if the hash is correctly formatted, contains 64 characters in length and includes only hexadecimal characters
+
+<span id="invalid-token-id" className="error-alias" />
 
 ### `invalid_token_id`
 - **Status:** 400
