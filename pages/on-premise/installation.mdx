@@ -79,7 +79,7 @@ Before Ansible is invoked at all, the installer refuses to run a deploy while an
     ./install.sh --scenario C --tags preflight
     ```
 
-    It reports PASS, WARN or FAIL for CPU, RAM, disk, operating system, and the required ports. Resolve every FAIL before continuing. Treat a WARN on vCPUs as a FAIL if you can: four cores install, but throttle badly enough to time out file anchoring.
+    It reports PASS, WARN or FAIL for CPU, RAM, disk, operating system, and the required ports. Resolve every FAIL before continuing. A host with fewer than eight vCPUs fails this check.
   </Step>
 
   <Step title="Fill in the inventory">
