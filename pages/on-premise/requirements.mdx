@@ -33,12 +33,12 @@ The installer measures these on the target and reports each one as PASS, WARN or
 
 | Resource | Minimum | Recommended | What happens below the minimum |
 |---|---|---|---|
-| **vCPUs** | 4 | 8 | Install fails. Below the recommendation it installs but throttles — see the warning below. |
+| **vCPUs** | 8 | 8 | Install fails — see the warning below. |
 | **RAM** | 15.5 GB | 30 GB | Install fails. |
 | **Free disk** | 100 GB | 250 GB | Install fails. Object storage grows with your files; size this against how much you intend to store. |
 
 <Warning>
-  Four vCPUs is a floor, not a target. On a host at the minimum, the CPU limits that ship with the workloads cause enough CFS throttling to time out blockchain anchoring: a file upload can exceed its five-second budget while the machine sits mostly idle, because the limit is per-container rather than per-host. Plan for eight.
+  Eight vCPUs is the minimum, not only the recommendation, and the installer refuses a smaller host. Under sustained load the Data Plane uses most of an eight-vCPU node. The autoscalers need the rest to add pods during peaks. On four vCPUs there is room for neither. If you expect sustained high volumes, size above eight.
 </Warning>
 
 ---
@@ -170,7 +170,7 @@ Everything above, in the order the installation consumes it:
 
 <AccordionGroup>
   <Accordion title="Infrastructure" icon="server">
-    - [ ] Host or cluster meets the CPU, RAM and disk requirements — eight vCPUs, not four.
+    - [ ] Host or cluster meets the CPU, RAM and disk requirements, with at least eight vCPUs.
     - [ ] Operating system is on the supported list (Scenario C).
     - [ ] Ports 6443, 443 and 80 are free.
     - [ ] SSH key access to the target (Scenario C) or a working kubeconfig (Scenario B).
