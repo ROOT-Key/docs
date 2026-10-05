@@ -1,11 +1,11 @@
 ---
 title: Errors
 icon: xmark
-description: Troubleshooting has never been easier than with this guide.
---- 
+description: What a failed request returns - the error response, the HTTP statuses, and what each error code means.
+---
 
 
-ROOTKey API returns human readable error messages and a link to the docs to help you deal with that bug much faster.
+The ROOTKey API answers a failed request with an HTTP error status and a JSON body that explains it: a human-readable `message`, a machine-readable `errorCode`, and a `docUrl` that links to this page.
 
 Here is what an error response looks like:
 
@@ -21,149 +21,59 @@ Here is what an error response looks like:
 }
 ```
 
-Branch on `errorCode` rather than on `message` when you handle an error in code, and quote the `requestId` when you contact support about a failed request.
+Branch on `errorCode` rather than on `message` when you handle an error in code, and quote the `requestId` when you contact support about a failed request. A few responses carry no `errorCode`; the table below says which.
 
-# HTTP Codes
+# HTTP Status Codes
 
-Give a look to the list of all errors our API returns:
-
-### `Not Found`
-- **Status:** 400
-- **Problem:**
-- **Solution:** Check the request and make sure it is properly formatted.
-
-### `Unauthorized`
-- **Status:** 401
-- **Problem:**
-- **Solution:** Check the request and make sure it is properly formatted.
-
-### `Forbidden`
-- **Status:** 403
-- **Problem:**
-- **Solution:** Check the request and make sure it is properly formatted.
-
-### `Not Found`
-- **Status:** 403
-- **Problem:**
-- **Solution:** Check the request and make sure it is properly formatted.
-
-### `Internal Error`
-- **Status:** 500
-- **Problem:**
-- **Solution:** Check the request and make sure it is properly formatted.
+| Status | When the API sends it |
+| --- | --- |
+| `400` Bad Request | The request failed a check, and the `errorCode` says which. A body that cannot be parsed, such as invalid JSON, also gets a `400`, without an `errorCode`. |
+| `401` Unauthorized | The `x-api-key` header is missing, or the key does not exist or is inactive. There is no `errorCode`; the `message` says which of the three it is. |
+| `403` Forbidden | The key is valid, but the request is not allowed: for example, your organization has no subscription ([`resource_not_found`](#resource_not_found)), your plan does not include the feature (`unauthorized_access`), or an access rule set for your organization blocks the request (`access_policy_denied`). |
+| `404` Not Found | The vault, table, file, record or recovery point does not exist in your organization ([`resource_not_found`](#resource_not_found)). A path the API does not have also gets a `404`, with an HTML body instead of JSON. |
+| `409` Conflict | The request conflicts with the current state of the resource, such as adding a version to a deleted file. Restore the file first. |
+| `410` Gone | The vault, file or record was permanently removed, so it can no longer be restored or downloaded. |
+| `413` Payload Too Large | The upload or the request body is larger than the API accepts. There is no `errorCode`. |
+| `429` Too Many Requests | Too many requests in a short time (`rate_limit_exceeded`). Wait the number of seconds in the `Retry-After` header before you retry. See [Rate Limits](/pages/rate-limits). |
+| `500` Internal Server Error | ROOTKey could not complete the request: [`internal_error`](#internal_error), or [`creation_outcome_unknown`](#creation_outcome_unknown) for an upload whose outcome is unknown. |
 
 # ROOTKey Error Codes
 
 {/* Every error-code entry on this page has a hidden alias above its heading. Most of the API's
-    docUrls spell the code with hyphens (#max-resource-limit), but Mintlify keeps the underscores
-    in heading ids (#max_resource_limit), so without the alias the link opens the top of the page.
+    docUrls spell the code with hyphens (#resource-not-found), but Mintlify keeps the underscores
+    in heading ids (#resource_not_found), so without the alias the link opens the top of the page.
     Give every new entry one too; the error-alias class in style.css keeps it clear of the sticky
     header. */}
 
-<span id="invalid-email" className="error-alias" />
-
-### `invalid_email`
-- **Status:** 400
-- **Problem:** The email is invalid
-- **Solution:** Check if the email address is properly formatted and only includes [allowed characters](https://en.wikipedia.org/wiki/Email_address#Local-part).
-
-<span id="invalid-code" className="error-alias" />
-
-### `invalid_code`
-- **Status:** 400
-- **Problem:** The secure code provided is invalid!
-- **Solution:** Make sure the code you provide is the same as the one sent to your email address!
-
-<span id="inactive-account" className="error-alias" />
-
-### `inactive_account`
-- **Status:** 400
-- **Problem:** The user account has not been activated!
-- **Solution:** Activate the user account by accessing your email and navigating to the link sent to your email for this purpose!
-
-<span id="invalid-credentials" className="error-alias" />
-
-### `invalid_credentials`
-- **Status:** 400
-- **Problem:** The credentials provided are invalid!
-- **Solution:** Make sure that the e-mail and password are the same as the ones you used to create a ROOTKey account!
-
-<span id="invalid-title" className="error-alias" />
-
-### `invalid_title`
-- **Status:** 400
-- **Problem:** The title submmited is invalid and does not meet with our guidelines.
-- **Solution:** Make sure that the title is between 4 and 200 characters long.
-
-<span id="invalid-password" className="error-alias" />
-
-### `invalid_password`
-- **Status:** 400
-- **Problem:** The password submmited is invalid and does not meet with our guidelines.
-- **Solution:** Make sure that the password is between 6 and 100 characters long.
-
-<span id="invalid-private-key" className="error-alias" />
-
-### `invalid_private_key`
-- **Status:** 400
-- **Problem:** The private key submmited is invalid!
-- **Solution:** The private key must be associated with an existing wallet in the polygon blockchain and must follow the correct scheme. For more information check our [concepts page](docs.rootkey.ai/concepts#private-key)
+## Vaults, files and records
 
 <span id="invalid-wallet-address" className="error-alias" />
 
 ### `invalid_wallet_address`
 - **Status:** 400
-- **Problem:** The wallet address submmited is invalid!
-- **Solution:** The wallet address must be associated with an existing wallet in the polygon's blockchain and must consist of 42 characters.
+- **Problem:** The vault or table address in the request is not a valid address.
+- **Solution:** Send the address exactly as ROOTKey returned it when the vault or table was created: 42 characters, `0x` followed by 40 hexadecimal characters. A well-formed address that matches no vault or table in your organization gets [`resource_not_found`](#resource_not_found) instead.
 
-<span id="invalid-subscription" className="error-alias" />
+<span id="private-key-invalid" className="error-alias" />
 
-### `invalid_subscription`
+### `private_key_invalid`
 - **Status:** 400
-- **Problem:** The product subscription is invalid.
-- **Solution:** A product subscription is required. Ensure that the product subscription is provided and valid.
-
-<span id="max-resource-limit" className="error-alias" />
-
-### `max_resource_limit`
-- **Status:** 400
-- **Problem:** You have reached the monthly limit of this resource for your subscription.
-- **Solution:** Upgrade your subscription to the next level or contact our team to define a customized plan for your needs.
+- **Problem:** ROOTKey could not create the vault: the private key it generated for the new vault failed its own check. Despite the message (`Invalid Private Key submitted`), you never send a private key to the API, so nothing in your request caused this.
+- **Solution:** [Create the vault](/api-reference/platform/endpoint/vaults/create-vault) again. If it fails again, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`. ROOTKey generates and holds the keys that sign for your vaults; see [Wallet](/pages/concepts#wallet).
 
 <span id="resource-not-found" className="error-alias" />
 
 ### `resource_not_found`
-- **Status:** 400
-- **Problem:** The resource specified by the submitted ID does not exist.
-- **Solution:** Ensure that the identifier provided is in the list of resources owned by your account.
+- **Status:** 404 on most endpoints and 400 on some; 403 when it is your organization's subscription that is missing
+- **Problem:** Something the request refers to, such as a vault, table, file, record or recovery point, does not exist in your organization. With status `403` and the message `Subscription not found`, ROOTKey could not find your organization's subscription.
+- **Solution:** Check the identifier against the resources your organization owns, for example by [listing the vault's files](/api-reference/platform/endpoint/files/get-files). Because the status differs between endpoints, branch on the `errorCode`. For a missing subscription, check your organization's plan in the ROOTKey app, and contact [support@rootkey.ai](mailto:support@rootkey.ai) if it is active.
 
-<span id="unsubmitted-file" className="error-alias" />
+<span id="usage-limit-exceeded" className="error-alias" />
 
-### `unsubmitted_file`
-- **Status:** 400
-- **Problem:** The file needed to complete the desired action was not submitted.
-- **Solution:** Make sure that you are attaching the file required for the desired action and that the argument is well specified. <br/>In addition, make sure you have set the `multipart/form-data` header correctly.
-
-<span id="code-expired" className="error-alias" />
-
-### `code_expired`
-- **Status:** 400
-- **Problem:** The secure code provided has expired!
-- **Solution:** Request a new code from our app.
-
-<span id="default-api-key-deletion-forbidden" className="error-alias" />
-
-### `default_api_key_deletion_forbidden`
-- **Status:** 400
-- **Problem:** The default API key cannot be deleted.
-- **Solution:** Ensure that you are not attempting to delete the default API key. If you need to manage API keys, consider creating and setting a new default key instead.
-
-<span id="already-default-api-key" className="error-alias" />
-
-### `already_default_api_key`
-- **Status:** 400
-- **Problem:** The API key is already set as the default key.
-- **Solution:** Ensure that you are not attempting to set an API key as the default if it is already the default key. If you need to change the default key, select a different API key.
+### `usage_limit_exceeded`
+- **Status:** 400 (403 when you request an audit report)
+- **Problem:** The request would take your organization over one of its plan's limits, such as the number of API requests, files, records or vaults.
+- **Solution:** The error's `details` object names the limit: `feature`, `limit`, `current` and `plan`, with an `upgrade_url` where you can move to a larger plan. To define a plan for your needs, contact [contact@rootkey.ai](mailto:contact@rootkey.ai).
 
 <span id="creation-outcome-unknown" className="error-alias" />
 
@@ -172,39 +82,41 @@ Give a look to the list of all errors our API returns:
 - **Problem:** ROOTKey sent the file for anchoring but got no answer back, so it cannot tell whether the file was anchored. ROOTKey does not retry automatically: anchoring is not idempotent, and a repeat could anchor the same file twice.
 - **Solution:** Do not simply resend the same upload, and if your integration retries `500` responses automatically, exclude this `errorCode` from those retries. Check whether the file is already in the vault by [listing the vault's files](/api-reference/platform/endpoint/files/get-files) filtered by name (for a new version, [list the file's versions](/api-reference/platform/endpoint/files/get-file-versions)); if it is there, do not upload it again. <br/>A file that is not listed may still have been anchored, so before uploading it again, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId` from the error response.
 
-# Blockchain Error Codes
+<span id="internal-error" className="error-alias" />
 
-<span id="invalid-balance-parameter" className="error-alias" />
+### `internal_error`
+- **Status:** 500, or the `4xx` status of a step that ROOTKey runs on your behalf, such as anchoring a file on the blockchain, when that step rejects the request
+- **Problem:** ROOTKey could not complete the request and has no more specific code for the failure. When the status is a `4xx`, the `message` is the rejecting step's explanation.
+- **Solution:** With a `4xx`, correct what the `message` describes, then send the request again. With a `500`, retry later, and if it keeps failing, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`. An upload that failed with a `500` may still have been anchored, so before sending it again, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown). A `500` without an `errorCode` means the same as `internal_error`.
 
-### `invalid_balance_parameter`
+## Accounts and shared links
+
+These come from signing in to the ROOTKey app, updating an account, or opening a shareable link. Requests made with an API key do not get them.
+
+<span id="invalid-email" className="error-alias" />
+
+### `invalid_email`
 - **Status:** 400
-- **Problem:** The balance received as parameter, is invalid
-- **Solution:** Make sure that the value provided is a number and greater than 0
+- **Problem:** The email address is not valid.
+- **Solution:** Check that the address is properly formatted, is at most 200 characters long, and only uses [allowed characters](https://en.wikipedia.org/wiki/Email_address#Local-part).
 
-<span id="insufficient-balance" className="error-alias" />
+<span id="inactive-account" className="error-alias" />
 
-### `insufficient_balance`
+### `inactive_account`
 - **Status:** 400
-- **Problem:** The balance received as parameter, is invalid
-- **Solution:** Upgrade your subscription to the next level or contact our team to define a customized plan for your needs.
+- **Problem:** The account's email address has not been verified, so ROOTKey refused the sign-in.
+- **Solution:** Verify the email address using the verification email ROOTKey sent when the account was created, then sign in again.
 
-<span id="smart-contract-exception" className="error-alias" />
+<span id="invalid-credentails" className="error-alias" />
 
-### `smart_contract_exception`
+### `invalid_credentails`
 - **Status:** 400
-- **Problem:** An error occurred on the blockchain side of the operation.
-- **Solution:** Ensure that all provided values are correct and comply with the requirements.
+- **Problem:** The email address or the password is incorrect. The code is spelled `invalid_credentails`, exactly as the API sends it, so match that spelling in your code.
+- **Solution:** Sign in with the email address and password of an existing ROOTKey account.
 
-<span id="invalid-file-hash-format" className="error-alias" />
+<span id="invalid-password" className="error-alias" />
 
-### `invalid_file_hash_format`
+### `invalid_password`
 - **Status:** 400
-- **Problem:** The submitted file hash has an invalid format!
-- **Solution:** Check if the hash is correctly formatted, contains 64 characters in length and includes only hexadecimal characters
-
-<span id="invalid-token-id" className="error-alias" />
-
-### `invalid_token_id`
-- **Status:** 400
-- **Problem:** The provided token ID is invalid!
-- **Solution:** Make sure the token ID exists, is valid and is not empty.
+- **Problem:** The shareable link is protected by a password, and the request carried no password or the wrong one.
+- **Solution:** Ask whoever shared the link for its password, then open the link again and enter it.
