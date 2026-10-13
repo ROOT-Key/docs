@@ -48,10 +48,6 @@ Confirmation depends on the blockchain network, so do not assume a fixed delay b
 
 A file that is `FAILED` - or that stays `PENDING` far longer than you expect - can be sent for anchoring again from the file's actions menu in the ROOTKey dashboard. This submits a new transaction: the file goes back to `PENDING` and its `transactionHash` changes.
 
-<Note>
-  Only files are anchored on the blockchain. A record is stored, hashed and audited, and is `REGISTERED` as soon as it is created, with no transaction hash - there is nothing to wait for.
-</Note>
-
 ---
 
 ## Following a File
@@ -114,7 +110,8 @@ def wait_for_anchor(file_id: str, vault_address: str, give_up_after_s: int = 600
             timeout=30,
         )
 
-        if response.status_code == 429:
+        # A 429, or a 503 on a read like this one, is safe to repeat after the wait
+        if response.status_code in (429, 503):
             time.sleep(int(response.headers.get("Retry-After", delay)))
             continue
 
@@ -140,8 +137,8 @@ Store the file's ID and `transactionHash` when you create it, and check the stat
 **Back off between checks**
 Start with a short delay and make it longer after each response that is still `PENDING`, as the example does. A tight loop adds load without making the anchor confirm sooner.
 
-**Respect the rate limits**
-Every check is an API request and counts against your plan. On a `429` response, wait for the number of seconds in the `Retry-After` header. See [Rate Limits](/pages/rate-limits).
+**Respect the rate limits and your quota**
+Every check is an API request, so it counts towards your plan's rate limit and request quota. On a `429`, or a `503` to a read like this one, wait the number of seconds in the `Retry-After` header and check again. A request refused with `usage_limit_exceeded` is different: checking again does not help until the quota resets or the plan changes. See [Rate Limits](/pages/rate-limits).
 
 **Treat `PENDING` as not yet proven**
 Until the status is `REGISTERED`, do not present the file as anchored or rely on it as evidence.
