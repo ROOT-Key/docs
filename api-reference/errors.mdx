@@ -36,6 +36,7 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 | `413` Payload Too Large | The upload or the request body is larger than the API accepts. There is no `errorCode`. |
 | `429` Too Many Requests | Too many requests in a short time (`rate_limit_exceeded`). Wait the number of seconds in the `Retry-After` header before you retry. See [Rate Limits](/pages/rate-limits). |
 | `500` Internal Server Error | ROOTKey could not complete the request: [`internal_error`](#internal_error), or [`creation_outcome_unknown`](#creation_outcome_unknown) for an upload whose outcome is unknown. |
+| `503` Service Unavailable | ROOTKey was too busy to answer ([`service_unavailable`](#service_unavailable)). Nothing is wrong with the request: wait the number of seconds in the `Retry-After` header, then send it again. An upload is the exception, so read the entry first. |
 
 # ROOTKey Error Codes
 
@@ -88,6 +89,13 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 - **Status:** 500, or the `4xx` status of a step that ROOTKey runs on your behalf, such as anchoring a file on the blockchain, when that step rejects the request
 - **Problem:** ROOTKey could not complete the request and has no more specific code for the failure. When the status is a `4xx`, the `message` is the rejecting step's explanation.
 - **Solution:** With a `4xx`, correct what the `message` describes, then send the request again. With a `500`, retry later, and if it keeps failing, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`. An upload that failed with a `500` may still have been anchored, so before sending it again, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown). A `500` without an `errorCode` means the same as `internal_error`.
+
+<span id="service-unavailable" className="error-alias" />
+
+### `service_unavailable`
+- **Status:** 503
+- **Problem:** ROOTKey was too busy to answer the request. Nothing is wrong with the request itself. The `Retry-After` header says how many seconds to wait, a few at most, and the body repeats the number as `retryAfterSeconds`. Unlike most errors, this response carries no `docUrl`.
+- **Solution:** Wait that many seconds, then send the same request again. If your integration retries automatically, retry `503` responses and stop after a few attempts. An upload of a file or of a new version is the exception: ROOTKey may already have anchored the file when it answered, and a repeat could anchor it twice. After a `503` on an upload, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown) before you send the file again.
 
 ## Accounts and shared links
 
