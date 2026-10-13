@@ -270,7 +270,7 @@ This is useful for analysis and reporting sessions where nothing should change. 
   </Accordion>
 
   <Accordion title="Requests fail with 503 Service Unavailable">
-    ROOTKey was too busy to take the request for a moment. The server waits as long as the `Retry-After` header says and tries again, up to three attempts in all. It does this for listing and fetching, updating and deleting (GET, PUT and DELETE requests), but not for anything it sends as a POST, such as creating a file, a record or a vault: a repeat could anchor the same data twice. If one of those tools reports a 503, ask Claude to list the vault or table to see whether the item was created before you run the tool again. If a 503 keeps coming back, wait a little and try again, and contact [support@rootkey.ai](mailto:support@rootkey.ai) with the `requestId` the tool reports.
+    ROOTKey was too busy to take the request for a moment. The server waits as long as the `Retry-After` header says and tries again, up to three attempts in all. It does this for listing and fetching, updating and deleting (GET, PUT and DELETE requests), but not for anything it sends as a POST, such as creating a file, a record or a vault: a repeat could create the same item twice. If one of those tools reports a 503, ask Claude to list the vault or table to see whether the item was created before you run the tool again. If a 503 keeps coming back, wait a little and try again, and contact [support@rootkey.ai](mailto:support@rootkey.ai) with the `requestId` the tool reports.
   </Accordion>
 
   <Accordion title="A tool reports the created file or record as null">

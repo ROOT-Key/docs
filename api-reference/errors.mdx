@@ -48,7 +48,7 @@ Whether a failed request is safe to send again depends on the response. Decide f
 | `503` [`service_unavailable`](#service_unavailable) | Yes, after the number of seconds in the `Retry-After` header. For an upload, check the vault first, as the entry describes. |
 | `500` [`creation_outcome_unknown`](#creation_outcome_unknown) | Not automatically. Check whether the file is in the vault first, as the entry describes. |
 | Any other `500`, with [`internal_error`](#internal_error) or without an `errorCode` | A request that only reads: yes, after a pause that grows with each attempt. An upload: check the vault first, because it may have been anchored. Any other request: retry later, and contact support if it keeps failing. |
-| `400` [`usage_limit_exceeded`](#usage_limit_exceeded) (`403` for audit reports) | No. The same request fails the same way until the plan's limit resets or the plan changes. |
+| `400` [`usage_limit_exceeded`](#usage_limit_exceeded) | No. The same request fails the same way until the plan's limit resets or the plan changes. |
 | Any other `4xx` | No. Correct the request first: the `errorCode` and the `message` say what is wrong. |
 
 Add a little random delay to every wait, so that clients refused together do not all come back together.

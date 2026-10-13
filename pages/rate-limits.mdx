@@ -10,7 +10,7 @@ A request can be refused in three ways that look alike but need different handli
 | What refuses the request | What the API answers | Send it again? |
 |--------------------------|----------------------|----------------|
 | A [rate limit](#rate-limits): too many requests in a minute | `429`, with `errorCode` `rate_limit_exceeded` and a `Retry-After` header | Yes, after the wait |
-| A [plan quota](#plan-quotas), such as your monthly API requests | `400`, with `errorCode` `usage_limit_exceeded` (`403` for audit reports) | No, not until the quota resets or the plan changes |
+| A [plan quota](#plan-quotas), such as your monthly API requests | `400`, with `errorCode` `usage_limit_exceeded` | No, not until the quota resets or the plan changes |
 | [ROOTKey being too busy](#when-rootkey-is-too-busy) to take the request | `503`, with `errorCode` `service_unavailable` and a `Retry-After` header | Yes, after the wait. For an upload, check first |
 
 The API does not send `X-RateLimit-Limit`, `X-RateLimit-Remaining` or `X-RateLimit-Reset` headers, so `Retry-After` is the only header to read. Handle a `429` on any endpoint: a rate limit can apply to any request.
@@ -62,7 +62,7 @@ Content-Type: application/json
 
 ## Plan quotas
 
-Your plan sets quotas: the number of API requests you can make each month, and how many files, records and vaults you can hold. Every API request counts toward the monthly quota of API requests. A request that would take you over a quota is refused with [`usage_limit_exceeded`](/api-reference/errors#usage_limit_exceeded), a `400` (a `403` for audit reports). Its `details` object names the quota and has an `upgrade_url`.
+Your plan sets quotas: the number of API requests you can make each month, and how many files, records and vaults you can hold. Every API request counts toward the monthly quota of API requests. A request that would take you over a quota is refused with [`usage_limit_exceeded`](/api-reference/errors#usage_limit_exceeded), a `400`. Its `details` object names the quota and has an `upgrade_url`.
 
 This is not a rate limit, and it comes without `Retry-After`. The same request sent a few seconds later fails the same way until the quota resets or the plan changes, so do not retry it automatically.
 
