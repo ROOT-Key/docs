@@ -363,7 +363,7 @@
       },
       "post": {
         "summary": "Create file",
-        "description": "Uploads a file and anchors its hash to create a verifiable record. The file becomes part of the specified vault.",
+        "description": "Uploads a file and anchors its hash to create a verifiable record. The file becomes part of the specified vault. The file travels in this request; for large files, or to register many files, use a [direct upload](/api-reference/platform/endpoint/files/direct-uploads) instead.",
         "tags": [
           "api-v1-files"
         ],
@@ -429,6 +429,591 @@
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/platform/files/uploads": {
+      "post": {
+        "summary": "Start an upload",
+        "description": "Starts a direct upload: you declare the file's name, size and SHA-256, and ROOTKey answers with a signed URL (or a part plan, for a large file) to send the bytes to. Nothing is anchored and nothing is consumed from your plan until you [complete the upload](/api-reference/platform/endpoint/files/complete-file-upload). Read [Direct file uploads](/api-reference/platform/endpoint/files/direct-uploads) first for the whole flow.",
+        "tags": [
+          "api-v1-files"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "ownerVault",
+                  "fileName",
+                  "size",
+                  "sha256",
+                  "contentType"
+                ],
+                "properties": {
+                  "ownerVault": {
+                    "type": "string",
+                    "description": "Address of the vault that will own the file. `ownerWallet` is accepted as an alias.",
+                    "example": "0xdf67CA8286510997567685c0385ECeAb11C23C92"
+                  },
+                  "fileName": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "description": "The file's name, with its extension. This is the name the file shows in the vault.",
+                    "example": "contract.pdf"
+                  },
+                  "size": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "The file's size in bytes. The bytes you upload must be exactly this long.",
+                    "example": 2621440
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-fA-F]{64}$",
+                    "description": "The SHA-256 of the whole file, as 64 hexadecimal characters. This is the hash that gets anchored.",
+                    "example": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+                  },
+                  "contentType": {
+                    "type": "string",
+                    "description": "The file's media type. ROOTKey keeps it for types that browsers do not execute (PDF, images, plain text, CSV, JSON, archives, office documents, audio and video) and stores anything else as `application/octet-stream`. The `Content-Type` in the response says which.",
+                    "example": "application/pdf"
+                  },
+                  "parentId": {
+                    "type": "string",
+                    "description": "Upload a new version of this file instead of a new file. The file must be in the same vault."
+                  },
+                  "expirationDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Optional expiry date-time for the smart contract"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Upload started. `mode` says how to send the bytes: `single` carries one signed URL, `multipart` carries a part plan.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/SinglePutUpload"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MultipartUpload"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request failed a check: a malformed body, an invalid vault address, a paused vault, or a plan limit (`usage_limit_exceeded`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "The vault or the parent file does not exist in your organization (`resource_not_found`), or direct uploads are not available on this deployment (`presigned_file_upload_disabled`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "`file_too_large`: the file is larger than the 5 GiB maximum.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Your organization has too much open at once, and nothing was created: `too_many_open_file_uploads` or `too_many_open_file_upload_bytes`. Complete or abort some uploads ([list them](/api-reference/platform/endpoint/files/list-file-uploads)), or wait for them to expire, then try again. A `429` with `rate_limit_exceeded` is the rate limit instead: see the `Retry-After` header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "get": {
+        "summary": "List open uploads",
+        "description": "Lists the uploads that API keys of your organization have open: started and not yet completed or expired, or waiting for verification. Use it to find an upload your client lost track of and abort it. The `metadata.organization` block shows what your whole organization has open, which is what the open-upload limits judge.",
+        "tags": [
+          "api-v1-files"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "description": "By creation time.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "The `pagination.nextCursor` of the previous page. It is opaque; a cursor that is not valid gets a `400`.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of open uploads, by creation time.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenFileUploads"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A bad `limit`, `order` or `cursor`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Direct uploads are not available on this deployment (`presigned_file_upload_disabled`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/platform/files/uploads/{uploadId}": {
+      "get": {
+        "summary": "Get upload status",
+        "description": "Returns the state of an upload. Poll it after completing a multipart upload, until `status` is `COMPLETED` or `FAILED`.",
+        "tags": [
+          "api-v1-files"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uploadId",
+            "in": "path",
+            "required": true,
+            "description": "The `uploadId` returned by [Start an upload](/api-reference/platform/endpoint/files/start-file-upload).",
+            "schema": {
+              "type": "string",
+              "pattern": "^upl_[0-9a-f]{32}$",
+              "example": "upl_3f2b8c1e5a7d4e9b9c2a1d6e8f0a4b7c"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The upload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileUploadStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "`file_upload_not_found`: no such upload in your organization. An upload of another organization gets the same answer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Abort an upload",
+        "description": "Aborts an upload that has not been completed, and deletes what was uploaded for it. Repeating the call is harmless. Abort the uploads you will not finish: an open upload counts against your organization's open-upload limits until it ends.",
+        "tags": [
+          "api-v1-files"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uploadId",
+            "in": "path",
+            "required": true,
+            "description": "The `uploadId` returned by [Start an upload](/api-reference/platform/endpoint/files/start-file-upload).",
+            "schema": {
+              "type": "string",
+              "pattern": "^upl_[0-9a-f]{32}$",
+              "example": "upl_3f2b8c1e5a7d4e9b9c2a1d6e8f0a4b7c"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Aborted."
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "`file_upload_not_found`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`file_upload_not_open`: the upload is already being completed, or it is finished.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/platform/files/uploads/{uploadId}/parts": {
+      "post": {
+        "summary": "Sign part URLs",
+        "description": "For a `multipart` upload only: returns one signed URL for each part you name, up to 100 per call. Each URL is signed for that part's exact length (`partSize`, or the remainder for the last part) and lives for a few minutes, so request them shortly before you send the parts.",
+        "tags": [
+          "api-v1-files"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uploadId",
+            "in": "path",
+            "required": true,
+            "description": "The `uploadId` returned by [Start an upload](/api-reference/platform/endpoint/files/start-file-upload).",
+            "schema": {
+              "type": "string",
+              "pattern": "^upl_[0-9a-f]{32}$",
+              "example": "upl_3f2b8c1e5a7d4e9b9c2a1d6e8f0a4b7c"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "parts"
+                ],
+                "properties": {
+                  "parts": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "partNumber"
+                      ],
+                      "properties": {
+                        "partNumber": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 10000,
+                          "description": "From 1 to the `partCount` of the upload."
+                        },
+                        "sha256": {
+                          "type": "string",
+                          "pattern": "^[0-9a-fA-F]{64}$",
+                          "description": "The SHA-256 of this part alone, as 64 hexadecimal characters. Always sending it is safe: it is required where the storage checks each part as it arrives (`file_upload_part_checksum_required` otherwise), and ignored where it cannot."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "One signed request per part.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "parts": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "$ref": "#/components/schemas/PresignedRequest"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "partNumber": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "`file_upload_not_multipart`, `file_upload_part_out_of_range`, `file_upload_part_checksum_required`, or a malformed body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "`file_upload_not_found`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`file_upload_not_open`: the upload is no longer open.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "`file_upload_expired`: the upload expired. Start a new one.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/platform/files/uploads/{uploadId}/complete": {
+      "post": {
+        "summary": "Complete an upload",
+        "description": "Tells ROOTKey the bytes are uploaded. ROOTKey checks them against the SHA-256 you declared, then anchors the hash and creates the file. For a `single` upload the answer is `200`, with the same fields as [Create file](/api-reference/platform/endpoint/files/create-file) plus `fileId`. For a `multipart` upload the answer is `202`: the whole file is verified first, and you poll [the upload](/api-reference/platform/endpoint/files/get-file-upload) until it is `COMPLETED`. This is the call that consumes one file and one API request from your plan. Repeating it is safe: a completed upload answers with its file again, and an upload that is being completed is never anchored twice.",
+        "tags": [
+          "api-v1-files"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uploadId",
+            "in": "path",
+            "required": true,
+            "description": "The `uploadId` returned by [Start an upload](/api-reference/platform/endpoint/files/start-file-upload).",
+            "schema": {
+              "type": "string",
+              "pattern": "^upl_[0-9a-f]{32}$",
+              "example": "upl_3f2b8c1e5a7d4e9b9c2a1d6e8f0a4b7c"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The file was created and its anchor submitted (`single` uploads).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompleteFileUploadResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Accepted (`multipart` uploads): the whole file's SHA-256 is being verified before anything is anchored.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompleteFileUploadAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A plan limit (`usage_limit_exceeded`) or a paused vault. The upload stays open, so you can repeat the call once it is resolved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "`file_upload_not_found`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "`file_upload_incomplete` (the bytes are not all there yet), `file_upload_finalizing` (the upload is already being completed: check its status, then try again), `file_upload_not_open` (it is finished, failed or aborted), or `no_promotable_version`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "`file_upload_expired`: the upload expired. Start a new one.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "`file_upload_checksum_mismatch` or `file_upload_size_mismatch`: what was stored is not what you declared. The upload fails and what was stored is deleted. Start a new one.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "`creation_outcome_unknown` (the anchor may or may not exist: do not repeat the upload, see [Errors](/api-reference/errors#creation_outcome_unknown)) or `internal_error`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3624,6 +4209,265 @@
             }
           }
         ]
+      },
+      "PresignedRequest": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "PUT"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Send the bytes to this URL."
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Send exactly these headers. They are part of the signature, so a different value is refused by the storage. The object can be empty. Your HTTP client sets `Content-Length` itself."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The request must start before this time."
+          }
+        }
+      },
+      "SinglePutUpload": {
+        "type": "object",
+        "properties": {
+          "uploadId": {
+            "type": "string",
+            "example": "upl_3f2b8c1e5a7d4e9b9c2a1d6e8f0a4b7c"
+          },
+          "fileId": {
+            "type": "string",
+            "description": "The id the file will have once the upload is completed."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "single"
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "You can complete the upload until this time."
+          },
+          "upload": {
+            "$ref": "#/components/schemas/PresignedRequest"
+          }
+        }
+      },
+      "MultipartUpload": {
+        "type": "object",
+        "properties": {
+          "uploadId": {
+            "type": "string",
+            "example": "upl_3f2b8c1e5a7d4e9b9c2a1d6e8f0a4b7c"
+          },
+          "fileId": {
+            "type": "string",
+            "description": "The id the file will have once the upload is completed."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "multipart"
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "You can complete the upload until this time."
+          },
+          "partSize": {
+            "type": "integer",
+            "description": "Bytes in each part. The last part is the remainder."
+          },
+          "partCount": {
+            "type": "integer",
+            "description": "How many parts the file is split into."
+          }
+        }
+      },
+      "CompleteFileUploadResponse": {
+        "type": "object",
+        "properties": {
+          "chainId": {
+            "type": "number",
+            "example": 137
+          },
+          "transactionHash": {
+            "type": "string",
+            "description": "On-chain transaction hash of the anchoring transaction",
+            "example": "0xabc123..."
+          },
+          "fileId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "chainId",
+          "transactionHash",
+          "fileId"
+        ]
+      },
+      "CompleteFileUploadAccepted": {
+        "type": "object",
+        "properties": {
+          "uploadId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "VERIFYING"
+            ]
+          }
+        }
+      },
+      "FileUploadStatus": {
+        "type": "object",
+        "properties": {
+          "uploadId": {
+            "type": "string"
+          },
+          "fileId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "VERIFYING",
+              "FINALIZING",
+              "COMPLETED",
+              "FAILED",
+              "EXPIRED",
+              "ABORTED"
+            ],
+            "description": "`PENDING`: waiting for the bytes or for you to complete it. `VERIFYING`: a multipart upload being checked. `FINALIZING`: being anchored. `COMPLETED`: the file exists. `FAILED`: see `failureCode`. `EXPIRED`, `ABORTED`: ended without a file."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "single",
+              "multipart"
+            ]
+          },
+          "size": {
+            "type": "integer",
+            "description": "The declared size in bytes."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "chainId": {
+            "type": "integer",
+            "description": "Once `COMPLETED`."
+          },
+          "transactionHash": {
+            "type": "string",
+            "description": "Once `COMPLETED`."
+          },
+          "failureCode": {
+            "type": "string",
+            "description": "When `FAILED`: the `errorCode` that explains why, such as `file_upload_checksum_mismatch`."
+          }
+        }
+      },
+      "OpenFileUploads": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "uploadId": {
+                  "type": "string"
+                },
+                "fileId": {
+                  "type": "string"
+                },
+                "fileName": {
+                  "type": "string"
+                },
+                "ownerVault": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "VERIFYING",
+                    "FINALIZING"
+                  ]
+                },
+                "mode": {
+                  "type": "string",
+                  "enum": [
+                    "single",
+                    "multipart"
+                  ]
+                },
+                "size": {
+                  "type": "integer",
+                  "description": "The declared size in bytes."
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "expiresAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationBlock"
+          },
+          "metadata": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationMetadata"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "organization": {
+                    "type": "object",
+                    "description": "What your whole organization has open, whoever started it. This is what the open-upload limits judge.",
+                    "properties": {
+                      "openSessions": {
+                        "type": "integer"
+                      },
+                      "reservedBytes": {
+                        "type": "integer"
+                      },
+                      "maxOpenSessions": {
+                        "type": "integer"
+                      },
+                      "maxOpenBytes": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
       }
     }
   }
