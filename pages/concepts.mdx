@@ -173,10 +173,10 @@ See: [Pricing](/pages/pricing)
 
 ---
 
-## Webhook
+## Anchoring Status
 
-A **Webhook** is an HTTP callback that ROOTKey sends to a client-defined endpoint when an asynchronous event completes - such as blockchain anchoring in RKP-1 or RKP-3, or a validation result.
+A file's **anchoring status** says where it is in the blockchain anchoring process. A new file is `PENDING` until its anchoring transaction is confirmed, and then `REGISTERED`. If the transaction does not complete, the file is `FAILED`.
 
-Webhooks allow integrations to react to ROOTKey events in real time without polling the API.
+Anchoring is asynchronous, so integrations read a file's status to find out when it has been anchored.
 
-See: [Webhooks](/pages/webhooks)
+See: [Anchoring Status](/pages/anchoring-status)

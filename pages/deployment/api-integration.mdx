@@ -76,8 +76,8 @@ The API returns structured error responses with machine-readable codes. Branch o
 **Idempotency**
 Operations that anchor data to the blockchain are not inherently idempotent - duplicate submissions result in separate on-chain records. Client-side deduplication should be implemented where appropriate.
 
-**Webhook support**
-Asynchronous operations (e.g. blockchain anchoring in RKP-1 and RKP-3) emit webhook events when complete. Configure webhook endpoints in the ROOTKey dashboard to receive real-time status notifications.
+**Asynchronous anchoring**
+Anchoring a file on the blockchain completes after the API call returns: the file starts as `PENDING` and becomes `REGISTERED` once the transaction is confirmed. Read the file's status to follow it - see [Anchoring Status](/pages/anchoring-status).
 
 ---
 
