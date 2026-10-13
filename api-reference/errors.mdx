@@ -138,7 +138,7 @@ Add a little random delay to every wait, so that clients refused together do not
 
 ### `no_promotable_version`
 - **Status:** 409
-- **Problem:** You asked for a new version of a file that is deleted and has no live version left to attach it to. If a deleted file still has a live version, ROOTKey attaches the new version to the oldest live one; this error means every version is deleted. The `message` is `File '<id>' is deleted and has no live version to attach a new version to. Restore it first, then retry.`
+- **Problem:** You asked for a new version of a file that is deleted and has no live version left to attach it to, in a plain request or in a [direct upload](/api-reference/platform/endpoint/files/direct-uploads). If a deleted file still has a live version, ROOTKey attaches the new version to the oldest live one; this error means every version is deleted. The `message` is `File '<id>' is deleted and has no live version to attach a new version to. Restore it first, then retry.`
 - **Solution:** Restore the file, from the **Deleted Items** page (the Restore Center) of the ROOTKey app or with `PATCH /platform/files/{fileId}/restore`, then create the version again. If you no longer need the deleted file, upload the content as a new file instead.
 
 <span id="waiting-for-registration" className="error-alias" />
@@ -297,7 +297,7 @@ Add a little random delay to every wait, so that clients refused together do not
 
 ## Direct file uploads
 
-These come from the [direct upload](/api-reference/platform/endpoint/files/direct-uploads) endpoints. An upload that is refused for a plan limit gets [`usage_limit_exceeded`](#usage_limit_exceeded), and one whose outcome is unknown gets [`creation_outcome_unknown`](#creation_outcome_unknown), described above.
+These come from the [direct upload](/api-reference/platform/endpoint/files/direct-uploads) endpoints. An upload that is refused for a plan limit gets [`usage_limit_exceeded`](#usage_limit_exceeded), one whose outcome is unknown gets [`creation_outcome_unknown`](#creation_outcome_unknown), and a new version of a deleted file that has no live version left gets [`no_promotable_version`](#no_promotable_version), all described above.
 
 <span id="file-too-large" className="error-alias" />
 
@@ -396,13 +396,6 @@ These come from the [direct upload](/api-reference/platform/endpoint/files/direc
 - **Status:** none: it is the `failureCode` of a `multipart` upload that is `FAILED`
 - **Problem:** The upload was completed, but the vault stayed paused for the whole time that ROOTKey waits for it to become active. The upload was discarded.
 - **Solution:** Make sure the vault is active, then start a new upload.
-
-<span id="no-promotable-version" className="error-alias" />
-
-### `no_promotable_version`
-- **Status:** 409
-- **Problem:** You uploaded a new version of a file that is deleted and has no live version to attach it to.
-- **Solution:** Restore the file, then send the new version again.
 
 <span id="presigned-file-upload-disabled" className="error-alias" />
 
