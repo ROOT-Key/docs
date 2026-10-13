@@ -34,7 +34,7 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 | `409` Conflict | The request conflicts with the current state of the resource, such as adding a version to a deleted file. Restore the file first. |
 | `410` Gone | The vault, file or record was permanently removed, so it can no longer be restored or downloaded. |
 | `413` Payload Too Large | The upload or the request body is larger than the API accepts. There is no `errorCode`. |
-| `429` Too Many Requests | Too many requests in a short time ([`rate_limit_exceeded`](#rate_limit_exceeded)). Wait the number of seconds in the `Retry-After` header before you retry. See [Rate Limits](/pages/rate-limits). |
+| `429` Too Many Requests | Too many requests in a short time (`rate_limit_exceeded`). Wait the number of seconds in the `Retry-After` header before you retry. See [Rate Limits](/pages/rate-limits). |
 | `500` Internal Server Error | ROOTKey could not complete the request: [`internal_error`](#internal_error), or [`creation_outcome_unknown`](#creation_outcome_unknown) for an upload whose outcome is unknown. |
 | `503` Service Unavailable | ROOTKey is too busy to take the request for a moment ([`service_unavailable`](#service_unavailable)). Wait the number of seconds in the `Retry-After` header before you retry. |
 
@@ -98,6 +98,13 @@ Add a little random delay to every wait, so that clients refused together do not
 - **Problem:** The request went over a rate limit: your plan's API rate limit, or the limit of an operation that has its own, such as listing deleted vaults, files and records and restoring them. The `Retry-After` header, and `retryAfter` in the error, give the number of seconds to wait. Unlike most errors, this response carries no `docUrl`.
 - **Solution:** Wait that many seconds, then send the request again. ROOTKey refused it before doing anything, so sending it again is safe. [Rate Limits](/pages/rate-limits) has the limits and how to stay under them.
 
+<span id="service-unavailable" className="error-alias" />
+
+### `service_unavailable`
+- **Status:** 503
+- **Problem:** ROOTKey is too busy to take the request for a moment. Nothing was wrong with the request. The `Retry-After` header, and `retryAfterSeconds` in the error, give the number of seconds to wait. Unlike most errors, this response carries no `docUrl`.
+- **Solution:** Wait that many seconds, then send the request again, with a little random delay added so that clients refused together do not all come back together, and stop after a few attempts if your integration retries automatically. ROOTKey normally refuses the request before it has done anything, so sending it again is safe, with one exception: an upload. If the busy moment came after ROOTKey had sent the file for anchoring, the file may be anchored already, so before sending it again, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown). If the `503` keeps coming back, contact [support@rootkey.ai](mailto:support@rootkey.ai), quoting the `requestId` when the error carries one.
+
 <span id="creation-outcome-unknown" className="error-alias" />
 
 ### `creation_outcome_unknown`
@@ -111,13 +118,6 @@ Add a little random delay to every wait, so that clients refused together do not
 - **Status:** 500, or the `4xx` status of a step that ROOTKey runs on your behalf, such as anchoring a file on the blockchain, when that step rejects the request
 - **Problem:** ROOTKey could not complete the request and has no more specific code for the failure. When the status is a `4xx`, the `message` is the rejecting step's explanation.
 - **Solution:** With a `4xx`, correct what the `message` describes, then send the request again. With a `500`, retry later, and if it keeps failing, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`. An upload that failed with a `500` may still have been anchored, so before sending it again, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown). A `500` without an `errorCode` means the same as `internal_error`.
-
-<span id="service-unavailable" className="error-alias" />
-
-### `service_unavailable`
-- **Status:** 503
-- **Problem:** ROOTKey is too busy to take the request for a moment. Nothing was wrong with the request. The `Retry-After` header, and `retryAfterSeconds` in the error, give the number of seconds to wait. Unlike most errors, this response carries no `docUrl`.
-- **Solution:** Wait that many seconds, then send the request again, with a little random delay added so that clients refused together do not all come back together, and stop after a few attempts if your integration retries automatically. ROOTKey normally refuses the request before it has done anything, so sending it again is safe, with one exception: an upload. If the busy moment came after ROOTKey had sent the file for anchoring, the file may be anchored already, so before sending it again, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown). If the `503` keeps coming back, contact [support@rootkey.ai](mailto:support@rootkey.ai), quoting the `requestId` when the error carries one.
 
 ## Accounts and shared links
 
