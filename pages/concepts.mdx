@@ -14,18 +14,21 @@ This page defines the key concepts, data model primitives, and terminology used 
 ```mermaid
 flowchart TD
     WS[Workspace] --> V[Vault\nProtocol-configured]
+    WS --> T[Table\nSchema-defined]
     V --> F[Files]
-    V --> T[Tables]
     V --> AN[Analytics]
+    T --> R[Records]
     F --> FA[(Blockchain Anchors\nPer version)]
-    T --> TA[(Blockchain Anchors\nPer record)]
+    R --> RA[(Blockchain Anchors\nPer record)]
 ```
+
+Vaults and tables are separate containers, each with its own address: vaults hold files, tables hold records.
 
 ---
 
 ## Workspace
 
-A **Workspace** is the top-level organisational unit in ROOTKey. It corresponds to your organisation or project. All API keys, vaults, and usage metrics are scoped to a workspace.
+A **Workspace** is the top-level organisational unit in ROOTKey. It corresponds to your organisation or project. All API keys, vaults, tables, and usage metrics are scoped to a workspace.
 
 A single account can manage multiple workspaces (e.g. one per environment, product line, or client).
 
@@ -33,7 +36,7 @@ A single account can manage multiple workspaces (e.g. one per environment, produ
 
 ## Vault
 
-A **Vault** is the primary container for data assets within ROOTKey. Every file and table belongs to a vault.
+A **Vault** is the container that holds your files in ROOTKey. Every file belongs to a vault. Tables are not part of a vault: a [Table](#table) is a separate container for records, with its own address.
 
 Vaults are configured with:
 - A **data processing protocol** (RKP-1, RKP-2, or RKP-3) - determines how assets are anchored
@@ -55,7 +58,7 @@ Each file has:
 - A creation timestamp and blockchain anchor
 - A version history (every update creates a new version)
 - A validation state (valid, invalid, or not yet validated)
-- An owner (the wallet that anchored it)
+- An owner (the wallet of the vault it belongs to)
 
 ---
 
@@ -88,7 +91,9 @@ A validation result is itself a blockchain operation - the result is anchored, c
 
 ## Table
 
-A **Table** is a structured, schema-defined data store within a vault. Tables allow you to store and manage datasets with defined column types, rather than arbitrary file payloads.
+A **Table** is a structured, schema-defined data store for [records](#record). A table is not part of a vault: it is a container of its own, created and addressed separately. Tables allow you to store and manage datasets with defined column types, rather than arbitrary file payloads.
+
+Vaults hold files and tables hold records, and the two are not interchangeable. An API call that names the wrong kind of container - a vault's address where a table's is expected, or the reverse - is answered with [`resource_not_found`](/api-reference/errors#resource_not_found).
 
 Each write to a table (create or update record) is anchored individually, providing row-level integrity and auditability for structured data.
 
@@ -96,7 +101,11 @@ Each write to a table (create or update record) is anchored individually, provid
 
 ## Record
 
-A **Record** is an individual row within a table. Like files, records are versioned - every update creates a new version with its own blockchain anchor. Records can be validated, transferred, and queried through their full history.
+A **Record** is an individual row within a table. Every record belongs to exactly one table, and the API identifies that table by its address. That address travels in fields named `ownerVault` (when you write a record) and `vaultAddress` (when you list records); despite the names, it is the **table's** address you pass there, not a vault's.
+
+Like files, records are versioned - every update creates a new version with its own blockchain anchor. A record's full version history, activity history, and validation history can be queried.
+
+See: [Records API](/api-reference/platform/endpoint/records/overview)
 
 ---
 
@@ -123,7 +132,7 @@ A **Blockchain Anchor** is the on-chain record produced by a write operation. It
 - **SHA-256 hash** of the data payload
 - **Block timestamp** - the moment the anchor was written
 - **Operation type** - create, update, validate, transfer
-- **Asset identifiers** - vault and file/record IDs
+- **Asset identifiers** - the owning vault or table, and the file or record
 - **Originating wallet address**
 
 Anchors are permanent and publicly queryable on Polygon. They are the cryptographic root of trust for every integrity guarantee ROOTKey provides.
@@ -132,9 +141,13 @@ Anchors are permanent and publicly queryable on Polygon. They are the cryptograp
 
 ## Wallet
 
-A **Wallet** is a blockchain identity - a public/private key pair used to sign and own on-chain operations. In ROOTKey, your workspace is associated with a managed wallet that signs all blockchain transactions on your behalf.
+A **Wallet** is a blockchain identity - a public/private key pair used to sign and own on-chain operations. Every vault and every table has a wallet of its own, created together with it. The wallet's address is the vault's or table's address, and it is recorded as the owner of everything anchored in it.
 
-For advanced use cases, clients can configure their own wallet for signing operations, maintaining direct blockchain ownership of all anchored assets.
+ROOTKey generates and holds these keys on your behalf: the API never asks you for a private key and never returns one. Which key signs the blockchain transactions depends on who pays the network fees under your subscription. By default ROOTKey pays and signs with its own key; if the subscription is set up for you to pay the fees, the vault's or table's own key signs instead.
+
+In an on-premise installation the wallets that sign never leave your environment.
+
+See: [On-premise](/pages/on-premise/overview)
 
 ---
 
