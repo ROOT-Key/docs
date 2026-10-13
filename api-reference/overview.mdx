@@ -32,10 +32,10 @@ Blockchain anchoring is asynchronous: the API responds with the operation in `PE
 
 <CardGroup cols={2}>
   <Card title="Vaults" icon="vault" href="/api-reference/platform/endpoint/vaults/create-vault">
-    Vaults are the top-level containers for your data assets. Each vault has its own protocol configuration, access controls, and lifecycle management.
+    Vaults are the top-level containers for your files. Each vault has its own protocol configuration, access controls, and lifecycle management.
   </Card>
   <Card title="Files" icon="file" href="/api-reference/platform/endpoint/files/get-files">
-    Files are the primary asset type within a vault. Each file supports versioning, validation, history traversal, and ownership transfer - all with integrity anchoring.
+    Files are the primary asset type within a vault. Each file supports versioning, validation, and history traversal - all with integrity anchoring.
   </Card>
   <Card title="Records" icon="rows" href="/api-reference/platform/endpoint/records/overview">
     Individual records within a table, with full version history and per-record integrity validation.
@@ -54,7 +54,6 @@ Blockchain anchoring is asynchronous: the API responds with the operation in `PE
 | **Integrity anchoring** | Every write operation produces a cryptographic proof anchored to the Polygon blockchain |
 | **Version history** | Full lineage tracking for files and records - every version is independently verifiable |
 | **Validation** | On-demand integrity validation against the on-chain proof - detect tampering at any point in the asset lifecycle |
-| **Ownership transfer** | Transfer custody of assets between vaults or accounts with an immutable chain-of-custody record |
 | **Analytics** | Usage and activity metrics for monitoring workloads, adoption, and operational patterns |
 | **Data Recovery** | Restore soft-deleted vaults and files within the retention window before permanent deletion |
 
@@ -117,7 +116,7 @@ Responses are JSON objects. Successful responses return a `2xx` status code. Err
 
 ## Rate Limits
 
-API requests are rate-limited per API key based on your active plan. Exceeded limits return `429 Too Many Requests`. See [Rate Limits](/pages/rate-limits) for plan-specific limits and retry guidance.
+Each plan has its own API rate limit, in requests per minute, and some operations, such as listing and restoring deleted items, have limits of their own. Over a rate limit the API answers `429 Too Many Requests` with a `Retry-After` header. Your plan also sets quotas, such as a monthly number of API requests; a request over a quota is refused with `usage_limit_exceeded`. When ROOTKey is too busy to take a request it answers `503 Service Unavailable`, also with `Retry-After`. See [Rate Limits](/pages/rate-limits) for the limits, and [Retrying a failed request](/api-reference/errors#retrying-a-failed-request) for which failures are safe to send again.
 
 ---
 

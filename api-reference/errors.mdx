@@ -29,13 +29,29 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 | --- | --- |
 | `400` Bad Request | The request failed a check, and the `errorCode` says which. A body that cannot be parsed, such as invalid JSON, also gets a `400`, without an `errorCode`. |
 | `401` Unauthorized | The `x-api-key` header is missing, or the key does not exist or is inactive. There is no `errorCode`; the `message` says which of the three it is. |
-| `403` Forbidden | The key is valid, but the request is not allowed: for example, your organization has no subscription ([`resource_not_found`](#resource_not_found)), your plan does not include the feature (`unauthorized_access`), or an access rule set for your organization blocks the request (`access_policy_denied`). |
+| `403` Forbidden | The key is valid, but the request is not allowed: for example, your organization has no subscription ([`resource_not_found`](#resource_not_found)), your plan does not include the feature ([`unauthorized_access`](#unauthorized_access), or [`feature_not_found`](#feature_not_found) for an audit report), an access rule set for your organization blocks the request ([`access_policy_denied`](#access_policy_denied)), or a Restricted vault is being downloaded from a country your organization does not allow ([`geofence_blocked`](#geofence_blocked)). |
 | `404` Not Found | The vault, table, file, record or recovery point does not exist in your organization ([`resource_not_found`](#resource_not_found)). A path the API does not have also gets a `404`, with an HTML body instead of JSON. |
 | `409` Conflict | The request conflicts with the current state of the resource, such as adding a version to a deleted file. Restore the file first. |
 | `410` Gone | The vault, file or record was permanently removed, so it can no longer be restored or downloaded. |
 | `413` Payload Too Large | The upload or the request body is larger than the API accepts. There is no `errorCode`. |
 | `429` Too Many Requests | Too many requests in a short time (`rate_limit_exceeded`). Wait the number of seconds in the `Retry-After` header before you retry. See [Rate Limits](/pages/rate-limits). |
 | `500` Internal Server Error | ROOTKey could not complete the request: [`internal_error`](#internal_error), or [`creation_outcome_unknown`](#creation_outcome_unknown) for an upload whose outcome is unknown. |
+| `503` Service Unavailable | ROOTKey is too busy to take the request for a moment ([`service_unavailable`](#service_unavailable)). Wait the number of seconds in the `Retry-After` header before you retry. |
+
+# Retrying a failed request
+
+Whether a failed request is safe to send again depends on the response. Decide from the status and the `errorCode`:
+
+| Response | Send it again? |
+| --- | --- |
+| `429` [`rate_limit_exceeded`](#rate_limit_exceeded) | Yes, after the number of seconds in the `Retry-After` header. ROOTKey refused the request before doing anything. |
+| `503` [`service_unavailable`](#service_unavailable) | Yes, after the number of seconds in the `Retry-After` header. For an upload, check the vault first, as the entry describes. |
+| `500` [`creation_outcome_unknown`](#creation_outcome_unknown) | Not automatically. Check whether the file is in the vault first, as the entry describes. |
+| Any other `500`, with [`internal_error`](#internal_error) or without an `errorCode` | A request that only reads: yes, after a pause that grows with each attempt. An upload: check the vault first, because it may have been anchored. Any other request: retry later, and contact support if it keeps failing. |
+| `400` [`usage_limit_exceeded`](#usage_limit_exceeded) | No. The same request fails the same way until the plan's limit resets or the plan changes. |
+| Any other `4xx` | No. Correct the request first: the `errorCode` and the `message` say what is wrong. |
+
+Add a little random delay to every wait, so that clients refused together do not all come back together.
 
 # ROOTKey Error Codes
 
@@ -68,12 +84,201 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 - **Problem:** Something the request refers to, such as a vault, table, file, record or recovery point, does not exist in your organization. With status `403` and the message `Subscription not found`, ROOTKey could not find your organization's subscription.
 - **Solution:** Check the identifier against the resources your organization owns, for example by [listing the vault's files](/api-reference/platform/endpoint/files/get-files). Because the status differs between endpoints, branch on the `errorCode`. For a missing subscription, check your organization's plan in the ROOTKey app, and contact [support@rootkey.ai](mailto:support@rootkey.ai) if it is active.
 
+<span id="access-policy-denied" className="error-alias" />
+
+### `access_policy_denied`
+- **Status:** 403
+- **Problem:** Your organization's IP access rules (IP Access Control in the ROOTKey app) do not allow this request. Most endpoints are checked against these rules, which judge where the request comes from, such as its IP address, network range, country or continent; a rule can apply to reads, to writes or to both. Under an allow-list policy, a request that matches no rule is refused. The `message` is `This request is not permitted by the organization's security policy.` It never says which rule matched or why, and the status alone does not tell this error from the other `403`s on this page.
+- **Solution:** Send the request from a network the policy allows, such as your servers' usual outbound IP address, or ask an organization administrator to review the rules in the ROOTKey app. A retry from the same network is refused again.
+
+<span id="geofence-blocked" className="error-alias" />
+
+### `geofence_blocked`
+- **Status:** 403
+- **Problem:** You tried to download a file from a vault classified Restricted, your organization limits access to its Restricted vaults to a list of countries, and the request came from outside that list or from a location ROOTKey could not determine. The `message` is `This Restricted vault cannot be accessed from your current location.` The location is judged from the IP address the request reaches ROOTKey from, so a VPN, a proxy or a cloud region in another country counts.
+- **Solution:** Download from a location inside the allowed list. To change the list, ask an organization administrator, or contact [support@rootkey.ai](mailto:support@rootkey.ai).
+
+<span id="resource-not-active" className="error-alias" />
+
+### `resource_not_active`
+- **Status:** 400
+- **Problem:** The vault (or table) you are writing to is deactivated, so ROOTKey refused to create the file, the new version or the record. The `message` is `This vault is not active!`
+- **Solution:** Reactivate the vault in the ROOTKey app, then send the request again. Updating a deactivated vault gets [`resource_deactive`](#resource_deactive) instead; handle both codes the same way.
+
+<span id="resource-deactive" className="error-alias" />
+
+### `resource_deactive`
+- **Status:** 400
+- **Problem:** The vault you tried to update is deactivated. The `message` is `This vault is deactive!`, spelled as the API sends it. It is the same condition as [`resource_not_active`](#resource_not_active), which the endpoints that write files and records send.
+- **Solution:** Reactivate the vault in the ROOTKey app, then send the update again.
+
+<span id="invalid-record-data" className="error-alias" />
+
+### `invalid_record_data`
+- **Status:** 400
+- **Problem:** The request to create a file or a record does not carry what it creates. The `message` starts with `Invalid record data:` and says what is missing: `File is required for file type` when a file or a version is created without a `file` part, and `Record data is required for record type` when a record is created without `recordData`. The code is named after records, but it covers files too.
+- **Solution:** For a file, send the content in the `file` field of the multipart form. For a record, send `recordData` as a JSON object; see [Records](/api-reference/platform/endpoint/records/overview) for what it can hold.
+
+<span id="invalid-filters" className="error-alias" />
+
+### `invalid_filters`
+- **Status:** 400
+- **Problem:** A filter on a listing has a value ROOTKey cannot use. The `message` is `Invalid filters. Please check the input data.`, and the `details` array lists each offending parameter as a `field` and a `message`, such as `startDate` with `Invalid ISO date`. It applies to the lists of files and records (`startDate`, `endDate` and `status`) and to the lists of deleted vaults, files and records (`deletedFrom` and `deletedTo`).
+- **Solution:** Correct the parameters named in `details`. Dates are in ISO 8601 format, and `status` is `pending`, `registered` or `error`.
+
+<span id="parent-version-not-in-vault" className="error-alias" />
+
+### `parent_version_not_in_vault`
+- **Status:** 400
+- **Problem:** You asked for a new version of a file (`parentId`), but that file is not in the vault named by `ownerVault`: a version has to live in the same vault as the file it versions. ROOTKey sends the same error when no file has that id. The `message` starts `File '<parentId>' does not belong to the vault this version is being created in.`
+- **Solution:** Send `ownerVault` with the address of the vault that holds the file, and check that `parentId` is the id of one of its files by [listing the vault's files](/api-reference/platform/endpoint/files/get-files).
+
+<span id="no-promotable-version" className="error-alias" />
+
+### `no_promotable_version`
+- **Status:** 409
+- **Problem:** You asked for a new version of a file that is deleted and has no live version left to attach it to. If a deleted file still has a live version, ROOTKey attaches the new version to the oldest live one; this error means every version is deleted. The `message` is `File '<id>' is deleted and has no live version to attach a new version to. Restore it first, then retry.`
+- **Solution:** Restore the file, from the **Deleted Items** page (the Restore Center) of the ROOTKey app or with `PATCH /platform/files/{fileId}/restore`, then create the version again. If you no longer need the deleted file, upload the content as a new file instead.
+
+<span id="waiting-for-registration" className="error-alias" />
+
+### `waiting_for_registration`
+- **Status:** 400
+- **Problem:** You asked to validate a file that is not registered yet. A file can be validated only once its anchor is confirmed, and this file's `status` is still `PENDING`, or its anchoring failed and the `status` is `FAILED`. The `message` is `File is waiting for registration!` followed by `Please try again later.`
+- **Solution:** Check the file's `status` with [Fetch file](/api-reference/platform/endpoint/files/get-file-by-id) until it is `REGISTERED`, waiting a little longer between checks because confirmation depends on the blockchain network, then validate again. A file whose `status` is `FAILED` was never anchored and cannot be validated: send it for anchoring again from the file's actions menu in the ROOTKey app, or upload it again.
+
+<span id="invalid-ownership" className="error-alias" />
+
+### `invalid_ownership`
+- **Status:** 403 when you delete or restore a record; 400 when you delete or restore a file
+- **Problem:** The vault or table named in `ownerAddress` does not own the file or record. The `message` is `This vault is not the owner of this file!` or `This vault is not the owner of this record!`
+- **Solution:** Send `ownerAddress` with the address of the vault that holds the file, or of the table that holds the record. The status differs between files and records, so branch on the `errorCode`.
+
+<span id="MISSING-ARGUMENTS" className="error-alias" />
+
+### `MISSING_ARGUMENTS`
+- **Status:** 400
+- **Problem:** You asked for a `partial` recovery point without naming the vaults to include. The `message` is `When requiring a partial recovery point, at least one vault must be defined!` The code is in upper case, exactly as the API sends it, so match that spelling in your code.
+- **Solution:** Send `vaults` with the addresses of the vaults to include when `scope` is `partial`, or use the `global` scope to include all of your organization's vaults.
+
+<span id="INVALID-TIME-RANGE" className="error-alias" />
+
+### `INVALID_TIME_RANGE`
+- **Status:** 400
+- **Problem:** The `timeRange` of the recovery point is not valid: `start` or `end` is in the future, or `end` is earlier than `start`. The `message` is `The start date must be less than the end date`. The code is in upper case, exactly as the API sends it, so match that spelling in your code.
+- **Solution:** Send a `timeRange` in the past, with `start` earlier than `end`. `end` is optional and defaults to now.
+
+<span id="wallet-not-deleted" className="error-alias" />
+
+### `wallet_not_deleted`
+- **Status:** 400
+- **Problem:** You asked to restore a vault that is not deleted. The `message` is `Wallet <address> is not deleted!`: the code and the message call a vault a wallet.
+- **Solution:** Nothing needs restoring, because the vault is not in the trash. Treat the response as a success.
+
+<span id="file-not-deleted" className="error-alias" />
+
+### `file_not_deleted`
+- **Status:** 400
+- **Problem:** You asked to restore a file that is not deleted. The `message` is `File <id> is not deleted!`
+- **Solution:** Nothing needs restoring, because the file is not in the trash. Treat the response as a success.
+
+<span id="record-not-deleted" className="error-alias" />
+
+### `record_not_deleted`
+- **Status:** 400
+- **Problem:** You asked to restore a record that is not deleted. The `message` is `Record <id> is not deleted!`
+- **Solution:** Nothing needs restoring, because the record is not in the trash. Treat the response as a success.
+
+<span id="vault-also-deleted" className="error-alias" />
+
+### `vault_also_deleted`
+- **Status:** 400
+- **Problem:** You asked to restore a file whose vault is deleted too. Restoring the file alone would leave it unreachable, so ROOTKey refuses. The `message` is `File <id>'s owning vault is currently deleted.` followed by the instruction to restore the vault first.
+- **Solution:** Restore the vault first, from the **Deleted Items** page of the ROOTKey app or with `PATCH /platform/vaults/{vaultAddress}/restore`, then restore the file again.
+
+<span id="table-also-deleted" className="error-alias" />
+
+### `table_also_deleted`
+- **Status:** 400
+- **Problem:** You asked to restore a record whose table is deleted too. Restoring the record alone would leave it unreachable, so ROOTKey refuses. The `message` is `Record <id>'s owning table is currently deleted.` followed by the instruction to restore the table first.
+- **Solution:** Restore the table from the **Deleted Items** page of the ROOTKey app (the API has no endpoint to restore a table), then restore the record again.
+
+<span id="retention-deadline-expired" className="error-alias" />
+
+### `retention_deadline_expired`
+- **Status:** 400
+- **Problem:** The vault, file or record was deleted so long ago that its retention period has run out, so ROOTKey no longer allows it to be restored, although its content may still be held. The `message` gives the date: `This item passed its retention deadline on <date> and can no longer be restored.` The lists of deleted items show each item's `purgeDeadline`.
+- **Solution:** Restore deleted items before their `purgeDeadline`. For an item that is already past it, an organization administrator can assign a longer retention policy to the vault or table that held it, or pause its retention, in the ROOTKey app; the item can be restored after that, as long as its content has not been removed meanwhile. See [Data Retention](/pages/retention-policies).
+
+<span id="wallet-already-purged" className="error-alias" />
+
+### `wallet_already_purged`
+- **Status:** 410
+- **Problem:** You asked to restore a vault that was deleted and then permanently removed once its retention period ended, so it cannot be restored. The `message` is `Wallet <address> was already purged and cannot be restored`: the code and the message call a vault a wallet.
+- **Solution:** Nothing can bring the vault back. Create a new one if you still need it. See [Data Retention](/pages/retention-policies) for what is removed when the period ends.
+
+<span id="file-already-purged" className="error-alias" />
+
+### `file_already_purged`
+- **Status:** 410
+- **Problem:** You asked to restore a file whose content was permanently removed once its retention period ended, so it cannot be restored. The `message` is `File <id> was already purged and cannot be restored`.
+- **Solution:** Nothing can bring the file back. Upload it again as a new file if you still have it.
+
+<span id="record-already-purged" className="error-alias" />
+
+### `record_already_purged`
+- **Status:** 410
+- **Problem:** You asked to restore a record whose content was permanently removed once its retention period ended, so it cannot be restored. The `message` is `Record <id> was already purged and cannot be restored`.
+- **Solution:** Nothing can bring the record back. Create it again if you still have its data.
+
+<span id="file-permanently-deleted" className="error-alias" />
+
+### `file_permanently_deleted`
+- **Status:** 410
+- **Problem:** You asked to download a file that was deleted and then permanently removed once its retention period ended, so there is no content left to download. The `message` is `File <id> was permanently deleted per retention policy`.
+- **Solution:** The content cannot be recovered. Upload your own copy as a new file if you still need it in ROOTKey.
+
+<span id="unauthorized-access" className="error-alias" />
+
+### `unauthorized_access`
+- **Status:** 403 when you create a recovery point; 400 on other endpoints
+- **Problem:** Your organization's plan does not include a feature the request needs. For example, [creating a recovery point](/api-reference/platform/endpoint/recovery/schedule-recovery-point) needs Bulk Recovery, which not every plan includes. The `message` names your plan and the feature, and the plan that unlocks it when there is one: `Your <plan> plan does not include <feature>. Upgrade to <plan> to unlock it.` The error's `details` object is the one described under [`usage_limit_exceeded`](#usage_limit_exceeded), with `limit` and `current` set to `null` and `required_plan` naming the cheapest plan that includes the feature.
+- **Solution:** Move to a plan that includes the feature: `upgrade_url` links to the upgrade page, and [contact@rootkey.ai](mailto:contact@rootkey.ai) can define a plan for your needs. Repeating the request does not help until the plan changes. Other `403` errors share this status, so branch on `errorCode`: [`access_policy_denied`](#access_policy_denied), for instance, depends on where the request comes from, not on your plan.
+
+<span id="feature-not-found" className="error-alias" />
+
+### `feature_not_found`
+- **Status:** 403 when you request an audit report; 400 on other endpoints
+- **Problem:** The feature the request needs is not part of your organization's plan at all. The `message` is `Feature with key "<key>" was not found on the current plan.` For an [audit report](/api-reference/platform/endpoint/files/generate-audit-report) the key is `complianceReports`: your plan does not include compliance reports. On other endpoints it means the plan has no entry for a feature ROOTKey meters, which points to how the plan was set up. When `details` is present, it is the object described under [`usage_limit_exceeded`](#usage_limit_exceeded).
+- **Solution:** For an audit report, move to a plan that includes compliance reports, or contact [contact@rootkey.ai](mailto:contact@rootkey.ai). On other endpoints, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`: the plan has to be corrected, and nothing in the request needs to change.
+
+<span id="usage-not-initialized" className="error-alias" />
+
+### `usage_not_initialized`
+- **Status:** 400
+- **Problem:** ROOTKey could not check a plan limit because your subscription has no usage counter for that feature. The `message` is `Usage for feature "<key>" is not initialized in the subscription.` This is a problem with how the subscription was set up, not with the request.
+- **Solution:** Contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`, so the subscription can be corrected. Repeating the request does not help until then.
+
 <span id="usage-limit-exceeded" className="error-alias" />
 
 ### `usage_limit_exceeded`
-- **Status:** 400 (403 when you request an audit report)
+- **Status:** 400
 - **Problem:** The request would take your organization over one of its plan's limits, such as the number of API requests, files, records or vaults.
 - **Solution:** The error's `details` object names the limit: `feature`, `limit`, `current` and `plan`, with an `upgrade_url` where you can move to a larger plan. To define a plan for your needs, contact [contact@rootkey.ai](mailto:contact@rootkey.ai).
+
+<span id="rate-limit-exceeded" className="error-alias" />
+
+### `rate_limit_exceeded`
+- **Status:** 429
+- **Problem:** The request went over a rate limit: your plan's API rate limit, or the limit of an operation that has its own, such as listing deleted vaults, files and records and restoring them. The `Retry-After` header, and `retryAfter` in the error, give the number of seconds to wait. Unlike most errors, this response carries no `docUrl`.
+- **Solution:** Wait that many seconds, then send the request again. ROOTKey refused it before doing anything, so sending it again is safe. [Rate Limits](/pages/rate-limits) has the limits and how to stay under them.
+
+<span id="service-unavailable" className="error-alias" />
+
+### `service_unavailable`
+- **Status:** 503
+- **Problem:** ROOTKey is too busy to take the request for a moment. Nothing was wrong with the request. The `Retry-After` header, and `retryAfterSeconds` in the error, give the number of seconds to wait. Unlike most errors, this response carries no `docUrl`.
+- **Solution:** Wait that many seconds, then send the request again, with a little random delay added so that clients refused together do not all come back together, and stop after a few attempts if your integration retries automatically. ROOTKey normally refuses the request before it has done anything, so sending it again is safe, with one exception: an upload. If the busy moment came after ROOTKey had sent the file for anchoring, the file may be anchored already, so before sending it again, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown). If the `503` keeps coming back, contact [support@rootkey.ai](mailto:support@rootkey.ai), quoting the `requestId` when the error carries one.
 
 <span id="creation-outcome-unknown" className="error-alias" />
 

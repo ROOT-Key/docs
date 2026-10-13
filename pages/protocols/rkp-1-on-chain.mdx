@@ -8,7 +8,7 @@ mode: wide
 
 ## Overview
 
-**RKP-1 (Full On-Chain)** is ROOTKey's highest-integrity data processing protocol. Every data operation - creation, validation, versioning, or transfer - is recorded directly to the Polygon blockchain via a smart contract transaction.
+**RKP-1 (Full On-Chain)** is ROOTKey's highest-integrity data processing protocol. Every data operation - creation, validation, or versioning - is recorded directly to the Polygon blockchain via a smart contract transaction.
 
 The result is a permanent, tamper-evident, publicly verifiable audit trail that requires no trust in any third party, including ROOTKey. Any entity with blockchain access can independently verify the integrity and existence of a record without contacting ROOTKey or relying on ROOTKey infrastructure.
 
@@ -53,7 +53,7 @@ On-chain records are **immutable** - they cannot be altered, deleted, or invalid
 | Maximum payload size per request | 35 MB |
 | Burst allowance | 2x/10seconds |
 
-For plan-specific throughput limits, visit [Rate Limits](/pages/rate-limits).
+For the limits the API applies to requests, and how to handle them, see [Rate Limits](/pages/rate-limits).
 
 {/*
   TODO: hidden until measured. Load tests (2026-09-30 / 2026-10-01, single-node on-prem, Polygon Amoy) did not

@@ -132,7 +132,7 @@ Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-nam
 
 | Tool | What it does |
 |---|---|
-| `rootkey_create_vault` | Create a vault or table and return its address |
+| `rootkey_create_vault` | Create a vault and return its address |
 | `rootkey_update_vault` | Rename a vault or change its description |
 | `rootkey_delete_vault` | Move a vault and its files to the trash, recoverable until retention purges them |
 
@@ -266,7 +266,11 @@ This is useful for analysis and reporting sessions where nothing should change. 
   </Accordion>
 
   <Accordion title="Requests fail with 429 Too Many Requests">
-    You have exceeded the rate limit for that API key. The server automatically retries once the period indicated by the `Retry-After` header has passed, provided the wait is short. Repeated 429s mean the workload needs a higher plan limit - see [Rate Limits](/pages/rate-limits).
+    A request went over a rate limit: your plan's API rate limit, or the limit of an operation that has its own - [Rate Limits](/pages/rate-limits) says which apply. The server automatically retries once the period indicated by the `Retry-After` header has passed, provided the wait is short. If 429s keep coming, spread those calls out over time, or move to a plan with a higher rate limit.
+  </Accordion>
+
+  <Accordion title="Requests fail with 503 Service Unavailable">
+    ROOTKey was too busy to take the request for a moment. The server waits as long as the `Retry-After` header says and tries again, up to three attempts in all. It does this for listing and fetching, updating and deleting (GET, PUT and DELETE requests), but not for anything it sends as a POST, such as creating a file, a record or a vault: a repeat could create the same item twice. If one of those tools reports a 503, ask Claude to list the vault or table to see whether the item was created before you run the tool again. If a 503 keeps coming back, wait a little and try again, and contact [support@rootkey.ai](mailto:support@rootkey.ai) with the `requestId` the tool reports.
   </Accordion>
 
   <Accordion title="A tool reports the created file or record as null">
