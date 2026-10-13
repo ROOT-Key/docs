@@ -28,13 +28,13 @@ Requirement: **Node.js 20 or newer** on the machine running the agent.
 The server authenticates with a ROOTKey API key. There is no OAuth flow, so this is the one part that cannot be fully automated.
 
 - Read the key from the `ROOTKEY_API_KEY` environment variable. Never ask the user to paste a key into the chat, and never write a key into a file that is tracked by git.
-- If `ROOTKEY_API_KEY` is not set, still write the configuration below with the placeholder in place, then tell the user to create a key at [app.rootkey.ai](https://app.rootkey.ai) under **Platform -> Developer Tools -> API Keys** and export it:
+- If `ROOTKEY_API_KEY` is not set, still write the configuration below with the placeholder in place, then tell the user to create a key at [app.rootkey.ai](https://app.rootkey.ai) under **Developer Tools -> API Keys** and export it:
 
 ```bash
-export ROOTKEY_API_KEY=rk_live_your_key
+export ROOTKEY_API_KEY=your_api_key
 ```
 
-Use an `rk_test_` key with `ROOTKEY_ENV=development` while trying things out. The development environment costs no credits and anchors nothing on Polygon Mainnet.
+Use a test API key while trying things out. ROOTKey has one public API, and a test key works on the organization's test data, kept separate from its live data. Do not set `ROOTKEY_ENV`: there is no development environment. Test requests still count toward the plan's usage limits, and files are anchored on a Polygon test network rather than Polygon Mainnet.
 
 ---
 
@@ -72,7 +72,7 @@ Add the server to `claude_desktop_config.json` (Settings -> Developer -> Edit Co
     "rootkey": {
       "command": "npx",
       "args": ["-y", "@rootkey/mcp"],
-      "env": { "ROOTKEY_API_KEY": "rk_live_your_key" }
+      "env": { "ROOTKEY_API_KEY": "your_api_key" }
     }
   }
 }
@@ -86,7 +86,7 @@ On Windows, route the command through `cmd` so `npx` resolves:
     "rootkey": {
       "command": "cmd",
       "args": ["/c", "npx", "-y", "@rootkey/mcp"],
-      "env": { "ROOTKEY_API_KEY": "rk_live_your_key" }
+      "env": { "ROOTKEY_API_KEY": "your_api_key" }
     }
   }
 }
@@ -108,7 +108,7 @@ command = "npx"
 args = ["-y", "@rootkey/mcp"]
 
 [mcp_servers.rootkey.env]
-ROOTKEY_API_KEY = "rk_live_your_key"
+ROOTKEY_API_KEY = "your_api_key"
 ```
 
 ### Cursor - `.cursor/mcp.json`
@@ -119,7 +119,7 @@ Add under `"mcpServers"`:
 "rootkey": {
   "command": "npx",
   "args": ["-y", "@rootkey/mcp"],
-  "env": { "ROOTKEY_API_KEY": "rk_live_your_key" }
+  "env": { "ROOTKEY_API_KEY": "your_api_key" }
 }
 ```
 
@@ -156,7 +156,7 @@ Add under `"mcpServers"`:
 "rootkey": {
   "command": "npx",
   "args": ["-y", "@rootkey/mcp"],
-  "env": { "ROOTKEY_API_KEY": "rk_live_your_key" }
+  "env": { "ROOTKEY_API_KEY": "your_api_key" }
 }
 ```
 
@@ -185,7 +185,7 @@ Every setting is an environment variable on the server process, alongside the ke
 
 | Variable | Default | Set it when |
 |---|---|---|
-| `ROOTKEY_ENV` | `production` | Working against the development environment, with an `rk_test_` key |
+| `ROOTKEY_ENV` | `production` | Almost never: `production` is the only accepted value, so leave it unset. For a self-hosted or on-premise deployment, set `ROOTKEY_API_URL` instead |
 | `ROOTKEY_READ_ONLY` | `false` | The session should only read. Registers the 15 read tools and hides the rest |
 | `ROOTKEY_DOWNLOAD_DIR` | `~/Downloads` | Downloads should land somewhere specific |
 | `ROOTKEY_ALLOWED_DIRS` | home, temp, cwd | A file to be uploaded lives outside those directories. Uploads are confined to them and refuse hidden directories inside them |
@@ -197,7 +197,7 @@ The full list, including timeouts and the base URL override, is on the [connecto
 
 ## Step 4: verify
 
-Restart the agent so it loads the new server, then call the `rootkey_get_environment_info` tool. It makes no API request and never reveals the key: it reports the configured environment, the key type and the number of registered tools. Expect 27 tools, or 15 with `ROOTKEY_READ_ONLY=true`.
+Restart the agent so it loads the new server, then call the `rootkey_get_environment_info` tool. It makes no API request and never reveals the key: it reports the API base URL, what the server can tell about the key, and the number of registered tools. Expect 27 tools, or 15 with `ROOTKEY_READ_ONLY=true`.
 
 Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-named tool from another server in the same session.
 
@@ -206,7 +206,8 @@ If no ROOTKey tools appear:
 - Confirm `node --version` reports 20 or newer and that `node` is on the PATH.
 - Confirm the client was fully restarted. Every client reads MCP configuration at startup.
 - Check the client's MCP logs. The server writes its startup line, and any failure, to stderr. The most common failure is a missing `ROOTKEY_API_KEY`: the server refuses to start rather than failing later on the first tool call.
-- A 401 on every call means the key and the environment do not match. `rk_test_` keys work only against development, `rk_live_` keys only against production.
+- A 401 on every call means the API does not accept the key: it is not valid, or it has been deactivated. Check the key in Developer Tools.
+- A startup error about `ROOTKEY_ENV` means the variable is set to something other than `production`. Remove it.
 
 ---
 

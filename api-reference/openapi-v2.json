@@ -2421,7 +2421,7 @@
         "type": "apiKey",
         "name": "x-api-key",
         "in": "header",
-        "description": "ROOTKey API key (rk_live_... for production, rk_test_... for the test network)."
+        "description": "ROOTKey API key. A test key works on your organization's test data and a live key on its live data; both are used with the same API."
       }
     },
     "responses": {

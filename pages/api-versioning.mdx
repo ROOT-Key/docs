@@ -53,9 +53,6 @@ Breaking changes and deprecations are documented in the release notes distribute
 **Handle unknown fields gracefully**
 Design your integration to ignore unknown fields in API responses. ROOTKey may add new fields to existing responses at any time - integrations that fail on unexpected fields will break unnecessarily.
 
-**Test against the development environment**
-New API versions are available at `dev-api.rootkey.ai` before production deployment. Validate your integration against upcoming changes before they affect production traffic.
-
 **Treat version headers as signals**
 If your HTTP client exposes response headers, monitor for `Deprecation` headers on any endpoint you rely on. Receiving this header means a migration is required before the sunset date.
 

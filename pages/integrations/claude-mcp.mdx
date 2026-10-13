@@ -18,9 +18,9 @@ Ask Claude to anchor a contract, check whether a file still matches its proof, p
 ## Requirements
 
 - **Node.js 20 or newer** on the machine running Claude
-- **A ROOTKey API key**, created in the platform under **Platform -> Developer Tools -> API Keys**
+- **A ROOTKey API key**, created in the platform under **Developer Tools -> API Keys**
 
-See [API Keys](/pages/api-keys) for how to create one. Use a development key (`rk_test_`) while you try things out: the development environment costs nothing and anchors nothing to Polygon Mainnet.
+See [API Keys](/pages/api-keys) for how to create one. Use a test API key while you try things out: it works on your organization's test data, kept separate from your live data, and files are anchored on a Polygon test network rather than Polygon Mainnet. Test requests still count toward your plan's usage limits. See [Test and Live Data](/pages/environments).
 
 ---
 
@@ -43,7 +43,7 @@ Those instructions are published as the [Agent Setup](/agent-setup/prompt) page,
     Run this once, from anywhere:
 
     ```bash
-    claude mcp add rootkey --env ROOTKEY_API_KEY=rk_live_your_key -- npx -y @rootkey/mcp
+    claude mcp add rootkey --env ROOTKEY_API_KEY=your_api_key -- npx -y @rootkey/mcp
     ```
 
     Start a new session and ask Claude what ROOTKey tools it has.
@@ -58,7 +58,7 @@ Those instructions are published as the [Agent Setup](/agent-setup/prompt) page,
         "rootkey": {
           "command": "npx",
           "args": ["-y", "@rootkey/mcp"],
-          "env": { "ROOTKEY_API_KEY": "rk_live_your_key" }
+          "env": { "ROOTKEY_API_KEY": "your_api_key" }
         }
       }
     }
@@ -72,7 +72,7 @@ Those instructions are published as the [Agent Setup](/agent-setup/prompt) page,
         "rootkey": {
           "command": "cmd",
           "args": ["/c", "npx", "-y", "@rootkey/mcp"],
-          "env": { "ROOTKEY_API_KEY": "rk_live_your_key" }
+          "env": { "ROOTKEY_API_KEY": "your_api_key" }
         }
       }
     }
@@ -109,8 +109,8 @@ Every setting is an environment variable on the server process.
 | Variable | Default | Description |
 |---|---|---|
 | `ROOTKEY_API_KEY` | required | Your ROOTKey API key. The server exits immediately if it is missing. |
-| `ROOTKEY_ENV` | `production` | `production` or `development`. Selects the matching API base URL. |
-| `ROOTKEY_API_URL` | - | Full base URL including the `/api-v1/` path. Overrides `ROOTKEY_ENV`. Plain `http://` is accepted only for loopback hosts, since the key travels in a header. |
+| `ROOTKEY_ENV` | `production` | Optional. `production` is the only accepted value, and the server refuses to start with `development`. ROOTKey has one public API. |
+| `ROOTKEY_API_URL` | - | Full base URL including the `/api-v1/` path. Use it for a self-hosted or on-premise deployment. Plain `http://` is accepted only for loopback hosts, since the key travels in a header. |
 | `ROOTKEY_READ_ONLY` | `false` | When `true`, only the read tools are registered, and downloads may only write inside `ROOTKEY_DOWNLOAD_DIR`. |
 | `ROOTKEY_TIMEOUT_MS` | `30000` | Timeout for ordinary requests, in milliseconds. |
 | `ROOTKEY_TRANSFER_TIMEOUT_MS` | `300000` | Timeout for uploads and downloads, in milliseconds. |
@@ -118,7 +118,7 @@ Every setting is an environment variable on the server process.
 | `ROOTKEY_ALLOWED_DIRS` | home, temp, cwd | Directories uploads may read from, separated by `;` on Windows and `:` elsewhere. |
 | `ROOTKEY_LOG_LEVEL` | `info` | `silent`, `error`, `warn`, `info` or `debug`. Logs are written to stderr. |
 
-To work against the development environment, set `ROOTKEY_ENV=development` and use an `rk_test_` key. See [Environments](/pages/environments) for the difference between the two.
+There is one public API, `https://api.rootkey.ai/api-v1/`, and no separate development environment. To try things out, use a test API key: it works on your organization's test data, kept separate from your live data. See [Test and Live Data](/pages/environments). A `ROOTKEY_ENV=development` left over from an earlier version of the server is rejected with a configuration error; remove the variable.
 
 ---
 
@@ -178,7 +178,7 @@ Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-nam
 
 | Tool | What it does |
 |---|---|
-| `rootkey_get_environment_info` | Report the configured environment, key type and tool count. Makes no API call and never reveals the key |
+| `rootkey_get_environment_info` | Report the API base URL, what the server can tell about the key, and the tool count. Makes no API call and never reveals the key |
 
 ---
 
@@ -238,7 +238,7 @@ Setting `ROOTKEY_READ_ONLY=true` registers only the tools that read data. The wr
       "command": "npx",
       "args": ["-y", "@rootkey/mcp"],
       "env": {
-        "ROOTKEY_API_KEY": "rk_live_your_key",
+        "ROOTKEY_API_KEY": "your_api_key",
         "ROOTKEY_READ_ONLY": "true"
       }
     }
@@ -262,7 +262,11 @@ This is useful for analysis and reporting sessions where nothing should change. 
   </Accordion>
 
   <Accordion title="Every call returns 401 Unauthenticated">
-    The key and the environment do not match. `rk_test_` keys work only against the development API and `rk_live_` keys only against production. Ask Claude to run `rootkey_get_environment_info` to see which environment the server is configured for, then align the key or set `ROOTKEY_ENV` accordingly.
+    The API does not accept the key: it is not valid, or it has been deactivated. Check that `ROOTKEY_API_KEY` holds the complete key and that the key is active in Developer Tools. Ask Claude to run `rootkey_get_environment_info` to see the API base URL the server is using.
+  </Accordion>
+
+  <Accordion title="The server exits with a message about ROOTKEY_ENV">
+    ROOTKey has one public API, so `ROOTKEY_ENV` accepts only `production` and is best left unset. A leftover `ROOTKEY_ENV=development` is refused at startup. Remove it and use a test API key to try things out. For a self-hosted or on-premise deployment, set `ROOTKEY_API_URL` instead.
   </Accordion>
 
   <Accordion title="Requests fail with 429 Too Many Requests">
