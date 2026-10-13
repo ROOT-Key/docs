@@ -21,7 +21,7 @@ Here is what an error response looks like:
 }
 ```
 
-Branch on `errorCode` rather than on `message` when you handle an error in code, and quote the `requestId` when you contact support about a failed request. A few responses carry no `errorCode`, and the `429`, `503` and `internal_error` ones carry an `errorCode` but no `docUrl`; the table below says which.
+Branch on `errorCode` rather than on `message` when you handle an error in code, and quote the `requestId` when you contact support about a failed request. A few responses carry no `errorCode`; the table below says which.
 
 # HTTP Status Codes
 
@@ -31,12 +31,11 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 | `401` Unauthorized | The `x-api-key` header is missing, or the key does not exist or is inactive. There is no `errorCode`; the `message` says which of the three it is. |
 | `403` Forbidden | The key is valid, but the request is not allowed: for example, your organization has no subscription ([`resource_not_found`](#resource_not_found)), your plan does not include the feature ([`unauthorized_access`](#unauthorized_access), or [`feature_not_found`](#feature_not_found) for an audit report), an access rule set for your organization blocks the request ([`access_policy_denied`](#access_policy_denied)), or a Restricted vault is being downloaded from a country your organization does not allow ([`geofence_blocked`](#geofence_blocked)). |
 | `404` Not Found | The vault, table, file, record or recovery point does not exist in your organization ([`resource_not_found`](#resource_not_found)). A path the API does not have also gets a `404`, with an HTML body instead of JSON. |
-| `409` Conflict | The request conflicts with the current state of the resource, such as adding a version to a deleted file that has no live version left ([`no_promotable_version`](#no_promotable_version)). Restore the file first. |
-| `410` Gone | The vault, file or record was permanently removed, so it can no longer be restored or downloaded ([`wallet_already_purged`](#wallet_already_purged), [`file_already_purged`](#file_already_purged), [`record_already_purged`](#record_already_purged), [`file_permanently_deleted`](#file_permanently_deleted)). |
+| `409` Conflict | The request conflicts with the current state of the resource, such as adding a version to a deleted file. Restore the file first. |
+| `410` Gone | The vault, file or record was permanently removed, so it can no longer be restored or downloaded. |
 | `413` Payload Too Large | The upload or the request body is larger than the API accepts. There is no `errorCode`. |
-| `429` Too Many Requests | Too many requests in a short time ([`rate_limit_exceeded`](#rate_limit_exceeded)). Wait the number of seconds in the `Retry-After` header before you retry. There is no `docUrl`. See [Rate Limits](/pages/rate-limits). |
-| `500` Internal Server Error | ROOTKey could not complete the request: [`internal_error`](#internal_error), which has no `docUrl`, or [`creation_outcome_unknown`](#creation_outcome_unknown) for an upload whose outcome is unknown. |
-| `503` Service Unavailable | ROOTKey is too busy to answer right now ([`service_unavailable`](#service_unavailable)). Wait the number of seconds in the `Retry-After` header, then retry. There is no `docUrl`. |
+| `429` Too Many Requests | Too many requests in a short time (`rate_limit_exceeded`). Wait the number of seconds in the `Retry-After` header before you retry. See [Rate Limits](/pages/rate-limits). |
+| `500` Internal Server Error | ROOTKey could not complete the request: [`internal_error`](#internal_error), or [`creation_outcome_unknown`](#creation_outcome_unknown) for an upload whose outcome is unknown. |
 
 # ROOTKey Error Codes
 
@@ -69,34 +68,6 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 - **Problem:** Something the request refers to, such as a vault, table, file, record or recovery point, does not exist in your organization. With status `403` and the message `Subscription not found`, ROOTKey could not find your organization's subscription.
 - **Solution:** Check the identifier against the resources your organization owns, for example by [listing the vault's files](/api-reference/platform/endpoint/files/get-files). Because the status differs between endpoints, branch on the `errorCode`. For a missing subscription, check your organization's plan in the ROOTKey app, and contact [support@rootkey.ai](mailto:support@rootkey.ai) if it is active.
 
-<span id="usage-limit-exceeded" className="error-alias" />
-
-### `usage_limit_exceeded`
-- **Status:** 400
-- **Problem:** The request would take your organization over one of its plan's limits, such as the number of API requests, files, records or vaults.
-- **Solution:** The error's `details` object names the limit: `feature`, `limit`, `current` and `plan`, with an `upgrade_url` where you can move to a larger plan. To define a plan for your needs, contact [contact@rootkey.ai](mailto:contact@rootkey.ai).
-
-<span id="unauthorized-access" className="error-alias" />
-
-### `unauthorized_access`
-- **Status:** 403 when you create a recovery point; 400 on other endpoints
-- **Problem:** Your organization's plan does not include a feature the request needs. For example, [creating a recovery point](/api-reference/platform/endpoint/recovery/schedule-recovery-point) needs Bulk Recovery, which not every plan includes. The `message` names your plan and the feature, and the plan that unlocks it when there is one: `Your <plan> plan does not include <feature>. Upgrade to <plan> to unlock it.` The error's `details` object is the one described under [`usage_limit_exceeded`](#usage_limit_exceeded), with `limit` and `current` set to `null` and `required_plan` naming the cheapest plan that includes the feature.
-- **Solution:** Move to a plan that includes the feature: `upgrade_url` links to the upgrade page, and [contact@rootkey.ai](mailto:contact@rootkey.ai) can define a plan for your needs. Repeating the request does not help until the plan changes. Other `403` errors share this status, so branch on `errorCode`: [`access_policy_denied`](#access_policy_denied), for instance, depends on where the request comes from, not on your plan.
-
-<span id="feature-not-found" className="error-alias" />
-
-### `feature_not_found`
-- **Status:** 403 when you request an audit report; 400 on other endpoints
-- **Problem:** The feature the request needs is not part of your organization's plan at all. The `message` is `Feature with key "<key>" was not found on the current plan.` For an [audit report](/api-reference/platform/endpoint/files/generate-audit-report) the key is `complianceReports`: your plan does not include compliance reports. On other endpoints it means the plan has no entry for a feature ROOTKey meters, which points to how the plan was set up. When `details` is present, it is the object described under [`usage_limit_exceeded`](#usage_limit_exceeded).
-- **Solution:** For an audit report, move to a plan that includes compliance reports, or contact [contact@rootkey.ai](mailto:contact@rootkey.ai). On other endpoints, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`: the plan has to be corrected, and nothing in the request needs to change.
-
-<span id="usage-not-initialized" className="error-alias" />
-
-### `usage_not_initialized`
-- **Status:** 400
-- **Problem:** ROOTKey could not check a plan limit because your subscription has no usage counter for that feature. The `message` is `Usage for feature "<key>" is not initialized in the subscription.` This is a problem with how the subscription was set up, not with the request.
-- **Solution:** Contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`, so the subscription can be corrected. Repeating the request does not help until then.
-
 <span id="access-policy-denied" className="error-alias" />
 
 ### `access_policy_denied`
@@ -116,7 +87,7 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 ### `resource_not_active`
 - **Status:** 400
 - **Problem:** The vault (or table) you are writing to is deactivated, so ROOTKey refused to create the file, the new version or the record. The `message` is `This vault is not active!`
-- **Solution:** Reactivate the vault in the ROOTKey app, then send the request again. The `vault.reactivated` [webhook](/pages/webhooks) tells your integration when that happens. Updating a deactivated vault gets [`resource_deactive`](#resource_deactive) instead; handle both codes the same way.
+- **Solution:** Reactivate the vault in the ROOTKey app, then send the request again. Updating a deactivated vault gets [`resource_deactive`](#resource_deactive) instead; handle both codes the same way.
 
 <span id="resource-deactive" className="error-alias" />
 
@@ -158,7 +129,7 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 ### `waiting_for_registration`
 - **Status:** 400
 - **Problem:** You asked to validate a file that is not registered yet. A file can be validated only once its anchor is confirmed, and this file's `status` is still `PENDING`, or its anchoring failed and the `status` is `FAILED`. The `message` is `File is waiting for registration!` followed by `Please try again later.`
-- **Solution:** Wait until the file's `status` is `REGISTERED`, then validate again: [fetch the file](/api-reference/platform/endpoint/files/get-file-by-id) to check, or wait for the `file.anchor.confirmed` [webhook](/pages/webhooks). A file whose `status` is `FAILED` was never anchored and cannot be validated, so upload it again.
+- **Solution:** Check the file's `status` with [Fetch file](/api-reference/platform/endpoint/files/get-file-by-id) until it is `REGISTERED`, waiting a little longer between checks because confirmation depends on the blockchain network, then validate again. A file whose `status` is `FAILED` was never anchored and cannot be validated: send it for anchoring again from the file's actions menu in the ROOTKey app, or upload it again.
 
 <span id="invalid-ownership" className="error-alias" />
 
@@ -251,19 +222,33 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 - **Problem:** You asked to download a file that was deleted and then permanently removed once its retention period ended, so there is no content left to download. The `message` is `File <id> was permanently deleted per retention policy`.
 - **Solution:** The content cannot be recovered. Upload your own copy as a new file if you still need it in ROOTKey.
 
-<span id="rate-limit-exceeded" className="error-alias" />
+<span id="unauthorized-access" className="error-alias" />
 
-### `rate_limit_exceeded`
-- **Status:** 429
-- **Problem:** Too many requests reached the endpoints that list deleted items (`GET /platform/vaults/deleted`, `/platform/files/deleted` and `/platform/records/deleted`) or restore them (`PATCH` on `/platform/vaults/{vaultAddress}/restore`, `/platform/files/{fileId}/restore` and `/platform/records/{recordId}/restore`) in one minute. Requests are counted per IP address, not per API key, so clients that share an outbound address share the budget; listing and restoring have separate budgets, of 600 and 120 requests per minute. The `message` is `Too many requests. Please slow down.` The `Retry-After` header and the `retryAfter` field of the body give the seconds until the next minute starts. This response carries no `docUrl`.
-- **Solution:** Wait the number of seconds in `Retry-After`, then send the request again. For a bulk restore, spread the calls over time so that you stay under the budget.
+### `unauthorized_access`
+- **Status:** 403 when you create a recovery point; 400 on other endpoints
+- **Problem:** Your organization's plan does not include a feature the request needs. For example, [creating a recovery point](/api-reference/platform/endpoint/recovery/schedule-recovery-point) needs Bulk Recovery, which not every plan includes. The `message` names your plan and the feature, and the plan that unlocks it when there is one: `Your <plan> plan does not include <feature>. Upgrade to <plan> to unlock it.` The error's `details` object is the one described under [`usage_limit_exceeded`](#usage_limit_exceeded), with `limit` and `current` set to `null` and `required_plan` naming the cheapest plan that includes the feature.
+- **Solution:** Move to a plan that includes the feature: `upgrade_url` links to the upgrade page, and [contact@rootkey.ai](mailto:contact@rootkey.ai) can define a plan for your needs. Repeating the request does not help until the plan changes. Other `403` errors share this status, so branch on `errorCode`: [`access_policy_denied`](#access_policy_denied), for instance, depends on where the request comes from, not on your plan.
 
-<span id="service-unavailable" className="error-alias" />
+<span id="feature-not-found" className="error-alias" />
 
-### `service_unavailable`
-- **Status:** 503
-- **Problem:** ROOTKey is temporarily overloaded and refused the request. The `message` is `The service is temporarily overloaded. Retry the request shortly.` The `Retry-After` header and the `retryAfterSeconds` field of the body say how many seconds to wait, a few at most. This response carries no `docUrl`.
-- **Solution:** Wait the number of seconds in `Retry-After`, then send the request again, and wait longer if the `503` repeats. Add a small random delay to your retries, so that clients refused together do not come back together. A `503` for an upload can arrive after the file was sent for anchoring, so before you upload it again, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown).
+### `feature_not_found`
+- **Status:** 403 when you request an audit report; 400 on other endpoints
+- **Problem:** The feature the request needs is not part of your organization's plan at all. The `message` is `Feature with key "<key>" was not found on the current plan.` For an [audit report](/api-reference/platform/endpoint/files/generate-audit-report) the key is `complianceReports`: your plan does not include compliance reports. On other endpoints it means the plan has no entry for a feature ROOTKey meters, which points to how the plan was set up. When `details` is present, it is the object described under [`usage_limit_exceeded`](#usage_limit_exceeded).
+- **Solution:** For an audit report, move to a plan that includes compliance reports, or contact [contact@rootkey.ai](mailto:contact@rootkey.ai). On other endpoints, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`: the plan has to be corrected, and nothing in the request needs to change.
+
+<span id="usage-not-initialized" className="error-alias" />
+
+### `usage_not_initialized`
+- **Status:** 400
+- **Problem:** ROOTKey could not check a plan limit because your subscription has no usage counter for that feature. The `message` is `Usage for feature "<key>" is not initialized in the subscription.` This is a problem with how the subscription was set up, not with the request.
+- **Solution:** Contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`, so the subscription can be corrected. Repeating the request does not help until then.
+
+<span id="usage-limit-exceeded" className="error-alias" />
+
+### `usage_limit_exceeded`
+- **Status:** 400
+- **Problem:** The request would take your organization over one of its plan's limits, such as the number of API requests, files, records or vaults.
+- **Solution:** The error's `details` object names the limit: `feature`, `limit`, `current` and `plan`, with an `upgrade_url` where you can move to a larger plan. To define a plan for your needs, contact [contact@rootkey.ai](mailto:contact@rootkey.ai).
 
 <span id="creation-outcome-unknown" className="error-alias" />
 
