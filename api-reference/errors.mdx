@@ -34,8 +34,24 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 | `409` Conflict | The request conflicts with the current state of the resource, such as adding a version to a deleted file. Restore the file first. |
 | `410` Gone | The vault, file or record was permanently removed, so it can no longer be restored or downloaded. |
 | `413` Payload Too Large | The upload or the request body is larger than the API accepts. There is no `errorCode`. |
-| `429` Too Many Requests | Too many requests in a short time (`rate_limit_exceeded`). Wait the number of seconds in the `Retry-After` header before you retry. See [Rate Limits](/pages/rate-limits). |
+| `429` Too Many Requests | Too many requests in a short time ([`rate_limit_exceeded`](#rate_limit_exceeded)). Wait the number of seconds in the `Retry-After` header before you retry. See [Rate Limits](/pages/rate-limits). |
 | `500` Internal Server Error | ROOTKey could not complete the request: [`internal_error`](#internal_error), or [`creation_outcome_unknown`](#creation_outcome_unknown) for an upload whose outcome is unknown. |
+| `503` Service Unavailable | ROOTKey is too busy to take the request for a moment ([`service_unavailable`](#service_unavailable)). Wait the number of seconds in the `Retry-After` header before you retry. |
+
+# Retrying a failed request
+
+Whether a failed request is safe to send again depends on the response. Decide from the status and the `errorCode`:
+
+| Response | Send it again? |
+| --- | --- |
+| `429` [`rate_limit_exceeded`](#rate_limit_exceeded) | Yes, after the number of seconds in the `Retry-After` header. ROOTKey refused the request before doing anything. |
+| `503` [`service_unavailable`](#service_unavailable) | Yes, after the number of seconds in the `Retry-After` header. For an upload, check the vault first, as the entry describes. |
+| `500` [`creation_outcome_unknown`](#creation_outcome_unknown) | Not automatically. Check whether the file is in the vault first, as the entry describes. |
+| Any other `500`, with [`internal_error`](#internal_error) or without an `errorCode` | A request that only reads: yes, after a pause that grows with each attempt. An upload: check the vault first, because it may have been anchored. Any other request: retry later, and contact support if it keeps failing. |
+| `400` [`usage_limit_exceeded`](#usage_limit_exceeded) (`403` for audit reports) | No. The same request fails the same way until the plan's limit resets or the plan changes. |
+| Any other `4xx` | No. Correct the request first: the `errorCode` and the `message` say what is wrong. |
+
+Add a little random delay to every wait, so that clients refused together do not all come back together.
 
 # ROOTKey Error Codes
 
@@ -75,6 +91,13 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 - **Problem:** The request would take your organization over one of its plan's limits, such as the number of API requests, files, records or vaults.
 - **Solution:** The error's `details` object names the limit: `feature`, `limit`, `current` and `plan`, with an `upgrade_url` where you can move to a larger plan. To define a plan for your needs, contact [contact@rootkey.ai](mailto:contact@rootkey.ai).
 
+<span id="rate-limit-exceeded" className="error-alias" />
+
+### `rate_limit_exceeded`
+- **Status:** 429
+- **Problem:** The request went over a limit on how often an operation can be called. Today that covers listing deleted vaults, files and records, and restoring them: the API counts the requests from each client IP address in each clock minute. The `Retry-After` header, and `retryAfter` in the error, give the number of seconds until the next minute begins.
+- **Solution:** Wait that many seconds, then send the request again. ROOTKey refused it before doing anything, so sending it again is safe. [Rate Limits](/pages/rate-limits) has the limits and how to stay under them.
+
 <span id="creation-outcome-unknown" className="error-alias" />
 
 ### `creation_outcome_unknown`
@@ -88,6 +111,13 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 - **Status:** 500, or the `4xx` status of a step that ROOTKey runs on your behalf, such as anchoring a file on the blockchain, when that step rejects the request
 - **Problem:** ROOTKey could not complete the request and has no more specific code for the failure. When the status is a `4xx`, the `message` is the rejecting step's explanation.
 - **Solution:** With a `4xx`, correct what the `message` describes, then send the request again. With a `500`, retry later, and if it keeps failing, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`. An upload that failed with a `500` may still have been anchored, so before sending it again, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown). A `500` without an `errorCode` means the same as `internal_error`.
+
+<span id="service-unavailable" className="error-alias" />
+
+### `service_unavailable`
+- **Status:** 503
+- **Problem:** ROOTKey is too busy to take the request for a moment. Nothing was wrong with the request. The `Retry-After` header, and `retryAfterSeconds` in the error, give the number of seconds to wait.
+- **Solution:** Wait that many seconds, then send the request again, with a little random delay added so that clients refused together do not all come back together. ROOTKey normally refuses the request before it has done anything, so sending it again is safe, with one exception: an upload. If the busy moment came after ROOTKey had sent the file for anchoring, the file may be anchored already, so before sending it again, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown). If the `503` keeps coming back, contact [support@rootkey.ai](mailto:support@rootkey.ai), quoting the `requestId` when the error carries one.
 
 ## Accounts and shared links
 

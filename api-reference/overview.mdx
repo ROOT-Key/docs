@@ -117,7 +117,7 @@ Responses are JSON objects. Successful responses return a `2xx` status code. Err
 
 ## Rate Limits
 
-API requests are rate-limited per API key based on your active plan. Exceeded limits return `429 Too Many Requests`. See [Rate Limits](/pages/rate-limits) for plan-specific limits and retry guidance.
+The API limits how often you can list deleted items and restore them, and answers `429 Too Many Requests` with a `Retry-After` header when you go over. Your plan also sets quotas, such as a monthly number of API requests; a request over a quota is refused with `usage_limit_exceeded`. When ROOTKey is too busy to take a request it answers `503 Service Unavailable`, also with `Retry-After`. See [Rate Limits](/pages/rate-limits) for the limits, and [Retrying a failed request](/api-reference/errors#retrying-a-failed-request) for which failures are safe to send again.
 
 ---
 

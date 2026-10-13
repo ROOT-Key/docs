@@ -266,7 +266,7 @@ This is useful for analysis and reporting sessions where nothing should change. 
   </Accordion>
 
   <Accordion title="Requests fail with 429 Too Many Requests">
-    You have exceeded the rate limit for that API key. The server automatically retries once the period indicated by the `Retry-After` header has passed, provided the wait is short. Repeated 429s mean the workload needs a higher plan limit - see [Rate Limits](/pages/rate-limits).
+    A request went over one of ROOTKey's request limits. They count per client IP address and per minute, and today cover listing deleted items and restoring them. The server automatically retries once the period indicated by the `Retry-After` header has passed, provided the wait is short. If 429s keep coming, spread those calls out over time: a higher plan does not raise these limits - see [Rate Limits](/pages/rate-limits).
   </Accordion>
 
   <Accordion title="A tool reports the created file or record as null">
