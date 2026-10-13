@@ -1,6 +1,6 @@
 ---
 title: Tables
-description: Structured data table management within ROOTKey vaults. Create, query, and manage schema-defined tables with integrity anchoring at the record level.
+description: Structured data table management in ROOTKey. Create, query, and manage schema-defined tables with integrity anchoring at the record level.
 sidebarTitle: Overview
 icon: table
 ---
@@ -11,7 +11,7 @@ icon: table
 
 ## Overview
 
-The Tables API allows you to create and manage structured, schema-defined data tables within ROOTKey vaults. Each table provides a typed record store with integrity anchoring - every write operation is processed through the configured data processing protocol, producing a cryptographically verifiable audit trail at the record level.
+The Tables API allows you to create and manage structured, schema-defined data tables. A table is a container of its own, separate from a vault: vaults hold files, tables hold records. Each table provides a typed record store with integrity anchoring - every write operation is processed through the configured data processing protocol, producing a cryptographically verifiable audit trail at the record level.
 
 Tables are designed for use cases where data has a defined structure (columns, types, constraints) and where individual records must be independently verifiable - regulatory datasets, operational logs, inventory records, or any structured data requiring tamper-evidence.
 
@@ -19,11 +19,11 @@ Tables are designed for use cases where data has a defined structure (columns, t
 
 ## Key Capabilities
 
-- Define typed schemas for structured data storage within a vault
+- Define typed schemas for structured data storage
 - Create, update, and query records with integrity anchoring per operation
 - Access full record history and version lineage
 - Validate individual records against their on-chain proof
-- Control table-level access and permissions through vault configuration
+- Control access and permissions for each table individually
 
 ---
 
@@ -33,8 +33,8 @@ Documentation for the following endpoints is in progress:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/tables` | Create a new table within a vault |
-| `GET` | `/tables` | List tables in a vault |
+| `POST` | `/tables` | Create a new table |
+| `GET` | `/tables` | List tables |
 | `GET` | `/tables/:id` | Get table metadata and schema |
 | `PUT` | `/tables/:id` | Update table configuration |
 | `DELETE` | `/tables/:id` | Delete a table |
@@ -44,5 +44,5 @@ Documentation for the following endpoints is in progress:
 ## Related
 
 - [Records API](/api-reference/platform/endpoint/records/overview) - manage individual records within a table
-- [Vaults](/api-reference/platform/endpoint/vaults/create-vault) - tables are scoped to a vault
+- [Vaults](/api-reference/platform/endpoint/vaults/create-vault) - a separate concept: vaults store **files**, tables store **records**
 - [Files](/api-reference/platform/endpoint/files/get-files) - for unstructured document management
