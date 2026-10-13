@@ -130,9 +130,9 @@ mode: wide
       </Accordion>
 
       <Accordion title="How are asynchronous operations handled?">
-        Operations that involve blockchain anchoring in RKP-2 and RKP-3 are processed asynchronously. The API returns immediately after off-chain processing; blockchain anchoring completes within a defined window.
+        Anchoring a file on the blockchain is asynchronous. The upload call returns as soon as the anchoring transaction has been submitted, and the file starts as `PENDING`. It becomes `REGISTERED` when the transaction is confirmed, or `FAILED` if it did not complete.
 
-        ROOTKey sends a **webhook event** to your configured endpoint when anchoring completes. See [Webhooks](/pages/webhooks) for event schemas and configuration.
+        To follow a file, read its status until it settles. See [Anchoring Status](/pages/anchoring-status) for the states and an example.
       </Accordion>
 
       <Accordion title="Where can I find the full API reference?">
