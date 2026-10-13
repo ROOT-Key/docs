@@ -21,7 +21,7 @@ Here is what an error response looks like:
 }
 ```
 
-Branch on `errorCode` rather than on `message` when you handle an error in code, and quote the `requestId` when you contact support about a failed request. A few responses carry no `errorCode`, and the `429` and `503` ones carry no `docUrl`; the table below says which.
+Branch on `errorCode` rather than on `message` when you handle an error in code, and quote the `requestId` when you contact support about a failed request. A few responses carry no `errorCode`, and the `429`, `503` and `internal_error` ones carry an `errorCode` but no `docUrl`; the table below says which.
 
 # HTTP Status Codes
 
@@ -35,7 +35,7 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 | `410` Gone | The vault, file or record was permanently removed, so it can no longer be restored or downloaded ([`wallet_already_purged`](#wallet_already_purged), [`file_already_purged`](#file_already_purged), [`record_already_purged`](#record_already_purged), [`file_permanently_deleted`](#file_permanently_deleted)). |
 | `413` Payload Too Large | The upload or the request body is larger than the API accepts. There is no `errorCode`. |
 | `429` Too Many Requests | Too many requests in a short time ([`rate_limit_exceeded`](#rate_limit_exceeded)). Wait the number of seconds in the `Retry-After` header before you retry. There is no `docUrl`. See [Rate Limits](/pages/rate-limits). |
-| `500` Internal Server Error | ROOTKey could not complete the request: [`internal_error`](#internal_error), or [`creation_outcome_unknown`](#creation_outcome_unknown) for an upload whose outcome is unknown. |
+| `500` Internal Server Error | ROOTKey could not complete the request: [`internal_error`](#internal_error), which has no `docUrl`, or [`creation_outcome_unknown`](#creation_outcome_unknown) for an upload whose outcome is unknown. |
 | `503` Service Unavailable | ROOTKey is too busy to answer right now ([`service_unavailable`](#service_unavailable)). Wait the number of seconds in the `Retry-After` header, then retry. There is no `docUrl`. |
 
 # ROOTKey Error Codes
