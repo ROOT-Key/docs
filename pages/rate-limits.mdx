@@ -9,17 +9,21 @@ A request can be refused in three ways that look alike but need different handli
 
 | What refuses the request | What the API answers | Send it again? |
 |--------------------------|----------------------|----------------|
-| A [request-rate limit](#request-rate-limits) on an operation | `429`, with `errorCode` `rate_limit_exceeded` and a `Retry-After` header | Yes, after the wait |
+| A [rate limit](#rate-limits): too many requests in a minute | `429`, with `errorCode` `rate_limit_exceeded` and a `Retry-After` header | Yes, after the wait |
 | A [plan quota](#plan-quotas), such as your monthly API requests | `400`, with `errorCode` `usage_limit_exceeded` (`403` for audit reports) | No, not until the quota resets or the plan changes |
 | [ROOTKey being too busy](#when-rootkey-is-too-busy) to take the request | `503`, with `errorCode` `service_unavailable` and a `Retry-After` header | Yes, after the wait. For an upload, check first |
 
-Outside the operations listed under [Request-rate limits](#request-rate-limits), the API does not currently limit how fast you send requests: not per API key, and not per plan. It does not send `X-RateLimit-Limit`, `X-RateLimit-Remaining` or `X-RateLimit-Reset` headers either, so `Retry-After` is the only header to read. Build your integration to handle a `429` on any endpoint anyway, because limits can be added.
+The API does not send `X-RateLimit-Limit`, `X-RateLimit-Remaining` or `X-RateLimit-Reset` headers, so `Retry-After` is the only header to read. Handle a `429` on any endpoint: a rate limit can apply to any request.
 
 ---
 
-## Request-rate limits
+## Rate limits
 
-Today the API limits how often you can list deleted items and restore them (the Data Recovery operations). The paths below are relative to `https://api.rootkey.ai/api-v1/`.
+A rate limit caps how many requests you can make in a minute. Two kinds apply.
+
+**Your plan's API rate limit.** It is set per plan, in requests per minute, and varies from plan to plan. The figure for each plan is on the pricing pages linked under [Plan quotas](#plan-quotas).
+
+**Listing and restoring deleted items.** These operations (the Data Recovery operations) have limits of their own, the same for every plan. The paths below are relative to `https://api.rootkey.ai/api-v1/`.
 
 **Listing deleted items** - 600 requests per minute, shared by:
 
@@ -33,9 +37,9 @@ Today the API limits how often you can list deleted items and restore them (the 
 - `PATCH /platform/files/{fileId}/restore`
 - `PATCH /platform/records/{recordId}/restore`
 
-Requests are counted per client IP address, the public address your requests reach ROOTKey from, whatever API key they carry. Servers that reach ROOTKey through the same outbound address, behind a NAT gateway for example, share one count. A count starts again at zero at the beginning of every clock minute; it is not a sliding window.
+These two limits count requests per client IP address, the public address your requests reach ROOTKey from, whatever API key they carry. Servers that reach ROOTKey through the same outbound address, behind a NAT gateway for example, share one count. A count starts again at zero at the beginning of every clock minute; it is not a sliding window.
 
-Over a limit, the API refuses the request with a `429 Too Many Requests`, a `Retry-After` header, and a JSON error:
+Over a rate limit, the API refuses the request with a `429 Too Many Requests`, a `Retry-After` header, and a JSON error:
 
 ```http
 HTTP/1.1 429 Too Many Requests
@@ -52,7 +56,7 @@ Content-Type: application/json
 }
 ```
 
-`Retry-After` is the number of seconds until the next clock minute begins, so between 1 and 60. `retryAfter` in the error repeats it. The refused request was not carried out, so sending it again after that wait is safe.
+`Retry-After` is the number of seconds to wait before you send the request again, and `retryAfter` in the error repeats it. For the limits on deleted items it is the time until the next clock minute begins, so between 1 and 60. The refused request was not carried out, so sending it again after that wait is safe.
 
 ---
 
@@ -62,7 +66,7 @@ Your plan sets quotas: the number of API requests you can make each month, and h
 
 This is not a rate limit, and it comes without `Retry-After`. The same request sent a few seconds later fails the same way until the quota resets or the plan changes, so do not retry it automatically.
 
-Plan quotas are listed on the pricing pages:
+Plan quotas, and the API rate limit of each plan, are listed on the pricing pages:
 
 - [Platform Pricing](https://www.rootkey.ai/platform/pricing?utm_source=api_docs&utm_medium=rate_limits&utm_content=platform_pricing)
 - [Enterprise Pricing](https://rootkey.ai/contact?utm_source=api_docs&utm_medium=rate_limits&utm_content=enterprise_pricing)
@@ -121,6 +125,7 @@ def request_with_retry(method, url, headers, max_retries=5, **kwargs):
 
 **Recommendations:**
 - Use the `Retry-After` value instead of a fixed backoff, and add a little random delay (jitter) so that clients refused together do not come back together
+- Spread requests evenly over the minute instead of sending them in bursts
 - Pace bulk work on deleted items to stay under the limits above: 120 restores a minute is two a second
 - Do not retry `usage_limit_exceeded`; it fails the same way until the quota resets or the plan changes
 - Do not retry other failures automatically unless the errors page says they are safe to retry
@@ -129,12 +134,13 @@ def request_with_retry(method, url, headers, max_retries=5, **kwargs):
 
 ## Development environment
 
-The development environment (`dev-api.rootkey.ai`) applies the same request-rate limits as production, so you will see `429` responses under the same conditions and can test how your integration handles them before you go live.
+The development environment (`dev-api.rootkey.ai`) applies the same rate limits as production, so you will see `429` responses under the same conditions and can test how your integration handles them before you go live.
 
 ---
 
 ## If you reach a limit
 
-- **`429` on listing or restoring deleted items** - spread the requests over time. The limits count per client IP address and are the same for every plan, so a larger plan does not raise them. If a legitimate workload needs more, contact [support@rootkey.ai](mailto:support@rootkey.ai).
+- **`429` on listing or restoring deleted items** - spread the requests over time. These limits count per client IP address and are the same for every plan, so a larger plan does not raise them. If a legitimate workload needs more, contact [support@rootkey.ai](mailto:support@rootkey.ai).
+- **Any other `429`** - spread the requests over the minute, or [view plans](https://www.rootkey.ai/platform/pricing?utm_source=api_docs&utm_medium=rate_limits&utm_content=rate_limit_upgrade) for a plan with a higher rate limit.
 - **`usage_limit_exceeded`** - [view plans](https://www.rootkey.ai/platform/pricing?utm_source=api_docs&utm_medium=rate_limits&utm_content=upgrade) and upgrade, or contact [contact@rootkey.ai](mailto:contact@rootkey.ai) to define a plan for your needs.
 - **`503` that keeps coming back** - contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId` from the error response.

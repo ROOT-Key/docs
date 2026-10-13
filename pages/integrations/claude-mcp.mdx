@@ -266,7 +266,7 @@ This is useful for analysis and reporting sessions where nothing should change. 
   </Accordion>
 
   <Accordion title="Requests fail with 429 Too Many Requests">
-    ROOTKey limits how often some operations can be called, per client IP address and per minute - [Rate Limits](/pages/rate-limits) says which. The server automatically retries once the period indicated by the `Retry-After` header has passed, provided the wait is short. If 429s keep coming, spread those calls out over time: a higher plan does not raise these limits.
+    A request went over a rate limit: your plan's API rate limit, or the limit of an operation that has its own - [Rate Limits](/pages/rate-limits) says which apply. The server automatically retries once the period indicated by the `Retry-After` header has passed, provided the wait is short. If 429s keep coming, spread those calls out over time, or move to a plan with a higher rate limit.
   </Accordion>
 
   <Accordion title="Requests fail with 503 Service Unavailable">

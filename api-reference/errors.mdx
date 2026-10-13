@@ -95,7 +95,7 @@ Add a little random delay to every wait, so that clients refused together do not
 
 ### `rate_limit_exceeded`
 - **Status:** 429
-- **Problem:** The request went over a limit on how often an operation can be called. Today that covers listing deleted vaults, files and records, and restoring them: the API counts the requests from each client IP address in each clock minute. The `Retry-After` header, and `retryAfter` in the error, give the number of seconds until the next minute begins. Unlike most errors, this response carries no `docUrl`.
+- **Problem:** The request went over a rate limit: your plan's API rate limit, or the limit of an operation that has its own, such as listing deleted vaults, files and records and restoring them. The `Retry-After` header, and `retryAfter` in the error, give the number of seconds to wait. Unlike most errors, this response carries no `docUrl`.
 - **Solution:** Wait that many seconds, then send the request again. ROOTKey refused it before doing anything, so sending it again is safe. [Rate Limits](/pages/rate-limits) has the limits and how to stay under them.
 
 <span id="creation-outcome-unknown" className="error-alias" />
