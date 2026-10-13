@@ -95,7 +95,7 @@ Add a little random delay to every wait, so that clients refused together do not
 
 ### `rate_limit_exceeded`
 - **Status:** 429
-- **Problem:** The request went over a limit on how often an operation can be called. Today that covers listing deleted vaults, files and records, and restoring them: the API counts the requests from each client IP address in each clock minute. The `Retry-After` header, and `retryAfter` in the error, give the number of seconds until the next minute begins.
+- **Problem:** The request went over a limit on how often an operation can be called. Today that covers listing deleted vaults, files and records, and restoring them: the API counts the requests from each client IP address in each clock minute. The `Retry-After` header, and `retryAfter` in the error, give the number of seconds until the next minute begins. Unlike most errors, this response carries no `docUrl`.
 - **Solution:** Wait that many seconds, then send the request again. ROOTKey refused it before doing anything, so sending it again is safe. [Rate Limits](/pages/rate-limits) has the limits and how to stay under them.
 
 <span id="creation-outcome-unknown" className="error-alias" />
@@ -116,8 +116,8 @@ Add a little random delay to every wait, so that clients refused together do not
 
 ### `service_unavailable`
 - **Status:** 503
-- **Problem:** ROOTKey is too busy to take the request for a moment. Nothing was wrong with the request. The `Retry-After` header, and `retryAfterSeconds` in the error, give the number of seconds to wait.
-- **Solution:** Wait that many seconds, then send the request again, with a little random delay added so that clients refused together do not all come back together. ROOTKey normally refuses the request before it has done anything, so sending it again is safe, with one exception: an upload. If the busy moment came after ROOTKey had sent the file for anchoring, the file may be anchored already, so before sending it again, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown). If the `503` keeps coming back, contact [support@rootkey.ai](mailto:support@rootkey.ai), quoting the `requestId` when the error carries one.
+- **Problem:** ROOTKey is too busy to take the request for a moment. Nothing was wrong with the request. The `Retry-After` header, and `retryAfterSeconds` in the error, give the number of seconds to wait. Unlike most errors, this response carries no `docUrl`.
+- **Solution:** Wait that many seconds, then send the request again, with a little random delay added so that clients refused together do not all come back together, and stop after a few attempts if your integration retries automatically. ROOTKey normally refuses the request before it has done anything, so sending it again is safe, with one exception: an upload. If the busy moment came after ROOTKey had sent the file for anchoring, the file may be anchored already, so before sending it again, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown). If the `503` keeps coming back, contact [support@rootkey.ai](mailto:support@rootkey.ai), quoting the `requestId` when the error carries one.
 
 ## Accounts and shared links
 
