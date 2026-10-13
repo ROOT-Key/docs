@@ -32,9 +32,10 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 | `403` Forbidden | The key is valid, but the request is not allowed: for example, your organization has no subscription ([`resource_not_found`](#resource_not_found)), your plan does not include the feature ([`unauthorized_access`](#unauthorized_access), or [`feature_not_found`](#feature_not_found) for an audit report), an access rule set for your organization blocks the request ([`access_policy_denied`](#access_policy_denied)), or a Restricted vault is being downloaded from a country your organization does not allow ([`geofence_blocked`](#geofence_blocked)). |
 | `404` Not Found | The vault, table, file, record or recovery point does not exist in your organization ([`resource_not_found`](#resource_not_found)). A path the API does not have also gets a `404`, with an HTML body instead of JSON. |
 | `409` Conflict | The request conflicts with the current state of the resource, such as adding a version to a deleted file. Restore the file first. |
-| `410` Gone | The vault, file or record was permanently removed, so it can no longer be restored or downloaded. |
-| `413` Payload Too Large | The upload or the request body is larger than the API accepts. There is no `errorCode`. |
-| `429` Too Many Requests | Too many requests in a short time (`rate_limit_exceeded`). Wait the number of seconds in the `Retry-After` header before you retry. See [Rate Limits](/pages/rate-limits). |
+| `410` Gone | The vault, file or record was permanently removed, so it can no longer be restored or downloaded. A direct upload that expired ([`file_upload_expired`](#file_upload_expired)) also gets it, and so does Create file where it is turned off ([`legacy_file_upload_disabled`](#legacy_file_upload_disabled)). |
+| `413` Payload Too Large | The upload or the request body is larger than the API accepts. A direct upload over 5 GiB gets [`file_too_large`](#file_too_large); otherwise there is no `errorCode`. |
+| `422` Unprocessable Entity | A direct upload was refused because what was stored is not what you declared: [`file_upload_checksum_mismatch`](#file_upload_checksum_mismatch) or [`file_upload_size_mismatch`](#file_upload_size_mismatch). |
+| `429` Too Many Requests | Too many requests in a short time (`rate_limit_exceeded`). Wait the number of seconds in the `Retry-After` header before you retry. See [Rate Limits](/pages/rate-limits). A direct upload can also get it when your organization has too many uploads open: [`too_many_open_file_uploads`](#too_many_open_file_uploads) or [`too_many_open_file_upload_bytes`](#too_many_open_file_upload_bytes). |
 | `500` Internal Server Error | ROOTKey could not complete the request: [`internal_error`](#internal_error), or [`creation_outcome_unknown`](#creation_outcome_unknown) for an upload whose outcome is unknown. |
 | `503` Service Unavailable | ROOTKey is too busy to take the request for a moment ([`service_unavailable`](#service_unavailable)). Wait the number of seconds in the `Retry-After` header before you retry. |
 
@@ -293,6 +294,129 @@ Add a little random delay to every wait, so that clients refused together do not
 - **Status:** 500, or the `4xx` status of a step that ROOTKey runs on your behalf, such as anchoring a file on the blockchain, when that step rejects the request
 - **Problem:** ROOTKey could not complete the request and has no more specific code for the failure. When the status is a `4xx`, the `message` is the rejecting step's explanation.
 - **Solution:** With a `4xx`, correct what the `message` describes, then send the request again. With a `500`, retry later, and if it keeps failing, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`. An upload that failed with a `500` may still have been anchored, so before sending it again, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown). A `500` without an `errorCode` means the same as `internal_error`.
+
+## Direct file uploads
+
+These come from the [direct upload](/api-reference/platform/endpoint/files/direct-uploads) endpoints. An upload that is refused for a plan limit gets [`usage_limit_exceeded`](#usage_limit_exceeded), and one whose outcome is unknown gets [`creation_outcome_unknown`](#creation_outcome_unknown), described above.
+
+<span id="file-too-large" className="error-alias" />
+
+### `file_too_large`
+- **Status:** 413
+- **Problem:** The file is larger than a direct upload accepts: 5 GiB.
+- **Solution:** Nothing was created. A file this large cannot be uploaded through the API; split it into smaller files if your use case allows it, or contact [support@rootkey.ai](mailto:support@rootkey.ai).
+
+<span id="too-many-open-file-uploads" className="error-alias" />
+
+### `too_many_open_file_uploads`
+- **Status:** 429
+- **Problem:** Your organization already has the most uploads open at once: 10,000. This is not a plan limit, and starting an upload consumes nothing.
+- **Solution:** Nothing was created. [List the open uploads](/api-reference/platform/endpoint/files/list-file-uploads) and [complete](/api-reference/platform/endpoint/files/complete-file-upload) or [abort](/api-reference/platform/endpoint/files/abort-file-upload) the ones that are no longer needed, or wait for them to expire, then start the upload again.
+
+<span id="too-many-open-file-upload-bytes" className="error-alias" />
+
+### `too_many_open_file_upload_bytes`
+- **Status:** 429
+- **Problem:** The uploads your organization has open already hold the bytes it may have in flight, so this file would not fit beside them. The limit is 128 GiB, or what your plan's storage has left if that is less. Your plan refusing the file by itself is [`usage_limit_exceeded`](#usage_limit_exceeded) instead.
+- **Solution:** Nothing was created. Complete or abort open uploads, or wait for them to expire, then start the upload again. The `metadata.organization` block of [List open uploads](/api-reference/platform/endpoint/files/list-file-uploads) shows what is open.
+
+<span id="file-upload-not-found" className="error-alias" />
+
+### `file_upload_not_found`
+- **Status:** 404
+- **Problem:** No upload with that `uploadId` exists in your organization. An upload that belongs to another organization gets the same answer.
+- **Solution:** Check the `uploadId` against the one [Start an upload](/api-reference/platform/endpoint/files/start-file-upload) returned. Finished uploads are removed after a few days, so an old `uploadId` may no longer exist.
+
+<span id="file-upload-expired" className="error-alias" />
+
+### `file_upload_expired`
+- **Status:** 410
+- **Problem:** The upload was not completed before it expired.
+- **Solution:** Start a new upload. What was uploaded for the expired one is deleted.
+
+<span id="file-upload-incomplete" className="error-alias" />
+
+### `file_upload_incomplete`
+- **Status:** 409
+- **Problem:** You completed the upload before all of its bytes were stored: nothing was uploaded yet, or some parts are missing.
+- **Solution:** Send the missing bytes, using the signed URL (or the part URLs) with exactly the headers returned, then complete the upload again.
+
+<span id="file-upload-finalizing" className="error-alias" />
+
+### `file_upload_finalizing`
+- **Status:** 409
+- **Problem:** The upload is already being completed, by an earlier call that is still running or that did not return an answer. ROOTKey does not anchor it a second time, because a repeat could anchor the same file twice.
+- **Solution:** [Get the upload's status](/api-reference/platform/endpoint/files/get-file-upload) and try again later. Once the upload is `COMPLETED`, completing it answers with its file.
+
+<span id="file-upload-not-open" className="error-alias" />
+
+### `file_upload_not_open`
+- **Status:** 409
+- **Problem:** The upload is in a state that the request does not apply to: it is finished, failed, expired or aborted, or, for an abort, it is already being completed.
+- **Solution:** [Get the upload's status](/api-reference/platform/endpoint/files/get-file-upload). For `FAILED`, its `failureCode` says why. Start a new upload if you still need the file.
+
+<span id="file-upload-checksum-mismatch" className="error-alias" />
+
+### `file_upload_checksum_mismatch`
+- **Status:** 422 when you complete a `single` upload; for a `multipart` upload it is the `failureCode` of the upload when it is `FAILED`
+- **Problem:** What was stored does not hash to the SHA-256 you declared, for example because the file changed after you hashed it, or a part was corrupted on the way. The upload fails and what was stored is deleted. Nothing was anchored.
+- **Solution:** Hash the file again and start a new upload.
+
+<span id="file-upload-size-mismatch" className="error-alias" />
+
+### `file_upload_size_mismatch`
+- **Status:** 422
+- **Problem:** What was stored is not as long as the `size` you declared. The upload fails and what was stored is deleted. Nothing was anchored.
+- **Solution:** Start a new upload, declaring the file's exact size in bytes.
+
+<span id="file-upload-not-multipart" className="error-alias" />
+
+### `file_upload_not_multipart`
+- **Status:** 400
+- **Problem:** You asked for part URLs for an upload whose `mode` is `single`, which has no parts.
+- **Solution:** Send the file with one `PUT` to the `upload.url` that Start an upload returned.
+
+<span id="file-upload-part-out-of-range" className="error-alias" />
+
+### `file_upload_part_out_of_range`
+- **Status:** 400
+- **Problem:** A `partNumber` is outside the upload's plan: it is below 1, or above the `partCount` that Start an upload returned.
+- **Solution:** Ask only for part numbers from 1 to `partCount`.
+
+<span id="file-upload-part-checksum-required" className="error-alias" />
+
+### `file_upload_part_checksum_required`
+- **Status:** 400
+- **Problem:** The storage checks each part against its SHA-256 as it arrives, and the request did not name one for a part.
+- **Solution:** Send the `sha256` of every part, as 64 hexadecimal characters. Sending it is always allowed, so a client that always does works on every deployment.
+
+<span id="file-upload-vault-paused" className="error-alias" />
+
+### `file_upload_vault_paused`
+- **Status:** none: it is the `failureCode` of a `multipart` upload that is `FAILED`
+- **Problem:** The upload was completed, but the vault stayed paused for the whole time that ROOTKey waits for it to become active. The upload was discarded.
+- **Solution:** Make sure the vault is active, then start a new upload.
+
+<span id="no-promotable-version" className="error-alias" />
+
+### `no_promotable_version`
+- **Status:** 409
+- **Problem:** You uploaded a new version of a file that is deleted and has no live version to attach it to.
+- **Solution:** Restore the file, then send the new version again.
+
+<span id="presigned-file-upload-disabled" className="error-alias" />
+
+### `presigned_file_upload_disabled`
+- **Status:** 404
+- **Problem:** Direct uploads are not available on this deployment.
+- **Solution:** Upload the file with [Create file](/api-reference/platform/endpoint/files/create-file) instead.
+
+<span id="legacy-file-upload-disabled" className="error-alias" />
+
+### `legacy_file_upload_disabled`
+- **Status:** 410
+- **Problem:** [Create file](/api-reference/platform/endpoint/files/create-file) and [Create file version](/api-reference/platform/endpoint/files/create-file-versions), which send the file in the request itself, are turned off on this deployment.
+- **Solution:** Upload the file with a [direct upload](/api-reference/platform/endpoint/files/direct-uploads).
 
 ## Accounts and shared links
 
