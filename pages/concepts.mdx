@@ -156,12 +156,12 @@ See: [On-premise](/pages/on-premise/overview)
 An **API Key** is the credential used to authenticate requests to the ROOTKey API. Each key is:
 
 - Scoped to a workspace
-- Bound to an environment (sandbox or production)
+- Either a test key or a live key: it works on your organization's test data or on its live data
 - Revocable at any time
 
-Development keys are used with `https://dev-api.rootkey.ai`. Production keys are used with `https://api.rootkey.ai`. Switching environments requires updating both the base URL and the API key.
+Test keys and live keys are used with the same API, `https://api.rootkey.ai`. Moving from test to live means changing the key; the base URL stays the same.
 
-See: [API Keys](/pages/api-keys) · [Environments](/pages/environments)
+See: [API Keys](/pages/api-keys) · [Test and Live Data](/pages/environments)
 
 ---
 

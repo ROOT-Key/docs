@@ -1,86 +1,53 @@
 ---
-title: Environments
-description: ROOTKey provides two separate API environments - a development endpoint for testing and a production endpoint for live operations. Switch by changing the base URL and API key.
+title: Test and Live Data
+description: ROOTKey has one API. The API key you send decides whether a request works on your organization's test data or its live data.
 icon: seedling
 mode: wide
 ---
 
-## Two Environments, Two Endpoints
+## One API, two kinds of keys
 
-ROOTKey provides dedicated endpoints for development and production. Each environment has its own base URL and requires its own API key. Switching from development to production requires updating both.
+ROOTKey has a single public API at `https://api.rootkey.ai`. There is no separate development host: you test against the same API you use in production, with a **test API key**.
 
-| Environment | Base URL | Purpose |
-|-------------|----------|---------|
-| **Development** | `https://dev-api.rootkey.ai` | Testing and integration development |
-| **Production** | `https://api.rootkey.ai` | Live operations |
+The key decides what a request works on:
 
----
+| | Test key | Live key |
+|---|----------|----------|
+| **Base URL** | `https://api.rootkey.ai` | `https://api.rootkey.ai` |
+| **Works on** | Your organization's test data | Your organization's live data |
+| **Files are anchored on** | A Polygon test network (Amoy) | Polygon Mainnet |
 
-## Development Environment
-
-The development environment is a full-featured environment for testing your integration before going live. All endpoints, request schemas, and response structures are identical to production.
-
-**Base URL:** `https://dev-api.rootkey.ai`
-
-### How it works
-1. Create an account at [app.rootkey.ai](https://app.rootkey.ai)
-2. Generate a **development API key** from the platform dashboard
-3. Send requests to `https://dev-api.rootkey.ai` using that key
-
-| Property | Value |
-|----------|-------|
-| Base URL | `https://dev-api.rootkey.ai` |
-| Data persistence | Non-persistent |
-| Blockchain anchoring | Development network - no real transactions |
-| Costs | None |
-| Rate limits | Applied |
-
-### Key characteristics
-- Full API parity with production - no endpoint or schema differences
-- No financial impact during development and QA
-- Suitable for integration testing, pre-production validation, and load testing
+You call the same endpoints with either kind of key.
 
 ---
 
-## Production Environment
+## Test data and live data
 
-The production environment serves live operations. All operations are real - blockchain anchors are written to Polygon Mainnet and credits are consumed per your active plan.
+Test data and live data are kept separate inside your organization:
 
-**Base URL:** `https://api.rootkey.ai`
-
-### How to go live
-1. Generate a **production API key** from the ROOTKey platform dashboard
-2. Update your `base URL` to `https://api.rootkey.ai`
-3. Update your API key to the production key
-
-| Property | Value |
-|----------|-------|
-| Base URL | `https://api.rootkey.ai` |
-| Data persistence | Persistent |
-| Blockchain | Polygon Mainnet |
-| Costs | Applied per active plan |
-| Rate limits | Applied |
-
-### Key characteristics
-- All blockchain operations are real and permanent
-- High availability and reliability
-- Credits consumed per operation according to your plan
+- Vaults, tables, files, and records created with a test key are visible only to test keys, and the same is true the other way round.
+- A vault or table address created with one kind of key is not found by the other.
+- Test data does not carry over when you move to live. Create your vaults and tables again with a live key.
 
 ---
 
-## Environment Comparison
+## What a test key does not change
 
-| Feature | Development | Production |
-|---------|-------------|-----------|
-| **Base URL** | `https://dev-api.rootkey.ai` | `https://api.rootkey.ai` |
-| **API Key** | Development key | Production key |
-| **Blockchain** | Development network | Polygon Mainnet |
-| **Data** | Non-persistent | Persistent |
-| **Costs** | None | Applied |
-| **Rate limits** | Applied | Applied |
+A test key is not exempt from your plan:
+
+- Requests made with a test key count toward your plan's usage limits, the same way requests made with a live key do. See [Rate Limits](/pages/rate-limits#plan-quotas).
+- The limits that count requests by client IP address apply to test keys as they do to live keys. See [Rate Limits](/pages/rate-limits#test-keys).
 
 ---
 
-## Summary
+## Create a test key
 
-Use `dev-api.rootkey.ai` while building your integration. Switch to `api.rootkey.ai` when you are ready to go live - update the base URL and the API key in your environment configuration.
+In Developer Tools, turn on test mode, then create the key as described in [API Keys](/pages/api-keys). A key created while test mode is on is a test key.
+
+Send it in the `x-api-key` header like any other key. See [Authentication](/api-reference/auth).
+
+---
+
+## Move to live
+
+When your integration is ready, create a live API key with test mode off and replace the key in your environment configuration. The base URL does not change.

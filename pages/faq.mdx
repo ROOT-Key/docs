@@ -40,8 +40,8 @@ mode: wide
 
       <Accordion title="How do I get started?">
         1. Create a free account at [app.rootkey.ai](https://app.rootkey.ai?utm_source=api_docs&utm_medium=faq&utm_content=signup)
-        2. Generate a sandbox API key
-        3. Follow the [Quickstart guide](/pages/overview) - you'll have your first vault and anchored record in under 5 minutes
+        2. Generate a test API key
+        3. Follow the [Quickstart guide](/pages/overview) - you'll have your first vault and anchored file in under 5 minutes
 
         If you prefer a guided introduction, [request a demo](https://rootkey.ai/contact?utm_source=api_docs&utm_medium=faq&utm_content=demo) and our team will walk through a use case tailored to your architecture.
       </Accordion>
@@ -112,15 +112,15 @@ mode: wide
         See the [Protocols overview](/pages/protocols/overview) for a decision guide.
       </Accordion>
 
-      <Accordion title="How do development and production environments work?">
-        ROOTKey provides two separate API endpoints:
+      <Accordion title="How do test and live keys work?">
+        ROOTKey has one API, `https://api.rootkey.ai`. The API key you send decides what a request works on:
 
-        - **Development**: `https://dev-api.rootkey.ai` - for testing and integration development, no costs, no real blockchain transactions
-        - **Production**: `https://api.rootkey.ai` - live operations on Polygon Mainnet, credits consumed per plan
+        - **Test key**: works on your organization's test data. Files are anchored on a Polygon test network (Amoy).
+        - **Live key**: works on your organization's live data. Files are anchored on Polygon Mainnet.
 
-        Switching to production requires updating your base URL and API key in your environment configuration.
+        Test data and live data are kept separate. Requests made with a test key count toward your plan's usage limits like any other request. Moving to live means replacing the key; the base URL does not change.
 
-        See [Environments](/pages/environments) for details.
+        See [Test and Live Data](/pages/environments) for details.
       </Accordion>
 
       <Accordion title="Does ROOTKey provide client SDKs?">
@@ -150,7 +150,7 @@ mode: wide
       </Accordion>
 
       <Accordion title="Is there a free tier or trial?">
-        Yes. Create a free account at [app.rootkey.ai](https://app.rootkey.ai?utm_source=api_docs&utm_medium=faq&utm_content=signup) to access the sandbox environment at no cost. Sandbox usage does not consume credits or incur charges.
+        Yes. Create a free account at [app.rootkey.ai](https://app.rootkey.ai?utm_source=api_docs&utm_medium=faq&utm_content=signup) and start testing with a test API key. Test requests count toward your plan's usage limits; see [Pricing](/pages/pricing) for what each plan includes.
       </Accordion>
 
       <Accordion title="What options are available for enterprise teams?">

@@ -26,7 +26,7 @@ All API communication is encrypted in transit using **TLS 1.2 or higher**. Conne
 
 API keys are the authentication primitive for the ROOTKey API. Each key is:
 
-- Scoped to a specific workspace and environment (sandbox or live)
+- Scoped to a specific workspace, and either a test key or a live key
 - Non-recoverable after generation - store securely at creation time
 - Revocable at any time from the ROOTKey platform dashboard
 - Not transmitted in URLs - always sent as an HTTP header (`x-api-key`)
@@ -35,7 +35,7 @@ API keys are the authentication primitive for the ROOTKey API. Each key is:
 - Store API keys as environment secrets or in a secrets manager (HashiCorp Vault, AWS Secrets Manager, Azure Key Vault)
 - Never commit API keys to version control
 - Rotate keys on a defined schedule and immediately after any suspected exposure
-- Use separate keys for sandbox and production environments
+- Use separate keys for testing and for production
 - Restrict key access to services that require it - do not share keys across applications
 
 ---

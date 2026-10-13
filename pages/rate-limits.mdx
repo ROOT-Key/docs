@@ -132,9 +132,9 @@ def request_with_retry(method, url, headers, max_retries=5, **kwargs):
 
 ---
 
-## Development environment
+## Test keys
 
-The development environment (`dev-api.rootkey.ai`) applies the same rate limits as production, so you will see `429` responses under the same conditions and can test how your integration handles them before you go live.
+A test API key is subject to the same plan quotas as a live key, and the limits above that count requests by client IP address apply to it in the same way.
 
 ---
 

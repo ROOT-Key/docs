@@ -61,12 +61,11 @@ Blockchain anchoring is asynchronous: the API responds with the operation in `PE
 
 ## Base URLs
 
-| Environment | Base URL |
-|-------------|----------|
-| **Development** | `https://dev-api.rootkey.ai` |
-| **Production** | `https://api.rootkey.ai` |
+| | Base URL |
+|-|----------|
+| **API** | `https://api.rootkey.ai` |
 
-All endpoints are relative to the base URL for the target environment. See [Environments](/pages/environments) for details on switching between them.
+All endpoints are relative to this base URL. There is no separate development host: to try things out, use a test API key against the same API. See [Test and Live Data](/pages/environments).
 
 ---
 
@@ -78,7 +77,7 @@ Every request must include your API key in the `x-api-key` header:
 x-api-key: your_api_key_here
 ```
 
-API keys are scoped to an environment (sandbox or live) and a workspace. Generate and manage your keys from the ROOTKey platform dashboard. See [API Keys](/pages/api-keys) for step-by-step instructions.
+API keys are scoped to a workspace, and each one is either a test key or a live key: a test key works on your organization's test data, a live key on its live data. Generate and manage your keys from the ROOTKey platform dashboard. See [API Keys](/pages/api-keys) for step-by-step instructions.
 
 <Warning>
   Never expose API keys in client-side code, public repositories, or logs. Rotate keys immediately if you suspect a compromise.

@@ -26,7 +26,7 @@ flowchart TD
     D --> E[(Blockchain Anchoring\n/ Off-Chain Processing)]
 ```
 
-All API calls are authenticated using an `x-api-key` header. Development and production use separate base URLs and separate API keys. See [Environments](/pages/environments) for details.
+All API calls are authenticated using an `x-api-key` header. Test and live keys use the same base URL; the key decides whether a request works on your organization's test data or its live data. See [Test and Live Data](/pages/environments) for details.
 
 ---
 
@@ -37,8 +37,7 @@ All API calls are authenticated using an `x-api-key` header. Development and pro
 | Protocol | REST over HTTPS (TLS 1.2+) |
 | Data format | JSON |
 | Authentication | API Key (`x-api-key` header) |
-| Development URL | `https://dev-api.rootkey.ai` |
-| Production URL | `https://api.rootkey.ai` |
+| Base URL | `https://api.rootkey.ai` |
 | Versioning | Header-based |
 
 ---
@@ -65,7 +64,7 @@ All API calls are authenticated using an `x-api-key` header. Development and pro
 ## Integration Considerations
 
 **Authentication and key management**
-API keys should be stored as environment secrets and rotated regularly. Development and production keys are distinct and tied to their respective base URLs - never use a development key against the production endpoint, or vice versa.
+API keys should be stored as environment secrets and rotated regularly. Test and live keys are distinct and work on separate data, so keep them as separate secrets and never use a test key where a live one is expected.
 
 **Rate limits and plan quotas**
 Each plan has its own API rate limit, in requests per minute, and some operations, such as listing and restoring deleted items, have limits of their own. Over a rate limit the API answers `429 Too Many Requests` with a `Retry-After` header. Your plan also sets quotas, such as a monthly number of API requests: a request over a quota is refused with `usage_limit_exceeded`, and sending it again does not help until the quota resets or the plan changes. See [Rate Limits](/pages/rate-limits) for which limits apply.
@@ -88,13 +87,13 @@ Anchoring a file on the blockchain completes after the API call returns: the fil
     Sign up at [app.rootkey.ai](https://app.rootkey.ai?utm_source=api_docs&utm_medium=api_deployment&utm_content=signup_step) and create your first workspace.
   </Step>
   <Step title="Generate an API key">
-    From the dashboard, generate a sandbox API key to begin testing. See [API Keys](/pages/api-keys) for step-by-step instructions.
+    From the dashboard, generate a test API key to begin testing. See [API Keys](/pages/api-keys) for step-by-step instructions.
   </Step>
   <Step title="Make your first API call">
-    Follow the [Quickstart guide](/pages/overview) to create a vault and anchor your first record against `https://dev-api.rootkey.ai`.
+    Follow the [Quickstart guide](/pages/overview) to create a vault and anchor your first file against `https://api.rootkey.ai` using your test key.
   </Step>
   <Step title="Switch to production">
-    Generate a production API key, update your base URL to `https://api.rootkey.ai`, and update the key in your environment configuration.
+    Generate a live API key and update the key in your environment configuration. The base URL stays `https://api.rootkey.ai`.
   </Step>
 </Steps>
 
@@ -106,7 +105,7 @@ Anchoring a file on the blockchain completes after the API call returns: the fil
     icon="rocket"
     href="https://app.rootkey.ai?utm_source=api_docs&utm_medium=api_deployment&utm_content=signup_cta"
   >
-    Access sandbox and production environments immediately. No commitment required.
+    Start with a test API key, then go live with a live key. No commitment required.
   </Card>
   <Card
     title="View API Reference"
