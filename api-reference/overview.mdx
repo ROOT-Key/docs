@@ -35,7 +35,7 @@ Blockchain anchoring is asynchronous: the API responds with the operation in `PE
     Vaults are the top-level containers for your files. Each vault has its own protocol configuration, access controls, and lifecycle management.
   </Card>
   <Card title="Files" icon="file" href="/api-reference/platform/endpoint/files/get-files">
-    Files are the primary asset type within a vault. Each file supports versioning, validation, history traversal, and ownership transfer - all with integrity anchoring.
+    Files are the primary asset type within a vault. Each file supports versioning, validation, and history traversal - all with integrity anchoring.
   </Card>
   <Card title="Records" icon="rows" href="/api-reference/platform/endpoint/records/overview">
     Individual records within a table, with full version history and per-record integrity validation.
@@ -54,7 +54,6 @@ Blockchain anchoring is asynchronous: the API responds with the operation in `PE
 | **Integrity anchoring** | Every write operation produces a cryptographic proof anchored to the Polygon blockchain |
 | **Version history** | Full lineage tracking for files and records - every version is independently verifiable |
 | **Validation** | On-demand integrity validation against the on-chain proof - detect tampering at any point in the asset lifecycle |
-| **Ownership transfer** | Transfer custody of assets between vaults or accounts with an immutable chain-of-custody record |
 | **Analytics** | Usage and activity metrics for monitoring workloads, adoption, and operational patterns |
 | **Data Recovery** | Restore soft-deleted vaults and files within the retention window before permanent deletion |
 

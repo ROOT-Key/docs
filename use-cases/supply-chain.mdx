@@ -65,12 +65,6 @@ Each party in the supply chain writes to the same vault using their own scoped A
     → [Create File Version](/api-reference/platform/endpoint/files/create-file-versions) · [Records API](/api-reference/platform/endpoint/records/overview)
   </Step>
 
-  <Step title="Record transfer of ownership">
-    When custody formally transfers between parties, use the Transfer endpoint to record the ownership change on-chain - creating an immutable chain-of-custody that documents every entity that held the asset.
-
-    → [Transfer File](/api-reference/platform/endpoint/files/transfer-file)
-  </Step>
-
   <Step title="Enable independent verification">
     Provide the vault ID and file IDs to any party requiring verification - regulators, auditors, end customers. They can verify the full chain of custody independently via the ROOTKey API or directly via Polygonscan, without contacting any supply chain participant.
 
@@ -99,7 +93,6 @@ Each party in the supply chain writes to the same vault using their own scoped A
 | [Create Vault](/api-reference/platform/endpoint/vaults/create-vault) | Create a vault per product, batch, or shipment |
 | [Create File](/api-reference/platform/endpoint/files/create-file) | Anchor custody events and certificates |
 | [Create File Version](/api-reference/platform/endpoint/files/create-file-versions) | Anchor updates to existing records |
-| [Transfer File](/api-reference/platform/endpoint/files/transfer-file) | Record ownership transfer between parties |
 | [Get File History](/api-reference/platform/endpoint/files/get-files-history) | Full chain-of-custody history |
 | [Validate File](/api-reference/platform/endpoint/files/validate-file) | Validate a specific record at any point |
 | [MQTT Integration](/pages/deployment/mqtt) | Real-time sensor and IoT data anchoring |
