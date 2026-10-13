@@ -131,7 +131,7 @@ A **Blockchain Anchor** is the on-chain record produced by a write operation. It
 
 - **SHA-256 hash** of the data payload
 - **Block timestamp** - the moment the anchor was written
-- **Operation type** - create, update, validate, transfer
+- **Operation type** - create, update, validate
 - **Asset identifiers** - the owning vault or table, and the file or record
 - **Originating wallet address**
 
@@ -143,7 +143,7 @@ Anchors are permanent and publicly queryable on Polygon. They are the cryptograp
 
 A **Wallet** is a blockchain identity - a public/private key pair used to sign and own on-chain operations. Every vault and every table has a wallet of its own, created together with it. The wallet's address is the vault's or table's address, and it is recorded as the owner of everything anchored in it.
 
-ROOTKey generates and holds these keys on your behalf: the API never asks you for a private key and never returns one. Which key signs the blockchain transactions depends on who pays the network fees under your subscription. By default ROOTKey pays and signs with its own key; if the subscription is set up for you to pay the fees, the vault's or table's own key signs instead.
+ROOTKey generates and holds these keys on your behalf: the API never asks you for a private key and never returns one. ROOTKey also pays the network fees and signs the blockchain transactions with its own key.
 
 In an on-premise installation the wallets that sign never leave your environment.
 
