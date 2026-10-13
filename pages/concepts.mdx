@@ -19,7 +19,6 @@ flowchart TD
     V --> AN[Analytics]
     T --> R[Records]
     F --> FA[(Blockchain Anchors\nPer version)]
-    R --> RA[(Blockchain Anchors\nPer record)]
 ```
 
 Vaults and tables are separate containers, each with its own address: vaults hold files, tables hold records.
@@ -78,7 +77,7 @@ This allows any version of a file to be independently validated at any point in 
 
 ## Validation
 
-**Validation** is the process of verifying that a file or record has not been tampered with since it was anchored.
+**Validation** is the process of verifying that a file has not been tampered with since it was anchored.
 
 Validation works by:
 1. Re-computing the SHA-256 hash of the current content
@@ -95,7 +94,7 @@ A **Table** is a structured, schema-defined data store for [records](#record). A
 
 Vaults hold files and tables hold records, and the two are not interchangeable. An API call that names the wrong kind of container - a vault's address where a table's is expected, or the reverse - is answered with [`resource_not_found`](/api-reference/errors#resource_not_found).
 
-Each write to a table (create or update record) is anchored individually, providing row-level integrity and auditability for structured data.
+Each write to a table (create or update record) is recorded individually, with its own entry in the table's activity history, providing row-level auditability for structured data.
 
 ---
 
@@ -103,7 +102,7 @@ Each write to a table (create or update record) is anchored individually, provid
 
 A **Record** is an individual row within a table. Every record belongs to exactly one table, and the API identifies that table by its address. That address travels in fields named `ownerVault` (when you write a record) and `vaultAddress` (when you list records); despite the names, it is the **table's** address you pass there, not a vault's.
 
-Like files, records are versioned - every update creates a new version with its own blockchain anchor. A record's full version history, activity history, and validation history can be queried.
+Like files, records are versioned - every update creates a new version. A record's full version history and activity history can be queried.
 
 See: [Records API](/api-reference/platform/endpoint/records/overview)
 
@@ -132,7 +131,7 @@ A **Blockchain Anchor** is the on-chain record produced by a write operation. It
 - **SHA-256 hash** of the data payload
 - **Block timestamp** - the moment the anchor was written
 - **Operation type** - create, update, validate
-- **Asset identifiers** - the owning vault or table, and the file or record
+- **Asset identifiers** - the owning vault and the file
 - **Originating wallet address**
 
 Anchors are permanent and publicly queryable on Polygon. They are the cryptographic root of trust for every integrity guarantee ROOTKey provides.
@@ -141,9 +140,9 @@ Anchors are permanent and publicly queryable on Polygon. They are the cryptograp
 
 ## Wallet
 
-A **Wallet** is a blockchain identity - a public/private key pair used to sign and own on-chain operations. Every vault and every table has a wallet of its own, created together with it. The wallet's address is the vault's or table's address, and it is recorded as the owner of everything anchored in it.
+A **Wallet** is a blockchain identity - a public/private key pair used to sign and own on-chain operations. Every vault and every table has a wallet of its own, created together with it, and the wallet's address is the vault's or table's address. A file anchored in a vault is owned, on-chain, by that vault's wallet.
 
-ROOTKey generates and holds these keys on your behalf: the API never asks you for a private key and never returns one. Which key signs the blockchain transactions depends on who pays the network fees under your subscription. By default ROOTKey pays and signs with its own key; if the subscription is set up for you to pay the fees, the vault's or table's own key signs instead.
+ROOTKey generates and holds these keys on your behalf: the API never asks you for a private key and never returns one. Which key signs the blockchain transactions that anchor your files depends on who pays the network fees under your subscription. By default ROOTKey pays and signs with its own key; if the subscription is set up for you to pay the fees, the vault's own key signs instead.
 
 In an on-premise installation the wallets that sign never leave your environment.
 
