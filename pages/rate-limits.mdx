@@ -1,106 +1,146 @@
 ---
 title: Rate Limits
-description: API throughput limits, burst behaviour, and retry guidance for all ROOTKey plans.
+description: What limits ROOTKey API requests, what the API answers when you reach one, and how to retry safely.
 icon: gauge
 mode: wide
 ---
 
-The ROOTKey API enforces rate limits on a per-API-key basis to ensure platform stability and fair resource allocation across all clients. Limits vary by subscription plan and apply equally to sandbox and production environments.
+A request can be refused in three ways that look alike but need different handling, so this page keeps them apart.
+
+| What refuses the request | What the API answers | Send it again? |
+|--------------------------|----------------------|----------------|
+| A [rate limit](#rate-limits): too many requests in a minute | `429`, with `errorCode` `rate_limit_exceeded` and a `Retry-After` header | Yes, after the wait |
+| A [plan quota](#plan-quotas), such as your monthly API requests | `400`, with `errorCode` `usage_limit_exceeded` | No, not until the quota resets or the plan changes |
+| [ROOTKey being too busy](#when-rootkey-is-too-busy) to take the request | `503`, with `errorCode` `service_unavailable` and a `Retry-After` header | Yes, after the wait. For an upload, check first |
+
+The API does not send `X-RateLimit-Limit`, `X-RateLimit-Remaining` or `X-RateLimit-Reset` headers, so `Retry-After` is the only header to read. Handle a `429` on any endpoint: a rate limit can apply to any request.
 
 ---
 
-## How Rate Limiting Works
+## Rate limits
 
-Rate limits are applied on a **sliding window** basis. When a limit is exceeded, the API returns:
+A rate limit caps how many requests you can make in a minute. Two kinds apply.
 
-```
-HTTP 429 Too Many Requests
-```
+**Your plan's API rate limit.** It is set per plan, in requests per minute, and varies from plan to plan. The figure for each plan is on the pricing pages linked under [Plan quotas](#plan-quotas).
 
-with a `Retry-After` header indicating the number of seconds to wait before retrying.
+**Listing and restoring deleted items.** These operations (the Data Recovery operations) have limits of their own, the same for every plan. The paths below are relative to `https://api.rootkey.ai/api-v1/`.
 
-```
+**Listing deleted items** - 600 requests per minute, shared by:
+
+- `GET /platform/vaults/deleted`
+- `GET /platform/files/deleted`
+- `GET /platform/records/deleted`
+
+**Restoring deleted items** - 120 requests per minute, shared by:
+
+- `PATCH /platform/vaults/{vaultAddress}/restore`
+- `PATCH /platform/files/{fileId}/restore`
+- `PATCH /platform/records/{recordId}/restore`
+
+These two limits count requests per client IP address, the public address your requests reach ROOTKey from, whatever API key they carry. Servers that reach ROOTKey through the same outbound address, behind a NAT gateway for example, share one count. A count starts again at zero at the beginning of every clock minute; it is not a sliding window.
+
+Over a rate limit, the API refuses the request with a `429 Too Many Requests`, a `Retry-After` header, and a JSON error:
+
+```http
 HTTP/1.1 429 Too Many Requests
-Retry-After: 5
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 0
-X-RateLimit-Reset: 1725200000
+Retry-After: 37
+Content-Type: application/json
+
+{
+  "error": {
+    "requestId": "3f2b8c1e-5a7d-4e9b-9c2a-1d6e8f0a4b7c",
+    "message": "Too many requests. Please slow down.",
+    "errorCode": "rate_limit_exceeded",
+    "retryAfter": 37
+  }
+}
 ```
 
-| Header | Description |
-|--------|-------------|
-| `X-RateLimit-Limit` | Maximum requests allowed in the current window |
-| `X-RateLimit-Remaining` | Requests remaining in the current window |
-| `X-RateLimit-Reset` | Unix timestamp when the window resets |
-| `Retry-After` | Seconds to wait before retrying |
+`Retry-After` is the number of seconds to wait before you send the request again, and `retryAfter` in the error repeats it. For the limits on deleted items it is the time until the next clock minute begins, so between 1 and 60. The refused request was not carried out, so sending it again after that wait is safe.
 
 ---
 
-## Plan Limits
+## Plan quotas
 
-For specific throughput limits per plan, visit the pricing pages:
+Your plan sets quotas: the number of API requests you can make each month, and how many files, records and vaults you can hold. Every API request counts toward the monthly quota of API requests. A request that would take you over a quota is refused with [`usage_limit_exceeded`](/api-reference/errors#usage_limit_exceeded), a `400`. Its `details` object names the quota and has an `upgrade_url`.
+
+This is not a rate limit, and it comes without `Retry-After`. The same request sent a few seconds later fails the same way until the quota resets or the plan changes, so do not retry it automatically.
+
+Plan quotas, and the API rate limit of each plan, are listed on the pricing pages:
 
 - [Platform Pricing](https://www.rootkey.ai/platform/pricing?utm_source=api_docs&utm_medium=rate_limits&utm_content=platform_pricing)
 - [Enterprise Pricing](https://rootkey.ai/contact?utm_source=api_docs&utm_medium=rate_limits&utm_content=enterprise_pricing)
 
-Enterprise plans include custom rate limit configurations. If your workload requires throughput beyond standard plan limits, contact [contact@rootkey.ai](mailto:contact@rootkey.ai) to discuss a custom arrangement.
+To define a plan for your needs, contact [contact@rootkey.ai](mailto:contact@rootkey.ai).
 
 ---
 
-## Protocol Throughput Considerations
+## When ROOTKey is too busy
 
-Rate limits are enforced at the API layer. Actual throughput for operations that write to the blockchain (RKP-1) is additionally constrained by Polygon block times.
+When ROOTKey is too busy to take a request for a moment, it answers `503 Service Unavailable` with `errorCode` `service_unavailable` and a `Retry-After` header of a few seconds. `retryAfterSeconds` in the error repeats it. Nothing was wrong with the request, and the same request a moment later will very likely succeed: wait the number of seconds in `Retry-After`, then send it again. The number differs a little from one response to the next on purpose, so clients that were refused together do not all come back together.
 
-| Protocol | API Rate Limit | Additional Constraint |
-|----------|---------------|----------------------|
-| RKP-1 | Per plan | Polygon block confirmation time |
-| RKP-2 | Per plan | None (no blockchain) |
-| RKP-3 | Per plan | Depends on routing path |
-
-For high-throughput workloads, [RKP-2](/pages/protocols/rkp-2-off-chain) or [RKP-3](/pages/protocols/rkp-3-hybrid) are recommended. [RKP-1](/pages/protocols/rkp-1-on-chain) is bounded by blockchain block times in addition to API rate limits.
+If the request was an upload, check before you send it again. In the rare case where the busy moment came after ROOTKey had sent the file for anchoring, the file may be anchored already; [`creation_outcome_unknown`](/api-reference/errors#creation_outcome_unknown) describes how to check.
 
 ---
 
-## Handling Rate Limits in Your Integration
+## On-premise installations
 
-Implement retry logic with **exponential backoff** for all `429` responses:
+An on-premise installation answers on your own address, and the ingress in front of it can also limit requests per client IP address. A request over that limit is refused by the ingress, not by the API: it gets a `503` with no `Retry-After` header and no JSON error. Treat it like any other `503` and wait, a little longer each time it repeats, before you send the request again. Ask whoever runs the installation what the limit is; it is set in their configuration.
+
+---
+
+## Blockchain writes
+
+Operations that anchor to the blockchain (RKP-1) are additionally bound by Polygon block times: the API accepts the write and answers with the operation `PENDING` and its transaction hash, and the anchor is confirmed once the transaction is mined. [RKP-2](/pages/protocols/rkp-2-off-chain) and [RKP-3](/pages/protocols/rkp-3-hybrid) are in development and not available yet. The [protocol overview](/pages/protocols/overview) says what each protocol offers.
+
+---
+
+## Handling limits in your integration
+
+Send a request again only when it is safe to, and wait as long as the response asks. A `429` is always safe to repeat, and a `503` is safe to repeat for a request that only reads. [Retrying a failed request](/api-reference/errors#retrying-a-failed-request) on the errors page says which other failures are safe and what to check first.
 
 ```python
+import random
 import time
+
 import requests
 
-def api_request_with_retry(url, headers, payload, max_retries=5):
+
+def request_with_retry(method, url, headers, max_retries=5, **kwargs):
     for attempt in range(max_retries):
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.request(method, url, headers=headers, **kwargs)
 
-        if response.status_code == 429:
-            retry_after = int(response.headers.get("Retry-After", 2 ** attempt))
-            time.sleep(retry_after)
-            continue
+        # A 429 is safe to repeat for any request. A 503 is safe to repeat for a read;
+        # for a request that writes, see "Retrying a failed request" before adding it here.
+        retry = response.status_code == 429 or (response.status_code == 503 and method == "GET")
+        if not retry:
+            return response
 
-        return response
+        # Wait as long as Retry-After says; without it, back off exponentially.
+        wait = int(response.headers.get("Retry-After", 2 ** attempt))
+        time.sleep(wait + random.uniform(0, 1))
 
     raise Exception("Max retries exceeded")
 ```
 
 **Recommendations:**
-- Always inspect the `Retry-After` header - use it instead of a fixed backoff value
-- Add jitter to your backoff to avoid thundering herd behaviour when multiple clients hit the limit simultaneously
-- Monitor `X-RateLimit-Remaining` to detect when you are approaching the limit and proactively slow down
-- For high-volume batch operations, distribute requests over time rather than sending in bursts
+- Use the `Retry-After` value instead of a fixed backoff, and add a little random delay (jitter) so that clients refused together do not come back together
+- Spread requests evenly over the minute instead of sending them in bursts
+- Pace bulk work on deleted items to stay under the limits above: 120 restores a minute is two a second
+- Do not retry `usage_limit_exceeded`; it fails the same way until the quota resets or the plan changes
+- Do not retry other failures automatically unless the errors page says they are safe to retry
 
 ---
 
-## Development Environment Rate Limits
+## Development environment
 
-The development environment (`dev-api.rootkey.ai`) applies the same rate limits as production. This allows you to test rate-limit handling during development - you will encounter `429` responses under the same conditions as in production.
+The development environment (`dev-api.rootkey.ai`) applies the same rate limits as production, so you will see `429` responses under the same conditions and can test how your integration handles them before you go live.
 
 ---
 
-## Increasing Limits
+## If you reach a limit
 
-If your workload consistently approaches plan limits:
-
-1. **Upgrade your plan** - [view plans](https://www.rootkey.ai/platform/pricing?utm_source=api_docs&utm_medium=rate_limits&utm_content=upgrade)
-2. **Contact enterprise sales** - for custom throughput arrangements at [contact@rootkey.ai](mailto:contact@rootkey.ai)
-3. **Optimise your integration** - review whether your call pattern can be batched or deferred to reduce peak request volume
+- **`429` on listing or restoring deleted items** - spread the requests over time. These limits count per client IP address and are the same for every plan, so a larger plan does not raise them. If a legitimate workload needs more, contact [support@rootkey.ai](mailto:support@rootkey.ai).
+- **Any other `429`** - spread the requests over the minute, or [view plans](https://www.rootkey.ai/platform/pricing?utm_source=api_docs&utm_medium=rate_limits&utm_content=rate_limit_upgrade) for a plan with a higher rate limit.
+- **`usage_limit_exceeded`** - [view plans](https://www.rootkey.ai/platform/pricing?utm_source=api_docs&utm_medium=rate_limits&utm_content=upgrade) and upgrade, or contact [contact@rootkey.ai](mailto:contact@rootkey.ai) to define a plan for your needs.
+- **`503` that keeps coming back** - contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId` from the error response.

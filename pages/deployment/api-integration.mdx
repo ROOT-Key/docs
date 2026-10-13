@@ -21,7 +21,7 @@ This model is appropriate for any team building web-native, cloud-native, or ser
 ```mermaid
 flowchart TD
     A([Client Application\nWeb · Mobile · Backend]) -->|HTTPS · JSON · API Key| B[api.rootkey.ai]
-    B --> C[Authentication &\nRate Limiting]
+    B --> C[Authentication &\nPlan Limits]
     B --> D[Protocol Routing\nRKP-1 / RKP-2 / RKP-3]
     D --> E[(Blockchain Anchoring\n/ Off-Chain Processing)]
 ```
@@ -67,11 +67,11 @@ All API calls are authenticated using an `x-api-key` header. Development and pro
 **Authentication and key management**
 API keys should be stored as environment secrets and rotated regularly. Development and production keys are distinct and tied to their respective base URLs - never use a development key against the production endpoint, or vice versa.
 
-**Rate limiting**
-API calls are subject to rate limits determined by the active subscription plan. Exceeding limits results in `429 Too Many Requests` responses. See [Pricing](/pages/pricing) for plan-specific limits.
+**Rate limits and plan quotas**
+Each plan has its own API rate limit, in requests per minute, and some operations, such as listing and restoring deleted items, have limits of their own. Over a rate limit the API answers `429 Too Many Requests` with a `Retry-After` header. Your plan also sets quotas, such as a monthly number of API requests: a request over a quota is refused with `usage_limit_exceeded`, and sending it again does not help until the quota resets or the plan changes. See [Rate Limits](/pages/rate-limits) for which limits apply.
 
 **Error handling**
-The API returns structured error responses with machine-readable codes. Implement retry logic with exponential backoff for transient failures (`5xx`). See [Error Reference](/api-reference/errors) for the full error schema.
+The API returns structured error responses with machine-readable codes. Branch on `errorCode` to decide whether to retry, and do not retry every `5xx` with backoff. A `429` or a `503` says in its `Retry-After` header how long to wait; wait that long, then retry. A `500` is different: an upload that failed with a `500` may still have been anchored, and `creation_outcome_unknown` must never be retried automatically. [Retrying a failed request](/api-reference/errors#retrying-a-failed-request) lists which failures are safe to retry and what to check first for an upload; the rest of the [Error Reference](/api-reference/errors) has the full error schema.
 
 **Idempotency**
 Operations that anchor data to the blockchain are not inherently idempotent - duplicate submissions result in separate on-chain records. Client-side deduplication should be implemented where appropriate.
