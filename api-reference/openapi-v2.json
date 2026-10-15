@@ -117,6 +117,9 @@
           "401": {
             "description": "Unauthenticated — missing or invalid API key"
           },
+          "404": {
+            "description": "Team not found"
+          },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
@@ -1228,6 +1231,9 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "404": {
+            "description": "File not found"
+          },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
@@ -1278,6 +1284,9 @@
           },
           "401": {
             "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "File not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -1332,6 +1341,9 @@
           },
           "401": {
             "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "File not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -1560,6 +1572,9 @@
           },
           "401": {
             "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "File not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -2318,6 +2333,9 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "404": {
+            "description": "Recovery point not found"
+          },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
@@ -2360,6 +2378,9 @@
           },
           "401": {
             "description": "Unauthenticated"
+          },
+          "404": {
+            "description": "Recovery point not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -2408,6 +2429,9 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "404": {
+            "description": "Recovery point not found"
+          },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
@@ -2426,7 +2450,7 @@
     },
     "responses": {
       "DomainError": {
-        "description": "Domain-level error (validation, business rule violation, resource not found)",
+        "description": "Domain-level error (validation or a business rule violation)",
         "content": {
           "application/json": {
             "schema": {

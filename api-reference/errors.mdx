@@ -27,7 +27,7 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 
 | Status | When the API sends it |
 | --- | --- |
-| `400` Bad Request | The request failed a check, and the `errorCode` says which. A body that cannot be parsed, such as invalid JSON, also gets a `400`, without an `errorCode`. |
+| `400` Bad Request | The request failed a check, and the `errorCode` says which. A step ROOTKey runs on your behalf can also refuse it ([`request_rejected`](#request_rejected)). A body that cannot be parsed, such as invalid JSON, also gets a `400`, without an `errorCode`. |
 | `401` Unauthorized | The `x-api-key` header is missing, or the key does not exist or is inactive. There is no `errorCode`; the `message` says which of the three it is. |
 | `403` Forbidden | The key is valid, but the request is not allowed: for example, your organization has no subscription ([`resource_not_found`](#resource_not_found)), your plan does not include the feature ([`unauthorized_access`](#unauthorized_access), or [`feature_not_found`](#feature_not_found) for an audit report), an access rule set for your organization blocks the request ([`access_policy_denied`](#access_policy_denied)), or a Restricted vault is being downloaded from a country your organization does not allow ([`geofence_blocked`](#geofence_blocked)). |
 | `404` Not Found | The vault, table, file, record or recovery point does not exist in your organization ([`resource_not_found`](#resource_not_found)). A path the API does not have also gets a `404`, with an HTML body instead of JSON. |
@@ -81,9 +81,9 @@ Add a little random delay to every wait, so that clients refused together do not
 <span id="resource-not-found" className="error-alias" />
 
 ### `resource_not_found`
-- **Status:** 404 on most endpoints and 400 on some; 403 when it is your organization's subscription that is missing
+- **Status:** 404; 403 when it is your organization's subscription that is missing
 - **Problem:** Something the request refers to, such as a vault, table, file, record or recovery point, does not exist in your organization. With status `403` and the message `Subscription not found`, ROOTKey could not find your organization's subscription.
-- **Solution:** Check the identifier against the resources your organization owns, for example by [listing the vault's files](/api-reference/platform/endpoint/files/get-files). Because the status differs between endpoints, branch on the `errorCode`. For a missing subscription, check your organization's plan in the ROOTKey app, and contact [support@rootkey.ai](mailto:support@rootkey.ai) if it is active.
+- **Solution:** Check the identifier against the resources your organization owns, for example by [listing the vault's files](/api-reference/platform/endpoint/files/get-files). For a missing subscription, check your organization's plan in the ROOTKey app, and contact [support@rootkey.ai](mailto:support@rootkey.ai) if it is active.
 
 <span id="access-policy-denied" className="error-alias" />
 
@@ -291,9 +291,16 @@ Add a little random delay to every wait, so that clients refused together do not
 <span id="internal-error" className="error-alias" />
 
 ### `internal_error`
-- **Status:** 500, or the `4xx` status of a step that ROOTKey runs on your behalf, such as anchoring a file on the blockchain, when that step rejects the request
-- **Problem:** ROOTKey could not complete the request and has no more specific code for the failure. When the status is a `4xx`, the `message` is the rejecting step's explanation.
-- **Solution:** With a `4xx`, correct what the `message` describes, then send the request again. With a `500`, retry later, and if it keeps failing, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`. An upload that failed with a `500` may still have been anchored, so before sending it again, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown). A `500` without an `errorCode` means the same as `internal_error`.
+- **Status:** 500, or another `5xx` when a step that ROOTKey runs on your behalf, such as anchoring a file on the blockchain, fails with one
+- **Problem:** ROOTKey could not complete the request and has no more specific code for the failure.
+- **Solution:** Retry later, and if it keeps failing, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`. An upload that failed with a `500` may still have been anchored, so before sending it again, check the vault as described under [`creation_outcome_unknown`](#creation_outcome_unknown). A `500` without an `errorCode` means the same as `internal_error`.
+
+<span id="request-rejected" className="error-alias" />
+
+### `request_rejected`
+- **Status:** The `4xx` status of the step that refused the request, usually `400`
+- **Problem:** A step that ROOTKey runs on your behalf, such as anchoring a file on the blockchain, refused the request. The `message` is that step's explanation, for example `Expiration date is invalid` for an `expirationDate` that is not a date and time.
+- **Solution:** Correct what the `message` describes, then send the request again. If the `message` gives you nothing to correct, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`.
 
 ## Direct file uploads
 
@@ -429,11 +436,11 @@ These come from signing in to the ROOTKey app, updating an account, or opening a
 - **Problem:** The account's email address has not been verified, so ROOTKey refused the sign-in.
 - **Solution:** Verify the email address using the verification email ROOTKey sent when the account was created, then sign in again.
 
-<span id="invalid-credentails" className="error-alias" />
+<span id="invalid-credentials" className="error-alias" />
 
-### `invalid_credentails`
+### `invalid_credentials`
 - **Status:** 400
-- **Problem:** The email address or the password is incorrect. The code is spelled `invalid_credentails`, exactly as the API sends it, so match that spelling in your code.
+- **Problem:** The email address or the password is incorrect.
 - **Solution:** Sign in with the email address and password of an existing ROOTKey account.
 
 <span id="invalid-password" className="error-alias" />
