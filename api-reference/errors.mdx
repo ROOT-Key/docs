@@ -27,10 +27,10 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 
 | Status | When the API sends it |
 | --- | --- |
-| `400` Bad Request | The request failed a check, and the `errorCode` says which. A step ROOTKey runs on your behalf can also refuse it ([`request_rejected`](#request_rejected)). A body that cannot be parsed, such as invalid JSON, also gets a `400`, without an `errorCode`. |
-| `401` Unauthorized | The `x-api-key` header is missing, or the key does not exist or is inactive. There is no `errorCode`; the `message` says which of the three it is. |
-| `403` Forbidden | The key is valid, but the request is not allowed: for example, your organization has no subscription ([`resource_not_found`](#resource_not_found)), your plan does not include the feature ([`unauthorized_access`](#unauthorized_access), or [`feature_not_found`](#feature_not_found) for an audit report), an access rule set for your organization blocks the request ([`access_policy_denied`](#access_policy_denied)), or a Restricted vault is being downloaded from a country your organization does not allow ([`geofence_blocked`](#geofence_blocked)). |
-| `404` Not Found | The vault, table, file, record or recovery point does not exist in your organization ([`resource_not_found`](#resource_not_found)). A path the API does not have also gets a `404`, with an HTML body instead of JSON. |
+| `400` Bad Request | The request failed a check, and the `errorCode` says which. A step ROOTKey runs on your behalf can also refuse it ([`request_rejected`](#request_rejected)). A body that cannot be parsed, such as invalid JSON, also gets a `400`, without an `errorCode`. A personal access token adds [`organization_header_required`](#organization_header_required), and a request that carries both an API key and a personal access token gets [`conflicting_credentials`](#conflicting_credentials). |
+| `401` Unauthorized | The `x-api-key` header is missing, or the key is malformed, unknown, inactive or belongs to the other data set (test or live). Every one of these gets the same `401` with the `message` `Access Denied` and no `errorCode`, so the response never says which it was. A personal access token that is missing, malformed, unknown, revoked or expired gets one identical `401`, so the response never says which. |
+| `403` Forbidden | The key is valid, but the request is not allowed: for example, your organization has no subscription ([`resource_not_found`](#resource_not_found)), your plan does not include the feature ([`unauthorized_access`](#unauthorized_access), or [`feature_not_found`](#feature_not_found) for an audit report), an access rule set for your organization blocks the request ([`access_policy_denied`](#access_policy_denied)), or a Restricted vault is being downloaded from a country your organization does not allow ([`geofence_blocked`](#geofence_blocked)). A personal access token can also be refused because the organization, the user or the token does not allow the request: see [Personal access tokens and agents](#personal-access-tokens-and-agents). |
+| `404` Not Found | The vault, table, file, record or recovery point does not exist in your organization ([`resource_not_found`](#resource_not_found)). A path the API does not have also gets a `404`, with an HTML body instead of JSON; so does `GET /me`, `GET /organizations` or `GET /organization` with an API key, because only a personal access token can call them. |
 | `409` Conflict | The request conflicts with the current state of the resource, such as adding a version to a deleted file. Restore the file first. |
 | `410` Gone | The vault, file or record was permanently removed, so it can no longer be restored or downloaded. A direct upload that expired ([`file_upload_expired`](#file_upload_expired)) also gets it, and so does Create file where it is turned off ([`legacy_file_upload_disabled`](#legacy_file_upload_disabled)). |
 | `413` Payload Too Large | The upload or the request body is larger than the API accepts. A direct upload over 5 GiB gets [`file_too_large`](#file_too_large); otherwise there is no `errorCode`. |
@@ -89,7 +89,7 @@ Add a little random delay to every wait, so that clients refused together do not
 
 ### `access_policy_denied`
 - **Status:** 403
-- **Problem:** Your organization's IP access rules (IP Access Control in the ROOTKey app) do not allow this request. Most endpoints are checked against these rules, which judge where the request comes from, such as its IP address, network range, country or continent; a rule can apply to reads, to writes or to both. Under an allow-list policy, a request that matches no rule is refused. The `message` is `This request is not permitted by the organization's security policy.` It never says which rule matched or why, and the status alone does not tell this error from the other `403`s on this page.
+- **Problem:** Your organization's IP access rules (IP Access Control in the ROOTKey app) do not allow this request. Most endpoints are checked against these rules, which judge where the request comes from, such as its IP address, network range, country or continent; a rule can apply to reads, to writes or to both. Under an allow-list policy, a request that matches no rule is refused. The `message` is `This request is not permitted by the organization's security policy.` It never says which rule matched or why, and the status alone does not tell this error from the other `403`s on this page. A personal access token gets the same answer when the user is not a member of the organization in `X-RootKey-Organization`, so the response never confirms that an organization exists.
 - **Solution:** Send the request from a network the policy allows, such as your servers' usual outbound IP address, or ask an organization administrator to review the rules in the ROOTKey app. A retry from the same network is refused again.
 
 <span id="geofence-blocked" className="error-alias" />
@@ -126,6 +126,20 @@ Add a little random delay to every wait, so that clients refused together do not
 - **Status:** 400
 - **Problem:** A filter on a listing has a value ROOTKey cannot use. The `message` is `Invalid filters. Please check the input data.`, and the `details` array lists each offending parameter as a `field` and a `message`, such as `startDate` with `Invalid ISO date`. It applies to the lists of files and records (`startDate`, `endDate` and `status`) and to the lists of deleted vaults, files and records (`deletedFrom` and `deletedTo`).
 - **Solution:** Correct the parameters named in `details`. Dates are in ISO 8601 format, and `status` is `pending`, `registered` or `error`.
+
+<span id="invalid-query-parameters" className="error-alias" />
+
+### `invalid_query_parameters`
+- **Status:** 400
+- **Problem:** A parameter of [List vaults](/api-reference/platform/endpoint/vaults/list-vaults), [List tables](/api-reference/platform/endpoint/tables/list-tables) or [List the organizations a token can act in](/api-reference/platform/endpoint/identity/list-organizations) has a value ROOTKey cannot use, such as a `limit` outside its range or an `order` that is not `asc` or `desc`. The `details` array lists each offending parameter as a `field` and a `message`; it never repeats the value you sent.
+- **Solution:** Correct the parameters named in `details`, then send the request again.
+
+<span id="invalid-cursor" className="error-alias" />
+
+### `invalid_cursor`
+- **Status:** 400
+- **Problem:** The `cursor` of a listing is not one ROOTKey issued. ROOTKey refuses it instead of starting again from the first page, so a damaged cursor never makes a client read the same rows twice.
+- **Solution:** Send the `pagination.nextCursor` of the previous page exactly as you received it, or leave `cursor` out to start from the first page. Do not build or change a cursor.
 
 <span id="parent-version-not-in-vault" className="error-alias" />
 
@@ -301,6 +315,108 @@ Add a little random delay to every wait, so that clients refused together do not
 - **Status:** The `4xx` status of the step that refused the request, usually `400`
 - **Problem:** A step that ROOTKey runs on your behalf, such as anchoring a file on the blockchain, refused the request. The `message` is that step's explanation, for example `Expiration date is invalid` for an `expirationDate` that is not a date and time.
 - **Solution:** Correct what the `message` describes, then send the request again. If the `message` gives you nothing to correct, contact [support@rootkey.ai](mailto:support@rootkey.ai) quoting the `requestId`.
+
+## Personal access tokens and agents
+
+These come from a request made with a [personal access token](/api-reference/auth#personal-access-tokens) (`Authorization: Bearer rk_pat_...`), which acts as a member of an organization within the limits the organization sets. Only a member of the organization sees the `agent_*` codes and [`insufficient_scope`](#insufficient_scope): a user who is not a member gets [`access_policy_denied`](#access_policy_denied), the same answer a blocked network gets. When a request is refused, `GET /organizations` and `GET /organization` show the mode the organization has set and the scopes the token has there, so you can tell the user what to change instead of retrying. The refusals are decisions, not faults: do not retry them, and do not try the same request in another organization on your own.
+
+<span id="organization-header-required" className="error-alias" />
+
+### `organization_header_required`
+- **Status:** 400
+- **Problem:** A personal access token belongs to a user, not to an organization, so every request that works inside an organization has to say which one. The request carried no `X-RootKey-Organization` header. The `message` is `Send the organization this request acts for in the X-RootKey-Organization header.`
+- **Solution:** Send the `id` of the organization in the `X-RootKey-Organization` header. [List the organizations a token can act in](/api-reference/platform/endpoint/identity/list-organizations) to see the ids. The header is the only place the organization is read from: a query string or a body field does not count.
+
+<span id="conflicting-credentials" className="error-alias" />
+
+### `conflicting_credentials`
+- **Status:** 400
+- **Problem:** The request carried both an `x-api-key` header and an `Authorization: Bearer rk_...` token. ROOTKey refuses it without saying whether either one is valid.
+- **Solution:** Send one credential per request: either the `x-api-key` header or the bearer token.
+
+<span id="email-verification-required" className="error-alias" />
+
+### `email_verification_required`
+- **Status:** 403
+- **Problem:** The email address of the user the token acts as has not been verified, and the time allowed to verify it has run out. The `message` is `Verify your email address to continue using the platform.`
+- **Solution:** Verify the email address with the message ROOTKey sent when the account was created.
+
+<span id="agent-org-not-allowed" className="error-alias" />
+
+### `agent_org_not_allowed`
+- **Status:** 403
+- **Problem:** The token was created for specific organizations, and the organization in `X-RootKey-Organization` is not one of them. The `message` is `This token is not allowed to act in this organization.`
+- **Solution:** Send the id of an organization the token covers (`GET /me` lists them), or create a new token that includes this organization or all of your organizations.
+
+<span id="agent-user-blocked" className="error-alias" />
+
+### `agent_user_blocked`
+- **Status:** 403
+- **Problem:** An administrator of the organization blocked this user from using agents there. The user's own access in the ROOTKey app is not affected. `GET /organizations` shows `blocked: true` for it.
+- **Solution:** Ask an administrator of the organization to unblock your agents in the organization's AI agents settings.
+
+<span id="agent-two-factor-required" className="error-alias" />
+
+### `agent_two_factor_required`
+- **Status:** 403
+- **Problem:** The organization requires two-factor authentication of the members who use agents, and the user has not turned it on.
+- **Solution:** Turn on two-factor authentication in your account security settings in the ROOTKey app, then send the request again.
+
+<span id="agent-access-disabled" className="error-alias" />
+
+### `agent_access_disabled`
+- **Status:** 403
+- **Problem:** The organization turned agent access off, so it serves no personal access token request, whoever the user is. `GET /organizations` shows `mode: DISABLED` for it.
+- **Solution:** Ask an administrator of the organization to change the access mode in the AI agents settings. Until then, use the ROOTKey app, or an organization API key if your organization issues them.
+
+<span id="agent-write-not-allowed" className="error-alias" />
+
+### `agent_write_not_allowed`
+- **Status:** 403
+- **Problem:** The organization lets agents read only, which is the setting until an administrator chooses another, and the request creates, changes or deletes something. `GET /organizations` shows `mode: READ_ONLY` for it.
+- **Solution:** Ask an administrator of the organization to allow full access for agents in the AI agents settings. Reads keep working in the meantime.
+
+<span id="agent-personal-tokens-disabled" className="error-alias" />
+
+### `agent_personal_tokens_disabled`
+- **Status:** 403
+- **Problem:** The organization does not allow personal access tokens, so a token cannot act in it.
+- **Solution:** Ask an administrator of the organization to allow personal access tokens in the AI agents settings.
+
+<span id="insufficient-scope" className="error-alias" />
+
+### `insufficient_scope`
+- **Status:** 403
+- **Problem:** The token does not carry the scope the endpoint needs: `rootkey.read` to read, `rootkey.write` to create or change, `rootkey.delete` to delete. The `message` is `This token does not carry the scope this endpoint needs.`
+- **Solution:** Create a new personal access token that carries the scope. A token's scopes are fixed when it is created. `GET /me` lists the scopes of the token you are using.
+
+<span id="insufficient-permission" className="error-alias" />
+
+### `insufficient_permission`
+- **Status:** 403
+- **Problem:** The user's role in the organization does not grant what the request does. A personal access token never has more access than its user has in the ROOTKey app. The `message` is `Your organization role does not grant permission to perform this action.`
+- **Solution:** Ask an administrator of the organization to change the user's role, or use an account whose role allows it.
+
+<span id="agent-restricted-data-denied" className="error-alias" />
+
+### `agent_restricted_data_denied`
+- **Status:** 403
+- **Problem:** The vault or table is classified Restricted, and Restricted data is never available to agents, in any mode. The listings still show it, with `agentAccessible: false`, so that an agent can tell the user it exists.
+- **Solution:** Open it in the ROOTKey app.
+
+<span id="agent-classification-change-not-allowed" className="error-alias" />
+
+### `agent_classification_change_not_allowed`
+- **Status:** 403
+- **Problem:** A request to [update a vault](/api-reference/platform/endpoint/vaults/update-vault) carried a `dataClassification` and came from a personal access token. How a vault's data is treated stays with a person, so the request is refused even for the value the vault already has, and nothing else in it is applied.
+- **Solution:** Change the classification in the ROOTKey app, or send the update without `dataClassification`.
+
+<span id="agent-route-not-available" className="error-alias" />
+
+### `agent_route_not_available`
+- **Status:** 403
+- **Problem:** The endpoint is never available to a personal access token, whatever the organization allows. Recovery points, file audit reports, the list of open direct uploads and the Restore Center (listing and restoring deleted vaults, files and records) are in this group. The `message` is `This endpoint is not available to agents.`
+- **Solution:** Use the ROOTKey app, or an organization API key, for these.
 
 ## Direct file uploads
 

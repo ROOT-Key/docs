@@ -1,16 +1,16 @@
 ---
 title: Claude (MCP)
 sidebarTitle: Claude
-description: Connect Claude to ROOTKey with the official MCP server and operate vaults, files, records and recovery points in plain language.
+description: Connect Claude to ROOTKey with the official MCP server and a personal access token, and operate vaults, files and records in plain language.
 icon: robot
 ---
 
-The ROOTKey MCP server connects Claude to your ROOTKey workspace. It implements the [Model Context Protocol](https://modelcontextprotocol.io), the open standard Claude uses to talk to external systems, and exposes the entire documented ROOTKey REST API as tools Claude can call.
+The ROOTKey MCP server connects Claude to your ROOTKey workspace. It implements the [Model Context Protocol](https://modelcontextprotocol.io), the open standard Claude uses to talk to external systems, and turns the documented ROOTKey REST API into tools Claude can call.
 
-Ask Claude to anchor a contract, check whether a file still matches its proof, pull the audit trail for a record, or build a recovery point, and it happens in your real workspace. Every tool call is an ordinary API request made with your own API key, so everything the server does is visible in the ROOTKey dashboard and subject to the same permissions, quotas and audit logging as any other API client.
+Ask Claude to anchor a contract, check whether a file still matches its proof, or pull the audit trail for a record, and it happens in your real workspace. The server signs in with your own [personal access token](/api-reference/auth#personal-access-tokens), so every tool call is an ordinary API request made as you. It can never do more than you can do in the ROOTKey app, everything it does is visible in the ROOTKey dashboard, and the organization it acts in decides whether agents may use its data at all.
 
 <Note>
-  The server runs locally on your machine and talks directly to `api.rootkey.ai`. Your API key stays in your own environment - it is never sent to Anthropic or to ROOTKey by any route other than the normal API call.
+  The server runs locally on your machine and talks directly to `api.rootkey.ai`. Your token stays in your own environment: it is never sent to Anthropic, and it is sent to ROOTKey only as the credential of the API call itself.
 </Note>
 
 ---
@@ -18,9 +18,14 @@ Ask Claude to anchor a contract, check whether a file still matches its proof, p
 ## Requirements
 
 - **Node.js 20 or newer** on the machine running Claude
-- **A ROOTKey API key**, created in the platform under **Developer Tools -> API Keys**
+- **A ROOTKey personal access token.** Create one in the ROOTKey app under **Account Settings → Personal access tokens**. It starts with `rk_pat_`, it is shown once when you create it, and it lasts at most 90 days. You choose its [scopes](/api-reference/auth#scopes), the organizations it may reach and when it expires; [Authentication](/api-reference/auth#create-a-token) walks through each step.
+- **An organization that lets agents in.** Each organization decides whether, and how far, agents may use its data. Until an administrator chooses otherwise, an organization lets agents read and nothing more. See [What the organization decides](#what-the-organization-decides).
 
-See [API Keys](/pages/api-keys) for how to create one. Use a test API key while you try things out: it works on your organization's test data, kept separate from your live data, and files are anchored on a Polygon test network rather than Polygon Mainnet. Test requests still count toward your plan's usage limits. See [Test and Live Data](/pages/environments).
+<Warning>
+  A token acts as you. Treat it like a password: keep it in a password manager or a secret store, create one token per tool, and revoke it under **Account Settings → Personal access tokens** if you suspect it leaked.
+</Warning>
+
+Organization API keys still work in version 0.2 through `ROOTKEY_API_KEY`, but they are deprecated and are removed in 0.3.0. See [Moving from an API key](#moving-from-an-api-key).
 
 ---
 
@@ -32,25 +37,32 @@ If you already have a coding agent open, hand it this URL and it will install an
 https://docs.rootkey.ai/agent-setup/prompt.md
 ```
 
-Those instructions are published as the [Agent Setup](/agent-setup/prompt) page, so you can read exactly what your agent is being told to do. To set it up by hand instead, follow the steps below.
+Those instructions are published as the [Agent Setup](/agent-setup/prompt) page, so you can read exactly what your agent is being told to do. Creating the token is the one step your agent cannot do for you. To set everything up by hand instead, follow the steps below.
 
 ---
 
 ## Install
 
+Replace `your_personal_access_token` with the token you created. `ROOTKEY_ORGANIZATION` is optional; see [Choosing the organization](#choosing-the-organization).
+
 <Tabs>
   <Tab title="Claude Code">
-    Run this once, from anywhere:
+    Export the token in your shell profile or load it from your secret manager, then run this once, from anywhere:
 
     ```bash
-    claude mcp add rootkey --env ROOTKEY_API_KEY=your_api_key -- npx -y @rootkey/mcp
+    claude mcp add rootkey \
+      --env ROOTKEY_TOKEN=$ROOTKEY_TOKEN \
+      --env ROOTKEY_ORGANIZATION=your_organization_id \
+      -- npx -y @rootkey/mcp
     ```
+
+    Your shell expands the token, so it never appears in the command you type. Claude Code keeps the value in its own configuration on your machine.
 
     Start a new session and ask Claude what ROOTKey tools it has.
   </Tab>
 
   <Tab title="Claude Desktop">
-    Open **Settings -> Developer -> Edit Config** and add the server to `claude_desktop_config.json`:
+    Claude Desktop keeps the token in plain text in its configuration file, so treat that file like a password. Open **Settings → Developer → Edit Config** and add the server to `claude_desktop_config.json`:
 
     ```json
     {
@@ -58,7 +70,10 @@ Those instructions are published as the [Agent Setup](/agent-setup/prompt) page,
         "rootkey": {
           "command": "npx",
           "args": ["-y", "@rootkey/mcp"],
-          "env": { "ROOTKEY_API_KEY": "your_api_key" }
+          "env": {
+            "ROOTKEY_TOKEN": "your_personal_access_token",
+            "ROOTKEY_ORGANIZATION": "your_organization_id"
+          }
         }
       }
     }
@@ -72,7 +87,10 @@ Those instructions are published as the [Agent Setup](/agent-setup/prompt) page,
         "rootkey": {
           "command": "cmd",
           "args": ["/c", "npx", "-y", "@rootkey/mcp"],
-          "env": { "ROOTKEY_API_KEY": "your_api_key" }
+          "env": {
+            "ROOTKEY_TOKEN": "your_personal_access_token",
+            "ROOTKEY_ORGANIZATION": "your_organization_id"
+          }
         }
       }
     }
@@ -81,8 +99,25 @@ Those instructions are published as the [Agent Setup](/agent-setup/prompt) page,
     Restart Claude Desktop for the change to take effect.
   </Tab>
 
+  <Tab title="Cursor and other clients">
+    The server speaks MCP over stdio, so any client that can start a local program can use it. Run `npx -y @rootkey/mcp` with `ROOTKEY_TOKEN` in the process environment, in whatever shape that client's configuration takes. In Cursor, add this under `"mcpServers"` in `.cursor/mcp.json`:
+
+    ```json
+    "rootkey": {
+      "command": "npx",
+      "args": ["-y", "@rootkey/mcp"],
+      "env": {
+        "ROOTKEY_TOKEN": "your_personal_access_token",
+        "ROOTKEY_ORGANIZATION": "your_organization_id"
+      }
+    }
+    ```
+
+    The [Agent Setup](/agent-setup/prompt) page has the equivalent entry for Codex, GitHub Copilot in VS Code, Windsurf and OpenCode.
+  </Tab>
+
   <Tab title="Shared with a team">
-    Commit a `.mcp.json` file at the root of your repository and let each person supply their own key from their environment:
+    Commit a `.mcp.json` file at the root of your repository and let each person supply their own token from their environment:
 
     ```json
     {
@@ -90,15 +125,31 @@ Those instructions are published as the [Agent Setup](/agent-setup/prompt) page,
         "rootkey": {
           "command": "npx",
           "args": ["-y", "@rootkey/mcp"],
-          "env": { "ROOTKEY_API_KEY": "${ROOTKEY_API_KEY}" }
+          "env": { "ROOTKEY_TOKEN": "${ROOTKEY_TOKEN}" }
         }
       }
     }
     ```
 
-    Never commit the key itself. API keys carry the full privileges of the account that created them.
+    A personal access token belongs to one person, so never commit a token and never share one between people: everyone creates their own.
   </Tab>
 </Tabs>
+
+---
+
+## Choosing the organization
+
+A personal access token can reach several organizations, so the server never guesses which one you mean. There are three ways to choose:
+
+- **Set a default.** Put the organization id in `ROOTKEY_ORGANIZATION`, and every tool uses it.
+- **Name it in the request.** Every tool that works inside an organization takes an optional `organization` argument that overrides the default for that call.
+- **Ask.** With neither, a tool answers that no organization is selected, and Claude calls `rootkey_list_organizations` and asks you which one to use. The list shows each organization's id, its agent mode (`DISABLED`, `READ_ONLY` or `FULL`) and whether you are blocked from agents there. Organizations that refuse agents are listed too, so you can see why.
+
+A change Claude makes always reports the organization it acted in (for example `Acted in organization ...`), so a wrong default cannot go unnoticed.
+
+<Tip>
+  Create the token with the explicit list of organizations you need rather than **All my organizations**, and with only the scopes you need. The `organization` argument can name any organization the token covers, and a model that has read a malicious document could use that.
+</Tip>
 
 ---
 
@@ -108,62 +159,108 @@ Every setting is an environment variable on the server process.
 
 | Variable | Default | Description |
 |---|---|---|
-| `ROOTKEY_API_KEY` | required | Your ROOTKey API key. The server exits immediately if it is missing. |
+| `ROOTKEY_TOKEN` | required | Your personal access token (`rk_pat_` followed by 64 hexadecimal characters), sent as a Bearer token. The server exits immediately if it is missing or malformed, and never prints it. |
+| `ROOTKEY_ORGANIZATION` | - | Default organization id for the token. A tool's own `organization` argument overrides it for that call. |
+| `ROOTKEY_TEST_MODE` | unset (live) | `true` or `false`: whether the token works on your organization's test data or its live data. The two are separate, and live is the default. See [Test and Live Data](/pages/environments). |
+| `ROOTKEY_API_KEY` | - | **Deprecated, removed in 0.3.0.** An organization API key, accepted in place of `ROOTKEY_TOKEN`, never together with it. See [Moving from an API key](#moving-from-an-api-key). |
 | `ROOTKEY_ENV` | `production` | Optional. `production` is the only accepted value, and the server refuses to start with `development`. ROOTKey has one public API. |
-| `ROOTKEY_API_URL` | - | Full base URL including the `/api-v1/` path. Use it for a self-hosted or on-premise deployment. Plain `http://` is accepted only for loopback hosts, since the key travels in a header. |
-| `ROOTKEY_READ_ONLY` | `false` | When `true`, only the read tools are registered, and downloads may only write inside `ROOTKEY_DOWNLOAD_DIR`. |
+| `ROOTKEY_API_URL` | - | Full base URL including the `/api-v1/` path. Use it for a self-hosted or on-premise deployment. Plain `http://` is accepted only for loopback hosts, since the credential travels in a header. |
+| `ROOTKEY_READ_ONLY` | `false` | When `true`, only the read tools are registered (14 with a token, 17 with an API key), and downloads may only write inside `ROOTKEY_DOWNLOAD_DIR`. |
 | `ROOTKEY_TIMEOUT_MS` | `30000` | Timeout for ordinary requests, in milliseconds. |
 | `ROOTKEY_TRANSFER_TIMEOUT_MS` | `300000` | Timeout for uploads and downloads, in milliseconds. |
 | `ROOTKEY_DOWNLOAD_DIR` | `~/Downloads` | Where downloads are saved when no path is given. |
 | `ROOTKEY_ALLOWED_DIRS` | home, temp, cwd | Directories uploads may read from, separated by `;` on Windows and `:` elsewhere. |
 | `ROOTKEY_LOG_LEVEL` | `info` | `silent`, `error`, `warn`, `info` or `debug`. Logs are written to stderr. |
 
-There is one public API, `https://api.rootkey.ai/api-v1/`, and no separate development environment. To try things out, use a test API key: it works on your organization's test data, kept separate from your live data. See [Test and Live Data](/pages/environments). A `ROOTKEY_ENV=development` left over from an earlier version of the server is rejected with a configuration error; remove the variable.
+There is one public API, `https://api.rootkey.ai/api-v1/`, and no separate development environment. Whether you work on test or live data is a property of the credential, not of a host: a token follows `ROOTKEY_TEST_MODE`. To try things out, set `ROOTKEY_TEST_MODE=true`. A `ROOTKEY_ENV=development` left over from an earlier version of the server is rejected with a configuration error; remove the variable.
+
+---
+
+## What the organization decides
+
+Your token is yours, but the organization decides whether an agent may use its data. An organization administrator sets this under **Organization Settings → AI agents**; the [admin guide](/pages/integrations/ai-agents) describes every setting. What it means for you:
+
+| Setting | What your agent can do |
+|---|---|
+| **Off** (`DISABLED`) | Nothing in that organization. Every call is refused. |
+| **Read only** (`READ_ONLY`) | Read what you can read. Creating, changing or deleting is refused. This is the setting until an administrator chooses another. |
+| **Full access** (`FULL`) | Read, create, change and delete, within your own permissions and your token's scopes. |
+
+An organization can also stop accepting personal access tokens, require two-factor authentication from members who use agents, and block a member's agents. Your role, your teams and the organization's IP and country rules still apply on top of all of this.
+
+**Some things are never available to an agent, whatever the organization allows:**
+
+- Recovery points, and file audit reports. The server does not offer these tools when you use a token. Use the ROOTKey app.
+- The Restore Center: listing and restoring deleted vaults, files and records. Use the ROOTKey app.
+- **Restricted** vaults and tables. They appear in `rootkey_list_vaults` and `rootkey_list_tables` with `agentAccessible: false` so that Claude can tell you they exist, and nothing more.
+- Changing the data classification of a vault.
+
+<Note>
+  Your organization governs the credentials it delegates to agents, not the AI itself: an agent using a person's own browser session, or a script holding an organization API key, cannot be told apart from that person.
+</Note>
 
 ---
 
 ## Available tools
 
-27 tools: every operation in the [API Reference](/api-reference/overview), plus a wait helper and one local diagnostic.
+30 tools in all: the operations of the [API Reference](/api-reference/overview) that suit an agent, the listings that find what to operate on, a wait helper and one diagnostic. What Claude is offered depends on the credential, because a tool that can only fail is not worth advertising:
 
-Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-named tool from another MCP server in the same session.
+- **A personal access token gets 23.** The six recovery point tools and `rootkey_generate_file_audit_report` are left out, because the API refuses them to agents. Every tool except `rootkey_list_organizations` takes the optional `organization` argument.
+- **An organization API key (deprecated) gets 29.** Everything except `rootkey_list_organizations`, and none of the tools take an `organization` argument: the key is bound to one organization.
+
+Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-named tool from another MCP server in the same session. The **Scope** column is the scope your token needs for the call; a token that lacks it gets [`insufficient_scope`](/api-reference/errors#insufficient_scope).
+
+### Organizations
+
+| Tool | Scope | What it does |
+|---|---|---|
+| `rootkey_list_organizations` | none | List the organizations the token can act in, with each one's agent mode and whether you are blocked. Token only |
 
 ### Vaults
 
-| Tool | What it does |
-|---|---|
-| `rootkey_create_vault` | Create a vault and return its address |
-| `rootkey_update_vault` | Rename a vault or change its description |
-| `rootkey_delete_vault` | Move a vault and its files to the trash, recoverable until retention purges them |
+| Tool | Scope | What it does |
+|---|---|---|
+| `rootkey_list_vaults` | `rootkey.read` | List the vaults you can see, with address, name, classification and status |
+| `rootkey_create_vault` | `rootkey.write` | Create a vault and return its address |
+| `rootkey_update_vault` | `rootkey.write` | Rename a vault or change its description. The old values are overwritten |
+| `rootkey_delete_vault` | `rootkey.delete` | Move a vault and its files to the trash, recoverable until retention purges them |
 
 ### Files
 
-| Tool | What it does |
-|---|---|
-| `rootkey_list_files` | List files in a vault, filtered by name, date range or anchoring status |
-| `rootkey_upload_file` | Upload a local file into a vault and anchor it |
-| `rootkey_get_file` | Fetch one file with its hashes, transaction details and usage metrics |
-| `rootkey_download_file` | Download a file to local disk |
-| `rootkey_delete_file` | Move a file to the trash, recoverable until retention purges it |
-| `rootkey_list_file_versions` | List every version of a file |
-| `rootkey_upload_file_version` | Upload a new version of an existing file |
-| `rootkey_validate_file` | Check a local copy against the anchor and return ownership, integrity and validity |
-| `rootkey_get_file_history` | Read the activity log for a file |
-| `rootkey_get_file_validations` | List past validations, with current and previous hashes |
-| `rootkey_generate_file_audit_report` | Queue a NIS2 or DORA compliance report |
+| Tool | Scope | What it does |
+|---|---|---|
+| `rootkey_list_files` | `rootkey.read` | List files in a vault, filtered by name, date range or anchoring status |
+| `rootkey_upload_file` | `rootkey.write` | Upload a local file into a vault and anchor it |
+| `rootkey_get_file` | `rootkey.read` | Fetch one file with its hashes, transaction details and usage metrics |
+| `rootkey_download_file` | `rootkey.read` | Download a file to local disk |
+| `rootkey_delete_file` | `rootkey.delete` | Move a file to the trash, recoverable until retention purges it |
+| `rootkey_list_file_versions` | `rootkey.read` | List every version of a file |
+| `rootkey_upload_file_version` | `rootkey.write` | Upload a new version of an existing file |
+| `rootkey_validate_file` | `rootkey.read` | Check a local copy against the anchor and return ownership, integrity and validity |
+| `rootkey_get_file_history` | `rootkey.read` | Read the activity log for a file |
+| `rootkey_get_file_validations` | `rootkey.read` | List past validations, with current and previous hashes |
 
 ### Records
 
-| Tool | What it does |
-|---|---|
-| `rootkey_list_records` | List records in a table with their metadata |
-| `rootkey_create_record` | Write a record, or a new version of one |
-| `rootkey_list_record_versions` | List every version of a record |
-| `rootkey_get_record_history` | Read the activity log for a record |
-| `rootkey_get_record_validations` | List past validations of a record |
-| `rootkey_delete_record` | Move a record to the trash, recoverable until retention purges it |
+| Tool | Scope | What it does |
+|---|---|---|
+| `rootkey_list_tables` | `rootkey.read` | List the tables you can see, with address, name, classification and status |
+| `rootkey_list_records` | `rootkey.read` | List records in a table with their metadata |
+| `rootkey_create_record` | `rootkey.write` | Write a record, or a new version of one |
+| `rootkey_list_record_versions` | `rootkey.read` | List every version of a record |
+| `rootkey_get_record_history` | `rootkey.read` | Read the activity log for a record |
+| `rootkey_get_record_validations` | `rootkey.read` | List past validations of a record |
+| `rootkey_delete_record` | `rootkey.delete` | Move a record to the trash, recoverable until retention purges it |
 
-### Data recovery
+### Diagnostics
+
+| Tool | Scope | What it does |
+|---|---|---|
+| `rootkey_get_environment_info` | none | Report the server version and the API address. With a token it also asks the API who you are and what the token may do: the user, the token name, its scopes and expiry, and, for the selected organization, its agent mode and the scopes that are effective there. Never reveals the token |
+
+### Only with an organization API key
+
+These seven are offered only when the server runs with the deprecated `ROOTKEY_API_KEY`, because the API refuses them to agents:
 
 | Tool | What it does |
 |---|---|
@@ -173,27 +270,24 @@ Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-nam
 | `rootkey_wait_for_recovery_point` | Wait for the archive to finish building, reporting progress while it waits |
 | `rootkey_download_recovery_point` | Download the encrypted archive |
 | `rootkey_delete_recovery_point` | Permanently delete a recovery point |
+| `rootkey_generate_file_audit_report` | Queue a NIS2 or DORA compliance report |
 
-### Diagnostics
-
-| Tool | What it does |
-|---|---|
-| `rootkey_get_environment_info` | Report the API base URL, what the server can tell about the key, and the tool count. Makes no API call and never reveals the key |
+Every tool declares whether it only reads, whether it is destructive and whether repeating it is safe, so your client can ask before it runs one that changes something. The four delete tools and `rootkey_update_vault`, which overwrites the previous name or description, are marked destructive.
 
 ---
 
 ## Prompts
 
-Besides the tools, the server offers four prompts: whole workflows your client can list, so you do not have to remember the sequence.
+Besides the tools, the server offers whole workflows your client can list, so you do not have to remember the sequence.
 
 | Prompt | What it does |
 |---|---|
 | `anchor_folder` | Anchors every file in a local folder into a vault, confirming first and reporting what landed |
 | `compliance_evidence_pack` | Gathers the anchor, activity history, validations and version chain for one file, and writes it up |
 | `verify_local_copies` | Validates local files against their anchors and leads with the failures |
-| `backup_workspace` | Creates a recovery point, waits for it, downloads it, and handles the one-time password carefully |
+| `backup_workspace` | Creates a recovery point, waits for it, downloads it, and handles the one-time password carefully. Only with an organization API key |
 
-In read-only mode only `compliance_evidence_pack` is offered, since the other three write.
+In read-only mode only `compliance_evidence_pack` is offered, since the others write.
 
 ---
 
@@ -201,7 +295,7 @@ In read-only mode only `compliance_evidence_pack` is offered, since the other th
 
 A few behaviours are worth knowing before your first session, because they follow from how the ROOTKey API works.
 
-**Vault addresses come from the dashboard.** The API has no endpoint that lists vaults, so the server cannot offer that tool. Claude will ask you for the address of the vault you mean. When `rootkey_create_vault` makes a new one, keep the address it returns.
+**Addresses come from the list tools.** `rootkey_list_vaults` and `rootkey_list_tables` page through what you can see: a vault holds files and a table holds records. With a token you see the vaults and tables of the teams you belong to, and organization owners and administrators see all of them. When `rootkey_create_vault` makes a new one, keep the address it returns.
 
 **Files move through your own machine.** Uploads read from the local disk of the computer running the server, and downloads are written there and reported back as a file path. File contents are never pasted into the conversation, so a large PDF costs you nothing in context.
 
@@ -213,23 +307,23 @@ A few behaviours are worth knowing before your first session, because they follo
 
 **Records are versioned by primary key.** Creating a record whose key column matches an existing record adds a version to it rather than creating a duplicate. Asking Claude to "try that again" after a create will produce a second version, which is usually not what you want.
 
-**Compliance reports arrive in the dashboard.** `rootkey_generate_file_audit_report` queues the job and returns a report id. There is no API endpoint that returns the finished report, so collect it from the platform.
+**Names and contents are other people's words.** Organization, vault and file names, record contents and error text were written by someone, often not you. The server tells the model to treat them as data and strips control characters from listed names, but the model is the last line of defence: do not paste untrusted documents into a session that holds a token that can write or delete.
 
 ---
 
 ## Safety
 
 <Warning>
-  **Deletions need your confirmation.** `rootkey_delete_vault`, `rootkey_delete_file` and `rootkey_delete_record` move the item to the trash: it leaves every listing at once and stays recoverable from the Restore Center until the retention policy purges it. `rootkey_delete_recovery_point` is the exception and cannot be undone by anyone. Every delete is recorded in the activity log; a file that was anchored keeps its on-chain proof either way. All four are marked as destructive so Claude asks for confirmation, but the final responsibility for approving them is yours.
+  **Deletions need your confirmation.** `rootkey_delete_vault`, `rootkey_delete_file` and `rootkey_delete_record` move the item to the trash: it leaves every listing at once and stays recoverable from the Restore Center until the retention policy purges it. Every delete is recorded in the activity log, and a file that was anchored keeps its on-chain proof either way. All three are marked as destructive so Claude asks for confirmation, but the final responsibility for approving them is yours.
 </Warning>
 
-<Warning>
-  **The recovery point password is shown exactly once.** `rootkey_create_recovery_point` returns a decryption password that the API never returns again. The server displays it prominently and keeps it out of its own logs. Store it immediately - without it the downloaded archive cannot be opened.
-</Warning>
+### Keep the token narrow
+
+A token with only `rootkey.read` cannot create or delete anything, whatever Claude is asked to do, and a token limited to one organization cannot be pointed at another. If a session only needs to look, create a read-only token. A token cannot be edited after it is created: to change its scopes or organizations, create a new one and revoke the old.
 
 ### Read-only mode
 
-Setting `ROOTKEY_READ_ONLY=true` registers only the tools that read data. The write tools are not advertised at all, so Claude cannot call them, and the two download tools may only write inside the configured download directory.
+Setting `ROOTKEY_READ_ONLY=true` registers only the tools that read data. The write tools are not advertised at all, so Claude cannot call them, and downloads may only write inside the configured download directory.
 
 ```json
 {
@@ -238,7 +332,8 @@ Setting `ROOTKEY_READ_ONLY=true` registers only the tools that read data. The wr
       "command": "npx",
       "args": ["-y", "@rootkey/mcp"],
       "env": {
-        "ROOTKEY_API_KEY": "your_api_key",
+        "ROOTKEY_TOKEN": "your_personal_access_token",
+        "ROOTKEY_ORGANIZATION": "your_organization_id",
         "ROOTKEY_READ_ONLY": "true"
       }
     }
@@ -246,7 +341,26 @@ Setting `ROOTKEY_READ_ONLY=true` registers only the tools that read data. The wr
 }
 ```
 
-This is useful for analysis and reporting sessions where nothing should change. Treat it as a convenience rail rather than a security control: ROOTKey API keys have no scopes and carry the full privileges of the account that owns them, so anything else holding the key can still write. If you need a genuine boundary, use a key belonging to an account with narrower access.
+This is useful for analysis and reporting sessions where nothing should change. Treat it as a convenience rail rather than a security control: what a call can do is decided by the token's scopes and the organization's agent mode, not by this switch, so anything else holding the token can still do whatever the token allows.
+
+---
+
+## Moving from an API key
+
+Version 0.1 of the server used an organization API key in `ROOTKEY_API_KEY`. That still works in 0.2, with one warning line at start-up, and it is removed in 0.3.0. To move to a personal access token:
+
+1. Create a personal access token with the scopes you need, covering the organization or organizations the key belonged to.
+2. In your client configuration, replace `ROOTKEY_API_KEY` with `ROOTKEY_TOKEN`, and set `ROOTKEY_ORGANIZATION` to the organization id (`rootkey_list_organizations` shows it). If the key was a test key, add `ROOTKEY_TEST_MODE=true`.
+3. Expect the organization's agent mode to apply. Under the default **Read only** mode, the write tools are refused until an administrator chooses **Full access**.
+
+Staying on `ROOTKEY_API_KEY` until 0.3.0 changes nothing you rely on, but it gives up what the token adds:
+
+- **No choice of organization.** The key is bound to its one organization, so `rootkey_list_organizations` and the `organization` argument are not offered, and `ROOTKEY_ORGANIZATION` and `ROOTKEY_TEST_MODE` are ignored with a warning. A test key works on test data and a live key on live data.
+- **No scopes.** An API key carries the full privileges of the account that owns it, so a session cannot be narrowed to reading.
+- **No organization control.** The organization's agent mode, its block list and its two-factor requirement apply to personal access tokens, not to API keys.
+- **A shorter future.** The key stops working with this server in 0.3.0.
+
+What you keep until then is the seven tools in [Only with an organization API key](#only-with-an-organization-api-key). With a token, use the ROOTKey app for recovery points and audit reports.
 
 ---
 
@@ -254,19 +368,56 @@ This is useful for analysis and reporting sessions where nothing should change. 
 
 <AccordionGroup>
   <Accordion title="Claude does not show any ROOTKey tools">
-    Confirm Node.js 20 or newer is installed and on the PATH (`node --version`), then restart the Claude client completely - configuration is read at startup. In Claude Desktop, check the MCP server logs under Settings -> Developer; the server writes its startup line and any failure to stderr, which is what those logs show.
+    Confirm Node.js 20 or newer is installed and on the PATH (`node --version`), then restart the Claude client completely - configuration is read at startup. In Claude Desktop, check the MCP server logs under Settings → Developer; the server writes its startup line and any failure to stderr, which is what those logs show.
   </Accordion>
 
   <Accordion title="The server exits immediately">
-    The most common cause is a missing key. The server refuses to start without `ROOTKEY_API_KEY` and says so on stderr, rather than failing later on the first tool call. Check that the variable is set inside the `env` block of the configuration, not only in your shell: Claude Desktop does not pass your shell environment to the server.
+    The server refuses to start, and says why on stderr, when `ROOTKEY_TOKEN` is missing or is not a whole personal access token (`rk_pat_` followed by 64 hexadecimal characters). It also refuses when both `ROOTKEY_TOKEN` and `ROOTKEY_API_KEY` are set, or when a personal access token was pasted into `ROOTKEY_API_KEY`. Check that the variable is set inside the `env` block of the configuration, not only in your shell: Claude Desktop does not pass your shell environment to the server.
   </Accordion>
 
-  <Accordion title="Every call returns 401 Unauthenticated">
-    The API does not accept the key: it is not valid, or it has been deactivated. Check that `ROOTKEY_API_KEY` holds the complete key and that the key is active in Developer Tools. Ask Claude to run `rootkey_get_environment_info` to see the API base URL the server is using.
+  <Accordion title="Every call returns 401">
+    The API does not accept the token. It may have expired (a token lasts at most 90 days), been revoked, or belong to an account that was deactivated, and the API gives the same answer for all of these. Create a new token under **Account Settings → Personal access tokens** and update `ROOTKEY_TOKEN`. Ask Claude to run `rootkey_get_environment_info` to see the API address the server is using.
+  </Accordion>
+
+  <Accordion title="A tool says no organization is selected">
+    The token can reach more than one organization and none was chosen. Ask Claude to call `rootkey_list_organizations` and tell it which one you mean, or set `ROOTKEY_ORGANIZATION` in the configuration. See [Choosing the organization](#choosing-the-organization).
+  </Accordion>
+
+  <Accordion title="A call is refused with an error that names a policy">
+    Refusals from the organization, your role or the token are decisions, not faults. The tool error names the cause and what has to change, and Claude is told to relay it to you and stop: not to retry, and not to try the same thing in another organization. Each one has an entry in [Errors](/api-reference/errors#personal-access-tokens-and-agents):
+
+    | Error code | What it means | What has to change |
+    |---|---|---|
+    | [`agent_access_disabled`](/api-reference/errors#agent_access_disabled) | The organization turned agent access off. | An organization administrator sets another mode. |
+    | [`agent_write_not_allowed`](/api-reference/errors#agent_write_not_allowed) | The organization lets agents read only, and the call creates, changes or deletes. | An organization administrator allows **Full access**. |
+    | [`agent_user_blocked`](/api-reference/errors#agent_user_blocked) | An administrator blocked your agents in this organization. Your own access in the app is unaffected. | An administrator unblocks you. |
+    | [`agent_two_factor_required`](/api-reference/errors#agent_two_factor_required) | The organization requires two-factor authentication and you have not turned it on. | You turn it on under **Account Settings → Security**. |
+    | [`agent_personal_tokens_disabled`](/api-reference/errors#agent_personal_tokens_disabled) | The organization does not accept personal access tokens. | An administrator allows them. |
+    | [`agent_org_not_allowed`](/api-reference/errors#agent_org_not_allowed) | The token was not created for this organization. | Use an organization the token covers, or create a new token that includes this one. |
+    | [`insufficient_scope`](/api-reference/errors#insufficient_scope) | The token lacks the scope the tool needs. | Create a new token with the scope. Scopes cannot be changed afterwards. |
+    | [`insufficient_permission`](/api-reference/errors#insufficient_permission) | Your role does not grant what the call does. | An administrator changes your role. |
+    | [`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied) | The vault or table is classified Restricted. | Nothing: agents never reach Restricted data. Use the ROOTKey app. |
+    | [`agent_classification_change_not_allowed`](/api-reference/errors#agent_classification_change_not_allowed) | An agent cannot change a vault's data classification. | You change it in the ROOTKey app. |
+    | [`agent_route_not_available`](/api-reference/errors#agent_route_not_available) | The operation is never available to agents, such as recovery points or the Restore Center. | Use the ROOTKey app. |
+    | [`access_policy_denied`](/api-reference/errors#access_policy_denied) | The organization id is wrong, you are not a member, or the organization's IP or country rules block this machine. The answer never says which. | Check the id with `rootkey_list_organizations`, or ask an administrator to review the access rules. |
+
+    Not sure which one applies? Ask Claude to run `rootkey_get_environment_info`: it shows the organization's agent mode and the scopes your token has there.
+  </Accordion>
+
+  <Accordion title="An organization is missing from the list">
+    `rootkey_list_organizations` lists the organizations you belong to that the token reaches, including those where agents are off or where you are blocked. An organization the token was not created for is not listed, and neither is one whose IP access rules block this machine. Create a token that includes the organization, or ask an administrator about the access rules.
+  </Accordion>
+
+  <Accordion title="A vault or table is listed but cannot be opened">
+    It is classified Restricted. Restricted vaults and tables are listed with `agentAccessible: false` so that Claude can tell you they exist, and no agent can read or change them, in any mode. Open them in the ROOTKey app.
+  </Accordion>
+
+  <Accordion title="The recovery point tools are missing">
+    That is expected with a personal access token. The API refuses recovery points, audit reports and the Restore Center to agents, so the server does not offer the tools. Use the ROOTKey app for them.
   </Accordion>
 
   <Accordion title="The server exits with a message about ROOTKEY_ENV">
-    ROOTKey has one public API, so `ROOTKEY_ENV` accepts only `production` and is best left unset. A leftover `ROOTKEY_ENV=development` is refused at startup. Remove it and use a test API key to try things out. For a self-hosted or on-premise deployment, set `ROOTKEY_API_URL` instead.
+    ROOTKey has one public API, so `ROOTKEY_ENV` accepts only `production` and is best left unset. A leftover `ROOTKEY_ENV=development` is refused at startup. Remove it, and set `ROOTKEY_TEST_MODE=true` to try things out on test data. For a self-hosted or on-premise deployment, set `ROOTKEY_API_URL` instead.
   </Accordion>
 
   <Accordion title="Requests fail with 429 Too Many Requests">
@@ -290,10 +441,10 @@ This is useful for analysis and reporting sessions where nothing should change. 
 
 ## Current limits
 
-The connector runs **locally**, which is what makes API key authentication safe: the key never leaves your machine. That has two consequences worth stating plainly.
+The server runs **locally**, which is what keeps your token on your machine. That has two consequences worth stating plainly.
 
-- **It works in Claude Code and Claude Desktop**, not in the claude.ai web app. Web connectors require a hosted server with OAuth, which is on the roadmap.
-- **It covers the public API and nothing beyond it.** There are no tools for managing API keys or organisation members, because the public API has no endpoints for them. Those arrive if and when the API does.
+- **It works in clients that can start a local program**, such as Claude Code, Claude Desktop and Cursor.
+- **It covers the public API and nothing beyond it.** There are no tools for managing tokens, API keys or organization members. You manage tokens in the ROOTKey app, and organization settings are an administrator's job there.
 
 ---
 
@@ -302,10 +453,16 @@ The connector runs **locally**, which is what makes API key authentication safe:
 The server is open source at [github.com/ROOT-Key/rootkey-mcp](https://github.com/ROOT-Key/rootkey-mcp) and published on npm as [`@rootkey/mcp`](https://www.npmjs.com/package/@rootkey/mcp). Bug reports and feature requests are welcome on the issue tracker.
 
 <CardGroup cols={2}>
-  <Card title="API Reference" icon="book-open-cover" href="/api-reference/overview">
-    Every endpoint the connector wraps, with interactive examples.
+  <Card title="AI agents in your organization" icon="shield-check" href="/pages/integrations/ai-agents">
+    Choose what agents may do in your organization, require two-factor authentication and block a member.
   </Card>
-  <Card title="API Keys" icon="key" href="/pages/api-keys">
-    Create, rotate and revoke the key the connector uses.
+  <Card title="Authentication" icon="key" href="/api-reference/auth#personal-access-tokens">
+    Create, scope and revoke the personal access token the server uses.
+  </Card>
+  <Card title="API Reference" icon="book-open-cover" href="/api-reference/overview">
+    Every endpoint the server wraps, with interactive examples.
+  </Card>
+  <Card title="Errors" icon="triangle-exclamation" href="/api-reference/errors#personal-access-tokens-and-agents">
+    Every code an agent can be refused with, and what to change.
   </Card>
 </CardGroup>

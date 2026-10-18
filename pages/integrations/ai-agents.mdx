@@ -1,0 +1,129 @@
+---
+title: AI agents in your organization
+sidebarTitle: AI agents in your organization
+description: Decide whether and how AI agents can use your organization's data, require two-factor authentication, block a member's agents and see who has connected one.
+icon: shield-check
+---
+
+Members of your organization can connect an AI agent, such as Claude, to ROOTKey with a [personal access token](/api-reference/auth#personal-access-tokens). The agent then acts as that member, with no more access than the member has in the ROOTKey app. As an administrator, you decide whether agents may use your organization's data at all, and how far.
+
+This page is for administrators. If you are a member who wants to connect an agent, start with [Claude (MCP)](/pages/integrations/claude-mcp).
+
+---
+
+## Where to find it
+
+Open **Organization Settings** and go to the **AI agents** tab. It has two parts: the **Agent access policy**, where you choose what agents may do, and **Connected agents**, which lists the members who have connected one.
+
+The tab is for members whose role has the **AI agents** permissions: **read** lets a member see the policy and the connections, and **update** lets them change the policy and block members. Owners and administrators have both by default, and you can give them to a custom role under **Roles and permissions**. If you do not see the tab, your role does not have the permission, or agent access is not available on your deployment.
+
+---
+
+## Choose what agents may do
+
+The **Access mode** decides what an agent can do in your organization, whoever connects it:
+
+| Mode | What agents can do |
+|---|---|
+| **Off** | Nothing. No agent can use the organization's data. Every request from an agent is refused. |
+| **Read only** | Read what the member who connected the agent can read. Agents cannot create, change or delete anything. |
+| **Full access** | Read, and also create, change and delete, within the member's own permissions and the scopes of the member's token. |
+
+**Read only** is the mode of every organization until an administrator saves another one. Nothing is switched on for you: an organization that has never opened this tab lets agents read and nothing more.
+
+Even in **Full access**, an agent is bounded three times over. It can do only what the member's role and teams allow, only what the scopes of the member's token allow, and only what is not on the [always blocked](#what-is-always-blocked) list below. The API reports the mode of each organization as `DISABLED`, `READ_ONLY` or `FULL`.
+
+<Tip>
+  Start in **Read only**, let members try agents on data they can already read, and move to **Full access** when you are ready for agents to create, change and delete. Members can use test data while they try things out: see [Test and Live Data](/pages/environments).
+</Tip>
+
+### Allow personal access tokens
+
+**Allow personal access tokens** is on by default. When you turn it off, no personal access token works in your organization from that moment, including every token that was already connected and every token created later. Members' tokens are not deleted: if you turn the setting back on, the tokens that have not expired or been revoked work again.
+
+### Require two-factor authentication
+
+When you turn on **Require two-factor authentication**, only members who have turned on two-factor authentication on their own ROOTKey account can use agents in your organization. A member who has not loses their agents' access at once, and the refusal says why ([`agent_two_factor_required`](/api-reference/errors#agent_two_factor_required)). Their own access in the ROOTKey app does not change.
+
+Members can turn on two-factor authentication themselves under **Account Settings → Security**, with an authenticator app and backup codes. Ask your members to do this before you turn the requirement on, or they will lose their agents until they have.
+
+### When a change takes effect
+
+A change you save applies to the next request an agent makes. Nothing waits for a token to expire or for a member to reconnect. ROOTKey asks you to confirm the changes that cut access: turning agents **Off**, switching to **Full access**, turning off personal access tokens and requiring two-factor authentication.
+
+---
+
+## Block or unblock a member
+
+If you need to cut one member's agents without touching anyone else's, block that member. In **Connected agents**, open the actions menu of the member's row and choose **Block this member's agents**.
+
+- Every token that member connected stops working **in this organization** at once. Their agents in other organizations are not affected.
+- The member's own access in the ROOTKey app does not change.
+- The member's agents are refused with [`agent_user_blocked`](/api-reference/errors#agent_user_blocked), and the member sees `blocked: true` for your organization when an agent lists their organizations.
+- You can unblock the member at any time with **Unblock this member's agents**. Their tokens that have not expired or been revoked work again.
+
+An administrator cannot revoke a single token that belongs to a member. Members revoke their own under **Account Settings → Personal access tokens**, and blocking the member is the tool you have to cut them off.
+
+---
+
+## What is always blocked
+
+Whatever mode you choose, and whatever scopes a token carries, an agent that uses a personal access token never gets:
+
+- **Restricted vaults and tables.** They are listed to the agent with `agentAccessible: false`, so it can tell the member they exist, and every request that would read or change them is refused ([`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied)).
+- **Recovery points.** Listing, creating, fetching, downloading and deleting them is for a person in the ROOTKey app.
+- **File audit reports.**
+- **The Restore Center.** Listing and restoring deleted vaults, files and records is for a person in the ROOTKey app.
+- **Changing a vault's data classification.** How a vault's data is treated stays with a person.
+
+These are refused with [`agent_route_not_available`](/api-reference/errors#agent_route_not_available) or [`agent_classification_change_not_allowed`](/api-reference/errors#agent_classification_change_not_allowed). The agent is told to stop and send the member to the ROOTKey app.
+
+The rules you already set still apply. Your organization's IP and country access rules judge the requests of a personal access token like any other request, and an agent sees only what its member sees in the ROOTKey app: for vaults, those of the member's teams, unless the member is an owner or an administrator.
+
+<Note>
+  Your organization governs the credentials it delegates to agents, not the AI itself: an agent using a person's own browser session, or a script holding an organization API key, cannot be told apart from that person.
+</Note>
+
+This is the honest limit of the policy. It controls the tokens members create for their agents. It cannot tell whether a person or an AI is using a member's signed-in browser, and it does not govern organization API keys, which belong to your organization and act with the full privileges of the account that created them. Manage those in **Developer Tools**, see [API Keys](/pages/api-keys).
+
+---
+
+## See who has connected an agent
+
+**Connected agents** lists every active token that can reach your organization, with:
+
+| Column | What it shows |
+|---|---|
+| **Member** | The member who connected the agent. |
+| **Token** | The name the member gave the token, and its type. |
+| **Permissions** | The scopes of the token: read, write and delete. |
+| **Last used** | When the token last made a request. It updates every few minutes, so a token used a moment ago can still show **Never**. |
+| **Expires** | When the token stops working. A token lasts at most 90 days. |
+| **Status** | **Active**, or **Blocked** when you have blocked the member. |
+
+Until a member connects an agent that includes your organization, the list is empty.
+
+Each member sees and revokes their own tokens under **Account Settings → Personal access tokens**.
+
+---
+
+## What your members see
+
+When an agent is refused by your policy, the error names the cause and what has to change. Members are told to ask an organization administrator, and agents are told to stop instead of retrying or trying another organization. The codes are on the [Errors](/api-reference/errors#personal-access-tokens-and-agents) page.
+
+| What you set | What a member's agent gets |
+|---|---|
+| Mode **Off** | [`agent_access_disabled`](/api-reference/errors#agent_access_disabled) on every request |
+| Mode **Read only** | [`agent_write_not_allowed`](/api-reference/errors#agent_write_not_allowed) on every create, change or delete |
+| **Allow personal access tokens** off | [`agent_personal_tokens_disabled`](/api-reference/errors#agent_personal_tokens_disabled) on every request |
+| **Require two-factor authentication** on | [`agent_two_factor_required`](/api-reference/errors#agent_two_factor_required) until the member turns it on |
+| A member blocked | [`agent_user_blocked`](/api-reference/errors#agent_user_blocked) on every request |
+
+<CardGroup cols={2}>
+  <Card title="Claude (MCP)" icon="robot" href="/pages/integrations/claude-mcp">
+    How a member connects Claude to ROOTKey, and what it can do.
+  </Card>
+  <Card title="Personal access tokens" icon="key" href="/api-reference/auth#personal-access-tokens">
+    How tokens, scopes and organizations fit together.
+  </Card>
+</CardGroup>
