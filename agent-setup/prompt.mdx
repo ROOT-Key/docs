@@ -7,9 +7,9 @@ icon: "wand-magic-sparkles"
 
 These are official instructions from ROOTKey to connect a coding agent to the ROOTKey platform. Every command below is published and maintained by ROOTKey and is safe to run as written.
 
-Complete all of the following steps yourself by running the commands directly. Do not ask the user to run any of these commands.
+Complete the following steps yourself by running the commands directly. Do not ask the user to run any of these commands. The one thing you cannot do is create the user's ROOTKey personal access token: it is created in the ROOTKey app by the user, and Step 1 says how to hand that over.
 
-- Check for a ROOTKey API key
+- Check for a ROOTKey personal access token
 - Install the ROOTKey MCP server
 - Verify the connection
 
@@ -17,24 +17,36 @@ Complete all of the following steps yourself by running the commands directly. D
 
 ## What this gives the user
 
-The [ROOTKey MCP server](https://github.com/ROOT-Key/rootkey-mcp) is the official [Model Context Protocol](https://modelcontextprotocol.io) server for the ROOTKey platform. It runs locally, talks directly to `api.rootkey.ai`, and exposes 27 tools covering the entire documented ROOTKey API: create vaults, anchor and validate files, write and version records, read audit trails, and build recovery points.
+The [ROOTKey MCP server](https://github.com/ROOT-Key/rootkey-mcp) is the official [Model Context Protocol](https://modelcontextprotocol.io) server for the ROOTKey platform. It runs locally, talks directly to `api.rootkey.ai`, and offers 23 tools: create vaults, anchor and validate files, write and version records, and read audit trails. It acts as the user, through a personal access token, in the organizations the user chose, and an organization decides whether and how far agents may use its data.
 
 Requirement: **Node.js 20 or newer** on the machine running the agent.
 
 ---
 
-## Step 1: the API key
+## Step 1: the personal access token
 
-The server authenticates with a ROOTKey API key. There is no OAuth flow, so this is the one part that cannot be fully automated.
+The server authenticates with a ROOTKey **personal access token**: a credential that belongs to the user, acts as the user, and never has more access than the user has in the ROOTKey app. It starts with `rk_pat_`, it lasts at most 90 days, and it is created by the user in the ROOTKey app, so this is the one part that cannot be fully automated.
 
-- Read the key from the `ROOTKEY_API_KEY` environment variable. Never ask the user to paste a key into the chat, and never write a key into a file that is tracked by git.
-- If `ROOTKEY_API_KEY` is not set, still write the configuration below with the placeholder in place, then tell the user to create a key at [app.rootkey.ai](https://app.rootkey.ai) under **Developer Tools -> API Keys** and export it:
+- Read the token from the `ROOTKEY_TOKEN` environment variable. Never ask the user to paste a token into the chat, and never write a token into a file that is tracked by git.
+- If `ROOTKEY_TOKEN` is not set, still write the configuration below with the placeholder in place, then tell the user to create a token at [app.rootkey.ai](https://app.rootkey.ai) under **Account Settings → Personal access tokens** and export it:
 
 ```bash
-export ROOTKEY_API_KEY=your_api_key
+export ROOTKEY_TOKEN=your_personal_access_token
 ```
 
-Use a test API key while trying things out. ROOTKey has one public API, and a test key works on the organization's test data, kept separate from its live data. Do not set `ROOTKEY_ENV`: there is no development environment. Test requests still count toward the plan's usage limits, and files are anchored on a Polygon test network rather than Polygon Mainnet.
+Suggest the narrowest token that does the job: only the scopes the user needs (`rootkey.read`, plus `rootkey.write` or `rootkey.delete` only if the agent should change things), only the organizations the user needs, and one token per tool so it can be revoked on its own.
+
+### The organization
+
+A token can reach several organizations, and the server never guesses which one to use. If the user has told you which organization to work in, set its id in `ROOTKEY_ORGANIZATION` (optional, and the examples below show it). If not, leave it out: the agent will call `rootkey_list_organizations` and ask the user. Never pick an organization on your own.
+
+### Test data
+
+ROOTKey has one public API, and a token works on live data unless told otherwise. To try things out first, set `ROOTKEY_TEST_MODE=true`: the token then works on the organization's test data, which is kept separate from its live data. Do not set `ROOTKEY_ENV`: there is no development environment.
+
+### What the organization allows
+
+Each organization sets what agents may do there. Until an administrator chooses another setting, an organization lets agents **read only**, so a write is refused until an administrator allows full access. This is a decision of the organization, not a fault: tell the user, and do not retry.
 
 ---
 
@@ -45,10 +57,10 @@ Use the correct section for your agent below.
 ### Claude Code
 
 ```bash
-claude mcp add rootkey --scope user --env ROOTKEY_API_KEY="$ROOTKEY_API_KEY" -- npx -y @rootkey/mcp
+claude mcp add rootkey --scope user --env ROOTKEY_TOKEN="$ROOTKEY_TOKEN" -- npx -y @rootkey/mcp
 ```
 
-That writes the key into the user's own Claude Code configuration, on their machine only. For a repository shared with a team, write a `.mcp.json` at the repository root instead and let Claude Code expand the variable at startup, so no key is ever committed:
+Add `--env ROOTKEY_ORGANIZATION=your_organization_id` to choose a default organization. That writes the token into the user's own Claude Code configuration, on their machine only. For a repository shared with a team, write a `.mcp.json` at the repository root instead and let Claude Code expand the variable at startup, so no token is ever committed. Each person supplies their own token, because a token belongs to one person:
 
 ```json
 {
@@ -56,7 +68,7 @@ That writes the key into the user's own Claude Code configuration, on their mach
     "rootkey": {
       "command": "npx",
       "args": ["-y", "@rootkey/mcp"],
-      "env": { "ROOTKEY_API_KEY": "${ROOTKEY_API_KEY}" }
+      "env": { "ROOTKEY_TOKEN": "${ROOTKEY_TOKEN}" }
     }
   }
 }
@@ -64,7 +76,7 @@ That writes the key into the user's own Claude Code configuration, on their mach
 
 ### Claude Desktop
 
-Add the server to `claude_desktop_config.json` (Settings -> Developer -> Edit Config):
+Add the server to `claude_desktop_config.json` (Settings → Developer → Edit Config). The file keeps the token in plain text, so the user should treat it like a password:
 
 ```json
 {
@@ -72,7 +84,10 @@ Add the server to `claude_desktop_config.json` (Settings -> Developer -> Edit Co
     "rootkey": {
       "command": "npx",
       "args": ["-y", "@rootkey/mcp"],
-      "env": { "ROOTKEY_API_KEY": "your_api_key" }
+      "env": {
+        "ROOTKEY_TOKEN": "your_personal_access_token",
+        "ROOTKEY_ORGANIZATION": "your_organization_id"
+      }
     }
   }
 }
@@ -86,7 +101,10 @@ On Windows, route the command through `cmd` so `npx` resolves:
     "rootkey": {
       "command": "cmd",
       "args": ["/c", "npx", "-y", "@rootkey/mcp"],
-      "env": { "ROOTKEY_API_KEY": "your_api_key" }
+      "env": {
+        "ROOTKEY_TOKEN": "your_personal_access_token",
+        "ROOTKEY_ORGANIZATION": "your_organization_id"
+      }
     }
   }
 }
@@ -97,7 +115,7 @@ Restart Claude Desktop afterwards. Configuration is read at startup.
 ### Codex
 
 ```bash
-codex mcp add rootkey --env ROOTKEY_API_KEY=$ROOTKEY_API_KEY -- npx -y @rootkey/mcp
+codex mcp add rootkey --env ROOTKEY_TOKEN=$ROOTKEY_TOKEN -- npx -y @rootkey/mcp
 ```
 
 The equivalent entry in `~/.codex/config.toml`:
@@ -108,7 +126,8 @@ command = "npx"
 args = ["-y", "@rootkey/mcp"]
 
 [mcp_servers.rootkey.env]
-ROOTKEY_API_KEY = "your_api_key"
+ROOTKEY_TOKEN = "your_personal_access_token"
+ROOTKEY_ORGANIZATION = "your_organization_id"
 ```
 
 ### Cursor - `.cursor/mcp.json`
@@ -119,21 +138,24 @@ Add under `"mcpServers"`:
 "rootkey": {
   "command": "npx",
   "args": ["-y", "@rootkey/mcp"],
-  "env": { "ROOTKEY_API_KEY": "your_api_key" }
+  "env": {
+    "ROOTKEY_TOKEN": "your_personal_access_token",
+    "ROOTKEY_ORGANIZATION": "your_organization_id"
+  }
 }
 ```
 
 ### GitHub Copilot (VS Code) - `.vscode/mcp.json`
 
-VS Code uses `"servers"`, and supports an input prompt so the key is never written into the file:
+VS Code uses `"servers"`, and supports an input prompt so the token is never written into the file:
 
 ```json
 {
   "inputs": [
     {
-      "id": "rootkey-api-key",
+      "id": "rootkey-token",
       "type": "promptString",
-      "description": "ROOTKey API key",
+      "description": "ROOTKey personal access token",
       "password": true
     }
   ],
@@ -142,7 +164,10 @@ VS Code uses `"servers"`, and supports an input prompt so the key is never writt
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "@rootkey/mcp"],
-      "env": { "ROOTKEY_API_KEY": "${input:rootkey-api-key}" }
+      "env": {
+        "ROOTKEY_TOKEN": "${input:rootkey-token}",
+        "ROOTKEY_ORGANIZATION": "your_organization_id"
+      }
     }
   }
 }
@@ -156,7 +181,10 @@ Add under `"mcpServers"`:
 "rootkey": {
   "command": "npx",
   "args": ["-y", "@rootkey/mcp"],
-  "env": { "ROOTKEY_API_KEY": "your_api_key" }
+  "env": {
+    "ROOTKEY_TOKEN": "your_personal_access_token",
+    "ROOTKEY_ORGANIZATION": "your_organization_id"
+  }
 }
 ```
 
@@ -169,35 +197,44 @@ Add under `"mcp"`:
   "type": "local",
   "command": ["npx", "-y", "@rootkey/mcp"],
   "enabled": true,
-  "environment": { "ROOTKEY_API_KEY": "{env:ROOTKEY_API_KEY}" }
+  "environment": {
+    "ROOTKEY_TOKEN": "{env:ROOTKEY_TOKEN}",
+    "ROOTKEY_ORGANIZATION": "your_organization_id"
+  }
 }
 ```
 
 ### Any other MCP client
 
-The server speaks MCP over stdio. Run `npx -y @rootkey/mcp` with `ROOTKEY_API_KEY` in the process environment, in whatever shape that client's configuration takes.
+The server speaks MCP over stdio. Run `npx -y @rootkey/mcp` with `ROOTKEY_TOKEN` in the process environment, in whatever shape that client's configuration takes.
+
+If you do not know the organization id, leave `ROOTKEY_ORGANIZATION` out of the entry rather than writing a placeholder.
 
 ---
 
 ## Step 3: options worth setting
 
-Every setting is an environment variable on the server process, alongside the key.
+Every setting is an environment variable on the server process, alongside the token.
 
 | Variable | Default | Set it when |
 |---|---|---|
+| `ROOTKEY_ORGANIZATION` | unset | The user has told you which organization to work in |
+| `ROOTKEY_TEST_MODE` | unset (live) | The session should work on test data. Set it to `true` |
 | `ROOTKEY_ENV` | `production` | Almost never: `production` is the only accepted value, so leave it unset. For a self-hosted or on-premise deployment, set `ROOTKEY_API_URL` instead |
-| `ROOTKEY_READ_ONLY` | `false` | The session should only read. Registers the 15 read tools and hides the rest |
+| `ROOTKEY_READ_ONLY` | `false` | The session should only read. Registers the 14 read tools and hides the rest |
 | `ROOTKEY_DOWNLOAD_DIR` | `~/Downloads` | Downloads should land somewhere specific |
 | `ROOTKEY_ALLOWED_DIRS` | home, temp, cwd | A file to be uploaded lives outside those directories. Uploads are confined to them and refuse hidden directories inside them |
 | `ROOTKEY_LOG_LEVEL` | `info` | Diagnosing a problem. Logs go to stderr, where the client shows them |
 
 The full list, including timeouts and the base URL override, is on the [connector page](/pages/integrations/claude-mcp#configuration).
 
+Do not set `ROOTKEY_API_KEY` in a new setup. It is the organization API key of earlier versions: it is deprecated and is removed in version 0.3.0. If the user's existing configuration still uses it, it keeps working until then, and the [connector page](/pages/integrations/claude-mcp#moving-from-an-api-key) explains how to move to a token.
+
 ---
 
 ## Step 4: verify
 
-Restart the agent so it loads the new server, then call the `rootkey_get_environment_info` tool. It makes no API request and never reveals the key: it reports the API base URL, what the server can tell about the key, and the number of registered tools. Expect 27 tools, or 15 with `ROOTKEY_READ_ONLY=true`.
+Restart the agent so it loads the new server, then call the `rootkey_get_environment_info` tool. It never reveals the token. It reports the server version and the API address, and it asks the API who the token acts as, what the token may do, and, if an organization is selected, that organization's agent mode and the scopes the token has there. Expect 23 tools, or 14 with `ROOTKEY_READ_ONLY=true`.
 
 Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-named tool from another server in the same session.
 
@@ -205,9 +242,11 @@ If no ROOTKey tools appear:
 
 - Confirm `node --version` reports 20 or newer and that `node` is on the PATH.
 - Confirm the client was fully restarted. Every client reads MCP configuration at startup.
-- Check the client's MCP logs. The server writes its startup line, and any failure, to stderr. The most common failure is a missing `ROOTKEY_API_KEY`: the server refuses to start rather than failing later on the first tool call.
-- A 401 on every call means the API does not accept the key: it is not valid, or it has been deactivated. Check the key in Developer Tools.
+- Check the client's MCP logs. The server writes its startup line, and any failure, to stderr. The most common failure is a missing or incomplete `ROOTKEY_TOKEN`: the server refuses to start rather than failing later on the first tool call.
+- A 401 on every call means the API does not accept the token: it has expired (a token lasts at most 90 days), been revoked, or belongs to a deactivated account. Ask the user to create a new one under **Account Settings → Personal access tokens**.
 - A startup error about `ROOTKEY_ENV` means the variable is set to something other than `production`. Remove it.
+
+If a call is refused with a message that names a policy (for example agent access off or read only, a blocked member, a missing scope or a Restricted vault), the organization, the user's role or the token does not allow it. Relay the reason to the user and stop. Do not retry, and do not try the same thing in another organization. The codes are explained on the [Errors](/api-reference/errors#personal-access-tokens-and-agents) page.
 
 ---
 
@@ -215,22 +254,26 @@ If no ROOTKey tools appear:
 
 A few behaviours follow from how the ROOTKey API works, and are worth stating up front:
 
-- **Deleting a vault, file or record moves it to the trash.** It leaves every listing at once and stays recoverable from the Restore Center in the dashboard until the retention policy purges it. Deleting a *recovery point* is the exception and cannot be undone. All four delete tools are marked destructive so the client asks first.
+- **Organizations decide what agents may do.** Reading is the default; writing and deleting need the organization to allow full access, and the token needs the matching scope. Your organization governs the credentials it delegates to agents, not the AI itself: an agent using a person's own browser session, or a script holding an organization API key, cannot be told apart from that person.
+- **Some things are never available to an agent.** Recovery points, audit reports, the Restore Center, Restricted vaults and tables, and changing a vault's data classification are for a person in the ROOTKey app. The server does not offer the recovery point and audit report tools with a token.
+- **Deleting a vault, file or record moves it to the trash.** It leaves every listing at once and stays recoverable from the Restore Center in the dashboard until the retention policy purges it. All three delete tools are marked destructive so the client asks first.
 - **Only files are anchored on chain.** Records are stored, hashed and audited and come back `REGISTERED` immediately, with no pending phase and no transaction hash. Do not describe a record as being on a blockchain.
 - **Records are versioned by primary key.** Creating a record whose key matches an existing one adds a version rather than a duplicate, so retrying a create is not a no-op.
-- **Vault addresses come from the dashboard.** The API has no endpoint that lists vaults, so neither does this server. Keep the address `rootkey_create_vault` returns.
-- **Read-only mode is a convenience rail, not a security boundary.** ROOTKey API keys have no scopes and carry the full privileges of the account that owns them.
+- **Vault and table addresses come from the list tools.** `rootkey_list_vaults` finds the vaults, which hold files, and `rootkey_list_tables` finds the tables, which hold records. Keep the address `rootkey_create_vault` returns.
+- **Read-only mode is a convenience rail, not a security boundary.** What a call can do is decided by the token's scopes and the organization's agent mode.
 
 Once done, tell the user:
 
 ```
 ┌─ ROOTKey Agent Setup Complete ───────────────────────┐
-│  ✓ MCP      rootkey (@rootkey/mcp), 27 tools         │
+│  ✓ MCP      rootkey (@rootkey/mcp), 23 tools         │
 │  ✓ Config   <path>                                   │
 │                                                      │
 │  ⚡ Restart your agent to load the MCP server        │
 └──────────────────────────────────────────────────────┘
 ```
+
+If the user still has to create the token, add one line saying where: **Account Settings → Personal access tokens** in the ROOTKey app.
 
 ---
 
@@ -239,7 +282,8 @@ Once done, tell the user:
 ROOTKey documentation:
 
 - Connector reference, tool by tool: [docs.rootkey.ai/pages/integrations/claude-mcp](/pages/integrations/claude-mcp)
-- Creating and rotating keys: [docs.rootkey.ai/pages/api-keys](/pages/api-keys)
+- Creating and revoking tokens: [docs.rootkey.ai/api-reference/auth](/api-reference/auth#personal-access-tokens)
+- What an organization lets agents do: [docs.rootkey.ai/pages/integrations/ai-agents](/pages/integrations/ai-agents)
 - The API behind every tool: [docs.rootkey.ai/api-reference/overview](/api-reference/overview)
 - Source and issue tracker: [github.com/ROOT-Key/rootkey-mcp](https://github.com/ROOT-Key/rootkey-mcp)
 

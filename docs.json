@@ -60,6 +60,7 @@
             "group": "Integrations",
             "pages": [
               "pages/integrations/claude-mcp",
+              "pages/integrations/ai-agents",
               "agent-setup/prompt"
             ]
           },
@@ -229,6 +230,14 @@
             ]
           },
           {
+            "group": "Personal access tokens",
+            "pages": [
+              "api-reference/platform/endpoint/identity/get-me",
+              "api-reference/platform/endpoint/identity/list-organizations",
+              "api-reference/platform/endpoint/identity/get-organization"
+            ]
+          },
+          {
             "group": "Files",
             "pages": [
               "api-reference/platform/endpoint/files/get-files",
@@ -254,9 +263,16 @@
           {
             "group": "Vaults",
             "pages": [
+              "api-reference/platform/endpoint/vaults/list-vaults",
               "api-reference/platform/endpoint/vaults/create-vault",
               "api-reference/platform/endpoint/vaults/update-vault",
               "api-reference/platform/endpoint/vaults/delete-vault"
+            ]
+          },
+          {
+            "group": "Tables",
+            "pages": [
+              "api-reference/platform/endpoint/tables/list-tables"
             ]
           },
           {

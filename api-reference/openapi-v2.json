@@ -20,6 +20,9 @@
   "security": [
     {
       "x-api-key": []
+    },
+    {
+      "personalAccessToken": []
     }
   ],
   "tags": [
@@ -42,19 +45,476 @@
     {
       "name": "api-v1-recovery-points",
       "description": "Backup archives created from vault contents (/api-v1/platform/recovery-point)"
+    },
+    {
+      "name": "api-v1-organizations",
+      "description": "The identity of a personal access token and the organizations it can act in (/api-v1/me, /api-v1/organizations, /api-v1/organization)"
     }
   ],
   "paths": {
-    "/platform/vaults": {
-      "post": {
-        "summary": "Create vault",
-        "description": "Creates a new vault and assigns it to the specified team. Returns the chain ID, address, name and description.",
+    "/me": {
+      "get": {
+        "summary": "Identify the token",
+        "description": "Tells a personal access token who it is: the user it acts as, its name, its scopes, the organizations it was limited to and when it expires. It says nothing about any organization, and it needs neither the `X-RootKey-Organization` header nor a scope. Only a personal access token can call it: a request with an API key gets the `404` that any path the API does not have gets.",
+        "tags": [
+          "api-v1-organizations"
+        ],
+        "security": [
+          {
+            "personalAccessToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The identity of the token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalAccessTokenIdentity"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An `x-api-key` sent together with `Authorization: Bearer rk_...` (`conflicting_credentials`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. A missing, malformed, unknown, inactive, revoked or expired credential all get the same answer."
+          },
+          "403": {
+            "description": "The user has not verified their email address and the grace period has run out (`email_verification_required`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests. The `Retry-After` header says how many seconds to wait. See [Rate Limits](/pages/rate-limits)."
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/organizations": {
+      "get": {
+        "summary": "List the organizations a token can act in",
+        "description": "Lists the organizations the user belongs to that the token reaches, each with its agent mode and whether the user is blocked from agents there. Use it to choose the value of `X-RootKey-Organization`. An organization where agents are off, or where the user is blocked, is still listed, so you can tell the user why a request there is refused. An organization whose IP access rules block your network is left out. It needs no `X-RootKey-Organization` header. Only a personal access token can call it: a request with an API key gets the `404` that any path the API does not have gets.",
+        "tags": [
+          "api-v1-organizations"
+        ],
+        "security": [
+          {
+            "personalAccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `pagination.nextCursor` of the previous page. It is opaque; a cursor that is not valid gets `invalid_cursor`, never a restart from the first page."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            },
+            "description": "By creation time."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of organizations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AgentOrganizationListItem"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/PaginationBlock"
+                    },
+                    "metadata": {
+                      "$ref": "#/components/schemas/PaginationMetadata"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An invalid `limit` or `order` (`invalid_query_parameters`), a cursor that is not valid (`invalid_cursor`), or an `x-api-key` sent together with `Authorization: Bearer rk_...` (`conflicting_credentials`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. A missing, malformed, unknown, inactive, revoked or expired credential all get the same answer."
+          },
+          "403": {
+            "description": "The user has not verified their email address and the grace period has run out (`email_verification_required`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests. The `Retry-After` header says how many seconds to wait. See [Rate Limits](/pages/rate-limits)."
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/organization": {
+      "get": {
+        "summary": "Get the organization a token acts in",
+        "description": "Returns the organization named by `X-RootKey-Organization` as the token sees it: its name, its agent mode and the scopes the token effectively has there. It needs the `rootkey.read` scope. When the organization does not allow the request, the answer is the `403` whose `errorCode` says why, so this is the call to make first to find out whether a token can work in an organization. Only a personal access token can call it: a request with an API key gets the `404` that any path the API does not have gets.",
+        "tags": [
+          "api-v1-organizations"
+        ],
+        "security": [
+          {
+            "personalAccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The organization as the token sees it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentOrganization"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The `X-RootKey-Organization` header is missing (`organization_header_required`), or an `x-api-key` sent together with `Authorization: Bearer rk_...` (`conflicting_credentials`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. A missing, malformed, unknown, inactive, revoked or expired credential all get the same answer."
+          },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
+          "404": {
+            "description": "An API key was used: this endpoint is for personal access tokens."
+          },
+          "429": {
+            "description": "Too many requests. The `Retry-After` header says how many seconds to wait. See [Rate Limits](/pages/rate-limits)."
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/vaults": {
+      "get": {
+        "summary": "List vaults",
+        "description": "Lists the vaults of your organization (the ones that hold files), newest first. With an API key it lists every vault of the organization, in the test or live data of the key. With a personal access token it lists what the user sees in the ROOTKey app: the vaults of the user's teams in the organization named by `X-RootKey-Organization` (every vault of the organization for an owner or an administrator), on the data `x-test-mode` selects. A vault that an IP access rule hides from your network is left out of the page and of `metadata.totalCount`. A RESTRICTED vault is listed with `agentAccessible: false` when a personal access token asks, and no agent can read or change it. A personal access token needs the `rootkey.read` scope.",
         "tags": [
           "api-v1-vaults"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `pagination.nextCursor` of the previous page. It is opaque; a cursor that is not valid gets `invalid_cursor`, never a restart from the first page."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 20
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            },
+            "description": "By creation time."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of vaults",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/VaultOrTableListItem"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/PaginationBlock"
+                    },
+                    "metadata": {
+                      "$ref": "#/components/schemas/PaginationMetadata"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An invalid `limit` or `order` (`invalid_query_parameters`), a cursor that is not valid (`invalid_cursor`), or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. A missing, malformed, unknown, inactive, revoked or expired credential all get the same answer."
+          },
+          "403": {
+            "description": "Your network is blocked by an IP access rule (`access_policy_denied`). With a personal access token the agent error codes apply too: see the [Errors](/api-reference/errors) page.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests. The `Retry-After` header says how many seconds to wait. See [Rate Limits](/pages/rate-limits)."
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/tables": {
+      "get": {
+        "summary": "List tables",
+        "description": "Lists the tables of your organization (the ones that hold records), newest first. With an API key it lists every table of the organization, in the test or live data of the key. With a personal access token it lists what the user sees in the ROOTKey app: the tables of the user's teams in the organization named by `X-RootKey-Organization` (every table of the organization for an owner or an administrator), on the data `x-test-mode` selects. A table that an IP access rule hides from your network is left out of the page and of `metadata.totalCount`. A RESTRICTED table is listed with `agentAccessible: false` when a personal access token asks, and no agent can read or change it. A personal access token needs the `rootkey.read` scope.",
+        "tags": [
+          "api-v1-records"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `pagination.nextCursor` of the previous page. It is opaque; a cursor that is not valid gets `invalid_cursor`, never a restart from the first page."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 20
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            },
+            "description": "By creation time."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of tables",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/VaultOrTableListItem"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/PaginationBlock"
+                    },
+                    "metadata": {
+                      "$ref": "#/components/schemas/PaginationMetadata"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An invalid `limit` or `order` (`invalid_query_parameters`), a cursor that is not valid (`invalid_cursor`), or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. A missing, malformed, unknown, inactive, revoked or expired credential all get the same answer."
+          },
+          "403": {
+            "description": "Your network is blocked by an IP access rule (`access_policy_denied`). With a personal access token the agent error codes apply too: see the [Errors](/api-reference/errors) page.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests. The `Retry-After` header says how many seconds to wait. See [Rate Limits](/pages/rate-limits)."
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/platform/vaults": {
+      "post": {
+        "summary": "Create vault",
+        "description": "Creates a new vault and assigns it to the specified team. Returns the chain ID, address, name and description. A personal access token with the `rootkey.write` scope can call it, in an organization that lets agents write.",
+        "tags": [
+          "api-v1-vaults"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "requestBody": {
@@ -117,25 +577,39 @@
           "401": {
             "description": "Unauthenticated — missing or invalid API key"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "Team not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          }
+        ]
       }
     },
     "/platform/vaults/{vaultAddress}": {
       "put": {
         "summary": "Update vault",
-        "description": "Updates the name and/or description of a vault.",
+        "description": "Updates the name and/or description of a vault. A personal access token with the `rootkey.write` scope can call it, in an organization that lets agents write. A personal access token cannot change a vault's `dataClassification`: the request is refused with `agent_classification_change_not_allowed`.",
         "tags": [
           "api-v1-vaults"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -146,6 +620,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "requestBody": {
@@ -183,6 +663,9 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "Vault not found",
             "content": {
@@ -200,13 +683,16 @@
       },
       "delete": {
         "summary": "Delete vault",
-        "description": "Deletes a vault. Returns 200 with an empty body on success.",
+        "description": "Deletes a vault. Returns 200 with an empty body on success. A personal access token with the `rootkey.delete` scope can call it, in an organization that lets agents write.",
         "tags": [
           "api-v1-vaults"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -217,6 +703,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -228,6 +720,9 @@
           },
           "401": {
             "description": "Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
           },
           "404": {
             "description": "Vault not found",
@@ -254,6 +749,9 @@
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -337,6 +835,12 @@
               ]
             },
             "description": "Filter by anchoring status"
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -356,23 +860,30 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "Wallet not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "description": "A personal access token with the `rootkey.read` scope can call it."
       },
       "post": {
         "summary": "Create file",
-        "description": "Uploads a file and anchors its hash to create a verifiable record. The file becomes part of the specified vault. The file travels in this request; for large files, or to register many files, use a [direct upload](/api-reference/platform/endpoint/files/direct-uploads) instead.",
+        "description": "Uploads a file and anchors its hash to create a verifiable record. The file becomes part of the specified vault. The file travels in this request; for large files, or to register many files, use a [direct upload](/api-reference/platform/endpoint/files/direct-uploads) instead. A personal access token with the `rootkey.write` scope can call it, in an organization that lets agents write.",
         "tags": [
           "api-v1-files"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "requestBody": {
@@ -427,25 +938,39 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "Wallet not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          }
+        ]
       }
     },
     "/platform/files/uploads": {
       "post": {
         "summary": "Start an upload",
-        "description": "Starts a direct upload: you declare the file's name, size and SHA-256, and ROOTKey answers with a signed URL (or a part plan, for a large file) to send the bytes to. Nothing is anchored and nothing is consumed from your plan until you [complete the upload](/api-reference/platform/endpoint/files/complete-file-upload). Read [Direct file uploads](/api-reference/platform/endpoint/files/direct-uploads) first for the whole flow.",
+        "description": "Starts a direct upload: you declare the file's name, size and SHA-256, and ROOTKey answers with a signed URL (or a part plan, for a large file) to send the bytes to. Nothing is anchored and nothing is consumed from your plan until you [complete the upload](/api-reference/platform/endpoint/files/complete-file-upload). Read [Direct file uploads](/api-reference/platform/endpoint/files/direct-uploads) first for the whole flow. A personal access token with the `rootkey.write` scope can call it, in an organization that lets agents write.",
         "tags": [
           "api-v1-files"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "requestBody": {
@@ -535,6 +1060,9 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "The vault or the parent file does not exist in your organization (`resource_not_found`), or direct uploads are not available on this deployment (`presigned_file_upload_disabled`).",
             "content": {
@@ -568,11 +1096,19 @@
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          }
+        ]
       },
       "get": {
         "summary": "List open uploads",
-        "description": "Lists the uploads that API keys of your organization have open: started and not yet completed or expired, or waiting for verification. Use it to find an upload your client lost track of and abort it. The `metadata.organization` block shows what your whole organization has open, which is what the open-upload limits judge.",
+        "description": "Lists the uploads that API keys of your organization have open: started and not yet completed or expired, or waiting for verification. Use it to find an upload your client lost track of and abort it. The `metadata.organization` block shows what your whole organization has open, which is what the open-upload limits judge. Not available to personal access tokens or agents: a request that carries one is refused with `agent_route_not_available`. Use an API key, or the ROOTKey app.",
         "tags": [
           "api-v1-files"
         ],
@@ -638,6 +1174,16 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "description": "A personal access token was used: this endpoint is not available to agents (`agent_route_not_available`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Direct uploads are not available on this deployment (`presigned_file_upload_disabled`).",
             "content": {
@@ -657,13 +1203,16 @@
     "/platform/files/uploads/{uploadId}": {
       "get": {
         "summary": "Get upload status",
-        "description": "Returns the state of an upload. Poll it after completing a multipart upload, until `status` is `COMPLETED` or `FAILED`.",
+        "description": "Returns the state of an upload. Poll it after completing a multipart upload, until `status` is `COMPLETED` or `FAILED`. A personal access token with the `rootkey.write` scope can call it, in an organization that lets agents write.",
         "tags": [
           "api-v1-files"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -677,6 +1226,12 @@
               "pattern": "^upl_[0-9a-f]{32}$",
               "example": "upl_3f2b8c1e5a7d4e9b9c2a1d6e8f0a4b7c"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -692,6 +1247,9 @@
           },
           "401": {
             "description": "Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
           },
           "404": {
             "description": "`file_upload_not_found`: no such upload in your organization. An upload of another organization gets the same answer.",
@@ -710,13 +1268,16 @@
       },
       "delete": {
         "summary": "Abort an upload",
-        "description": "Aborts an upload that has not been completed, and deletes what was uploaded for it. Repeating the call is harmless. Abort the uploads you will not finish: an open upload counts against your organization's open-upload limits until it ends.",
+        "description": "Aborts an upload that has not been completed, and deletes what was uploaded for it. Repeating the call is harmless. Abort the uploads you will not finish: an open upload counts against your organization's open-upload limits until it ends. A personal access token with the `rootkey.write` scope can call it, in an organization that lets agents write.",
         "tags": [
           "api-v1-files"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -730,6 +1291,12 @@
               "pattern": "^upl_[0-9a-f]{32}$",
               "example": "upl_3f2b8c1e5a7d4e9b9c2a1d6e8f0a4b7c"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -738,6 +1305,9 @@
           },
           "401": {
             "description": "Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
           },
           "404": {
             "description": "`file_upload_not_found`",
@@ -768,13 +1338,16 @@
     "/platform/files/uploads/{uploadId}/parts": {
       "post": {
         "summary": "Sign part URLs",
-        "description": "For a `multipart` upload only: returns one signed URL for each part you name, up to 100 per call. Each URL is signed for that part's exact length (`partSize`, or the remainder for the last part) and lives for a few minutes, so request them shortly before you send the parts.",
+        "description": "For a `multipart` upload only: returns one signed URL for each part you name, up to 100 per call. Each URL is signed for that part's exact length (`partSize`, or the remainder for the last part) and lives for a few minutes, so request them shortly before you send the parts. A personal access token with the `rootkey.write` scope can call it, in an organization that lets agents write.",
         "tags": [
           "api-v1-files"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -788,6 +1361,12 @@
               "pattern": "^upl_[0-9a-f]{32}$",
               "example": "upl_3f2b8c1e5a7d4e9b9c2a1d6e8f0a4b7c"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "requestBody": {
@@ -873,6 +1452,9 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "`file_upload_not_found`",
             "content": {
@@ -912,13 +1494,16 @@
     "/platform/files/uploads/{uploadId}/complete": {
       "post": {
         "summary": "Complete an upload",
-        "description": "Tells ROOTKey the bytes are uploaded. ROOTKey checks them against the SHA-256 you declared, then anchors the hash and creates the file. For a `single` upload the answer is `200`, with the same fields as [Create file](/api-reference/platform/endpoint/files/create-file) plus `fileId`. For a `multipart` upload the answer is `202`: the whole file is verified first, and you poll [the upload](/api-reference/platform/endpoint/files/get-file-upload) until it is `COMPLETED`. This is the call that consumes one file and one API request from your plan. Repeating it is safe: a completed upload answers with its file again, and an upload that is being completed is never anchored twice.",
+        "description": "Tells ROOTKey the bytes are uploaded. ROOTKey checks them against the SHA-256 you declared, then anchors the hash and creates the file. For a `single` upload the answer is `200`, with the same fields as [Create file](/api-reference/platform/endpoint/files/create-file) plus `fileId`. For a `multipart` upload the answer is `202`: the whole file is verified first, and you poll [the upload](/api-reference/platform/endpoint/files/get-file-upload) until it is `COMPLETED`. This is the call that consumes one file and one API request from your plan. Repeating it is safe: a completed upload answers with its file again, and an upload that is being completed is never anchored twice. A personal access token with the `rootkey.write` scope can call it, in an organization that lets agents write.",
         "tags": [
           "api-v1-files"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -932,6 +1517,12 @@
               "pattern": "^upl_[0-9a-f]{32}$",
               "example": "upl_3f2b8c1e5a7d4e9b9c2a1d6e8f0a4b7c"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -967,6 +1558,9 @@
           },
           "401": {
             "description": "Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
           },
           "404": {
             "description": "`file_upload_not_found`",
@@ -1030,6 +1624,9 @@
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -1079,6 +1676,12 @@
               ],
               "default": "desc"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -1098,23 +1701,30 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "Parent file not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "description": "A personal access token with the `rootkey.read` scope can call it."
       },
       "post": {
         "summary": "Create file version",
-        "description": "Uploads a new version of an existing file, keeping the parent's version history.",
+        "description": "Uploads a new version of an existing file, keeping the parent's version history. A personal access token with the `rootkey.write` scope can call it, in an organization that lets agents write.",
         "tags": [
           "api-v1-files"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -1125,6 +1735,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "requestBody": {
@@ -1175,6 +1791,9 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "Wallet not found"
           },
@@ -1193,6 +1812,9 @@
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -1212,6 +1834,12 @@
               "type": "string"
             },
             "description": "Blockchain address of the vault that owns the file"
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -1231,13 +1859,17 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "File not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "description": "A personal access token with the `rootkey.read` scope can call it."
       },
       "delete": {
         "summary": "Delete file",
@@ -1247,6 +1879,9 @@
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -1266,6 +1901,12 @@
               "type": "string"
             },
             "description": "Blockchain address of the vault that owns the file"
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -1285,13 +1926,17 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "File not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "description": "A personal access token with the `rootkey.delete` scope can call it, in an organization that lets agents write."
       }
     },
     "/platform/files/{fileId}/download": {
@@ -1303,6 +1948,9 @@
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -1322,6 +1970,12 @@
               "type": "string"
             },
             "description": "Shareable-link token (alternative to authenticating via API key)"
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -1342,13 +1996,17 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "File not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "description": "A personal access token with the `rootkey.read` scope can call it."
       }
     },
     "/platform/files/{fileId}/history": {
@@ -1360,6 +2018,9 @@
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -1400,6 +2061,12 @@
               ],
               "default": "desc"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -1419,13 +2086,17 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "File not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "description": "A personal access token with the `rootkey.read` scope can call it."
       }
     },
     "/platform/files/{fileId}/validations": {
@@ -1437,6 +2108,9 @@
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -1477,6 +2151,12 @@
               ],
               "default": "desc"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -1496,25 +2176,32 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "File not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "description": "A personal access token with the `rootkey.read` scope can call it."
       }
     },
     "/platform/files/{fileId}/validate": {
       "post": {
         "summary": "Validate file",
-        "description": "Uploads a file and compares it against the anchored version to verify integrity, ownership and validity.",
+        "description": "Uploads a file and compares it against the anchored version to verify integrity, ownership and validity. A personal access token with the `rootkey.read` scope can call it.",
         "tags": [
           "api-v1-files"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -1525,6 +2212,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "requestBody": {
@@ -1573,6 +2266,9 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "File not found"
           },
@@ -1585,7 +2281,7 @@
     "/platform/files/{fileId}/audit-report": {
       "post": {
         "summary": "Create file audit report",
-        "description": "Enqueues a compliance audit report for the given file. The report is generated asynchronously; the response returns the report ID and its initial pending status.",
+        "description": "Enqueues a compliance audit report for the given file. The report is generated asynchronously; the response returns the report ID and its initial pending status. Not available to personal access tokens or agents: a request that carries one is refused with `agent_route_not_available`. Use an API key, or the ROOTKey app.",
         "tags": [
           "api-v1-files"
         ],
@@ -1649,7 +2345,7 @@
             "description": "Unauthenticated"
           },
           "403": {
-            "description": "Subscription limit exceeded, feature not found, or user is not an organization member"
+            "description": "Subscription limit exceeded, feature not found, or user is not an organization member A personal access token was used: this endpoint is not available to agents (`agent_route_not_available`)."
           },
           "404": {
             "description": "File not found"
@@ -1669,6 +2365,9 @@
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -1748,6 +2447,12 @@
                 "error"
               ]
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -1767,23 +2472,30 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "Wallet not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "description": "A personal access token with the `rootkey.read` scope can call it."
       },
       "post": {
         "summary": "Create record",
-        "description": "Creates a structured, integrity-hashed record inside a **table**.\n\n**This endpoint also creates versions.** ROOTKey groups a record's versions by the table's **primary key** — the schema's key column, which (until one is explicitly designated) is the **first field**, by convention an `id`.\n\n- If **no record with that key value exists yet**, the payload is stored as a new **root** record.\n- If a **record with the same key value already exists**, the payload is stored as a **new version** of that entity (a database-style update). The version's `parentId` is set to the existing root automatically — you do not send it.\n\nSo to update an entity, simply `POST` the same primary key again — there is **no separate version-creation endpoint**; versioning is a built-in behaviour of this route.\n\nVersioning only applies when the table has a schema **and** the payload is a keyed object with a non-empty key value; otherwise the record is stored as a standalone root.\n\n**Response:** returns only `{ chainId }`. The new record's `id` is **not** returned here — read it from `GET /platform/records` (the `__meta.id` field of each item).",
+        "description": "Creates a structured, integrity-hashed record inside a **table**.\n\n**This endpoint also creates versions.** ROOTKey groups a record's versions by the table's **primary key** — the schema's key column, which (until one is explicitly designated) is the **first field**, by convention an `id`.\n\n- If **no record with that key value exists yet**, the payload is stored as a new **root** record.\n- If a **record with the same key value already exists**, the payload is stored as a **new version** of that entity (a database-style update). The version's `parentId` is set to the existing root automatically — you do not send it.\n\nSo to update an entity, simply `POST` the same primary key again — there is **no separate version-creation endpoint**; versioning is a built-in behaviour of this route.\n\nVersioning only applies when the table has a schema **and** the payload is a keyed object with a non-empty key value; otherwise the record is stored as a standalone root.\n\n**Response:** returns only `{ chainId }`. The new record's `id` is **not** returned here — read it from `GET /platform/records` (the `__meta.id` field of each item). A personal access token with the `rootkey.write` scope can call it, in an organization that lets agents write.",
         "tags": [
           "api-v1-records"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "requestBody": {
@@ -1825,25 +2537,39 @@
           "401": {
             "description": "Unauthenticated — missing or invalid API key"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "Table not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          }
+        ]
       }
     },
     "/platform/records/{parentId}/versions": {
       "get": {
         "summary": "List record versions",
-        "description": "Returns the version history of a record, newest first by default. `parentId` is the record's `id` (from the `__meta.id` field of a List Records item). Each item is a full record version including its decrypted column values in `data`.\n\n**Response shape:** this endpoint returns a bare pagination envelope (`data` / `pagination` / `metadata`) — unlike List Records and Fetch Record History, there is **no `chainId` wrapper**.",
+        "description": "Returns the version history of a record, newest first by default. `parentId` is the record's `id` (from the `__meta.id` field of a List Records item). Each item is a full record version including its decrypted column values in `data`.\n\n**Response shape:** this endpoint returns a bare pagination envelope (`data` / `pagination` / `metadata`) — unlike List Records and Fetch Record History, there is **no `chainId` wrapper**. A personal access token with the `rootkey.read` scope can call it.",
         "tags": [
           "api-v1-records"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -1894,6 +2620,12 @@
               ],
               "default": "desc"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -1913,6 +2645,9 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "Record not found (or not owned by the caller's table)"
           },
@@ -1925,13 +2660,16 @@
     "/platform/records/{fileId}/history": {
       "get": {
         "summary": "Fetch record history",
-        "description": "Returns the activity/audit log for a record — creation, new versions, deletion, and related events — newest first by default. `fileId` is the record's `id` (from `__meta.id`).",
+        "description": "Returns the activity/audit log for a record — creation, new versions, deletion, and related events — newest first by default. `fileId` is the record's `id` (from `__meta.id`). A personal access token with the `rootkey.read` scope can call it.",
         "tags": [
           "api-v1-records"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -1973,6 +2711,12 @@
               ],
               "default": "desc"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -1992,6 +2736,9 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "Record not found"
           },
@@ -2004,13 +2751,16 @@
     "/platform/records/{fileId}/validations": {
       "get": {
         "summary": "Fetch record validations",
-        "description": "Returns the integrity-validation history for a record — each entry compares the stored payload against its integrity hash. `fileId` is the record's `id` (from `__meta.id`).\n\n**Response shape:** returned directly with **no `chainId` wrapper** — `{ currentHash, previousHash, validations }`, where `currentHash`/`previousHash` are the hashes of the current and parent-version payloads.",
+        "description": "Returns the integrity-validation history for a record — each entry compares the stored payload against its integrity hash. `fileId` is the record's `id` (from `__meta.id`).\n\n**Response shape:** returned directly with **no `chainId` wrapper** — `{ currentHash, previousHash, validations }`, where `currentHash`/`previousHash` are the hashes of the current and parent-version payloads. A personal access token with the `rootkey.read` scope can call it.",
         "tags": [
           "api-v1-records"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -2052,6 +2802,12 @@
               ],
               "default": "desc"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -2071,6 +2827,9 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "404": {
             "description": "Record not found"
           },
@@ -2083,13 +2842,16 @@
     "/platform/records/{recordId}": {
       "delete": {
         "summary": "Delete record",
-        "description": "Deletes a record. Once deleted, it no longer appears in list or fetch responses.\n\nAuthorization: the caller's organization must own the table identified by `ownerAddress`, and that table must own the record.",
+        "description": "Deletes a record. Once deleted, it no longer appears in list or fetch responses.\n\nAuthorization: the caller's organization must own the table identified by `ownerAddress`, and that table must own the record. A personal access token with the `rootkey.delete` scope can call it, in an organization that lets agents write.",
         "tags": [
           "api-v1-records"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
@@ -2110,6 +2872,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
           }
         ],
         "responses": {
@@ -2134,7 +2902,7 @@
             "description": "Unauthenticated"
           },
           "403": {
-            "description": "The table does not own this record",
+            "description": "The table does not own this record A personal access token can also be refused: see the [Errors](/api-reference/errors) page.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2195,14 +2963,25 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "description": "A personal access token was used: this endpoint is not available to agents (`agent_route_not_available`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "description": "Not available to personal access tokens or agents: a request that carries one is refused with `agent_route_not_available`. Use an API key, or the ROOTKey app."
       },
       "post": {
         "summary": "Create recovery point",
-        "description": "Enqueues creation of a new recovery point. Returns a one-time decryption password for the resulting archive.",
+        "description": "Enqueues creation of a new recovery point. Returns a one-time decryption password for the resulting archive. Not available to personal access tokens or agents: a request that carries one is refused with `agent_route_not_available`. Use an API key, or the ROOTKey app.",
         "tags": [
           "api-v1-recovery-points"
         ],
@@ -2283,6 +3062,16 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "description": "A personal access token was used: this endpoint is not available to agents (`agent_route_not_available`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
@@ -2333,13 +3122,24 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "description": "A personal access token was used: this endpoint is not available to agents (`agent_route_not_available`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Recovery point not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "description": "Not available to personal access tokens or agents: a request that carries one is refused with `agent_route_not_available`. Use an API key, or the ROOTKey app."
       },
       "delete": {
         "summary": "Delete recovery point",
@@ -2379,19 +3179,30 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "description": "A personal access token was used: this endpoint is not available to agents (`agent_route_not_available`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Recovery point not found"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
-        }
+        },
+        "description": "Not available to personal access tokens or agents: a request that carries one is refused with `agent_route_not_available`. Use an API key, or the ROOTKey app."
       }
     },
     "/platform/recovery-point/{recoveryPointId}/download": {
       "get": {
         "summary": "Download recovery point",
-        "description": "Returns the recovery point archive. The archive is encrypted with the one-time password returned when the recovery point was created.",
+        "description": "Returns the recovery point archive. The archive is encrypted with the one-time password returned when the recovery point was created. Not available to personal access tokens or agents: a request that carries one is refused with `agent_route_not_available`. Use an API key, or the ROOTKey app.",
         "tags": [
           "api-v1-recovery-points"
         ],
@@ -2429,6 +3240,16 @@
           "401": {
             "description": "Unauthenticated"
           },
+          "403": {
+            "description": "A personal access token was used: this endpoint is not available to agents (`agent_route_not_available`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Recovery point not found"
           },
@@ -2446,6 +3267,12 @@
         "name": "x-api-key",
         "in": "header",
         "description": "ROOTKey API key. A test key works on your organization's test data and a live key on its live data; both are used with the same API."
+      },
+      "personalAccessToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "rk_pat_...",
+        "description": "Personal access token of a ROOTKey user, sent as `Authorization: Bearer rk_pat_...`. A token acts as the user who created it, in the organization named by the `X-RootKey-Organization` header, and never with more access than that user has in the ROOTKey app: the organization's agent policy, the user's own role and teams, and the token's scopes (`rootkey.read`, `rootkey.write`, `rootkey.delete`) all apply. A missing, malformed, unknown, revoked or expired token gets the same `401`. Send either an `x-api-key` or a bearer token, never both: a request with both gets `conflicting_credentials`. See [Authentication](/api-reference/auth)."
       }
     },
     "responses": {
@@ -2461,6 +3288,16 @@
       },
       "InternalError": {
         "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DomainErrorResponse"
+            }
+          }
+        }
+      },
+      "AgentAccessDenied": {
+        "description": "Forbidden. With a personal access token, the organization, the user or the token does not allow the request, and the `errorCode` says which: `agent_org_not_allowed`, `agent_user_blocked`, `agent_two_factor_required`, `agent_access_disabled`, `agent_write_not_allowed`, `agent_personal_tokens_disabled`, `insufficient_scope`, `insufficient_permission`, `agent_restricted_data_denied` or `email_verification_required`. A user who is not a member of the organization, or a network an IP access rule blocks, gets `access_policy_denied`. Each code has an entry on the [Errors](/api-reference/errors) page.",
         "content": {
           "application/json": {
             "schema": {
@@ -4492,6 +5329,201 @@
             ]
           }
         }
+      },
+      "PersonalAccessTokenIdentity": {
+        "type": "object",
+        "description": "Who a personal access token acts as and what it was granted. Identity only: it says nothing about any organization.",
+        "properties": {
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            }
+          },
+          "credential": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "PAT"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "description": "The name the user gave the token."
+              },
+              "scopes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "rootkey.read",
+                    "rootkey.write",
+                    "rootkey.delete"
+                  ]
+                }
+              },
+              "allOrganizations": {
+                "type": "boolean",
+                "description": "True when the token covers every organization the user belongs to, now and later."
+              },
+              "organizationIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The organizations the token was limited to. Empty when `allOrganizations` is true."
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "AgentOrganizationMode": {
+        "type": "string",
+        "enum": [
+          "DISABLED",
+          "READ_ONLY",
+          "FULL"
+        ],
+        "description": "What the organization lets agents do: `DISABLED` serves no agent request, `READ_ONLY` only reads, `FULL` reads, writes and deletes. An organization that never saved a policy is `READ_ONLY`."
+      },
+      "AgentOrganizationListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The value to send in `X-RootKey-Organization`."
+          },
+          "name": {
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/AgentOrganizationMode"
+          },
+          "blocked": {
+            "type": "boolean",
+            "description": "True when an administrator of the organization blocked this user from agents. The organization is still listed: the user belongs to it."
+          }
+        }
+      },
+      "AgentOrganization": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/AgentOrganizationMode"
+          },
+          "effectiveScopes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "rootkey.read",
+                "rootkey.write",
+                "rootkey.delete"
+              ]
+            },
+            "description": "The token's own scopes narrowed by what the organization allows now: none when agents are disabled, when the user is blocked, when the organization requires two-factor authentication and the user has none, or when it does not allow personal access tokens; only `rootkey.read` (when the token has it) in a read-only organization; the token's scopes otherwise. It never adds a scope the token does not hold. The user's role can still refuse an individual request."
+          }
+        }
+      },
+      "VaultOrTableListItem": {
+        "type": "object",
+        "description": "One row of the vault or table listing.",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "The vault or table address, as the other endpoints take it."
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "VAULT",
+              "TABLE"
+            ]
+          },
+          "dataClassification": {
+            "type": "string",
+            "enum": [
+              "PUBLIC",
+              "INTERNAL",
+              "CONFIDENTIAL",
+              "SENSITIVE",
+              "RESTRICTED"
+            ]
+          },
+          "isTest": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "paused"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "agentAccessible": {
+            "type": "boolean",
+            "description": "Only in the answer to a personal access token. False for a RESTRICTED vault or table: it is listed so that an agent can tell the user it exists, and every endpoint that would read or change it is refused with `agent_restricted_data_denied`. True for every other classification."
+          }
+        }
+      }
+    },
+    "parameters": {
+      "OrganizationHeader": {
+        "name": "X-RootKey-Organization",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "The organization a personal access token acts in: the `id` of one of the organizations that `GET /organizations` lists. Required with a personal access token on every endpoint that works inside an organization; without it the request gets `organization_header_required`. Ignored with an API key, which belongs to exactly one organization."
+      },
+      "TestModeHeader": {
+        "name": "x-test-mode",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "true",
+            "false"
+          ],
+          "default": "false"
+        },
+        "description": "Whether a personal access token works on live data (`false`, the default) or on test data (`true`). Only this header decides, never a query string or a body field. An API key is itself a test or a live key and works on that data."
       }
     }
   }
