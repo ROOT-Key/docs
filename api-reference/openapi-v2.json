@@ -3297,7 +3297,7 @@
         }
       },
       "AgentAccessDenied": {
-        "description": "Forbidden. With a personal access token, the organization, the user or the token does not allow the request, and the `errorCode` says which: `agent_org_not_allowed`, `agent_user_blocked`, `agent_two_factor_required`, `agent_access_disabled`, `agent_write_not_allowed`, `agent_personal_tokens_disabled`, `insufficient_scope`, `insufficient_permission`, `agent_restricted_data_denied` or `email_verification_required`. A user who is not a member of the organization, or a network an IP access rule blocks, gets `access_policy_denied`. Each code has an entry on the [Errors](/api-reference/errors) page.",
+        "description": "Forbidden. With a personal access token or an app connected through the hosted connector, the organization, the user or the token does not allow the request, and the `errorCode` says which: `agent_org_not_allowed`, `agent_user_blocked`, `agent_two_factor_required`, `agent_access_disabled`, `agent_write_not_allowed`, `agent_personal_tokens_disabled`, `agent_client_not_allowed`, `insufficient_scope`, `insufficient_permission`, `agent_restricted_data_denied` or `email_verification_required`. A user who is not a member of the organization, or a network an IP access rule blocks, gets `access_policy_denied`. Each code has an entry on the [Errors](/api-reference/errors) page.",
         "content": {
           "application/json": {
             "schema": {

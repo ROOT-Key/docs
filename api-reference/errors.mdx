@@ -318,7 +318,7 @@ Add a little random delay to every wait, so that clients refused together do not
 
 ## Personal access tokens and agents
 
-These come from a request made with a [personal access token](/api-reference/auth#personal-access-tokens) (`Authorization: Bearer rk_pat_...`), which acts as a member of an organization within the limits the organization sets. Only a member of the organization sees the `agent_*` codes and [`insufficient_scope`](#insufficient_scope): a user who is not a member gets [`access_policy_denied`](#access_policy_denied), the same answer a blocked network gets. When a request is refused, `GET /organizations` and `GET /organization` show the mode the organization has set and the scopes the token has there, so you can tell the user what to change instead of retrying. The refusals are decisions, not faults: do not retry them, and do not try the same request in another organization on your own.
+These come from a request made with a [personal access token](/api-reference/auth#personal-access-tokens) (`Authorization: Bearer rk_pat_...`), or by an app a member connected through the [hosted connector](/pages/integrations/hosted-connector), which acts as a member of an organization within the limits the organization sets. Only a member of the organization sees the `agent_*` codes and [`insufficient_scope`](#insufficient_scope): a user who is not a member gets [`access_policy_denied`](#access_policy_denied), the same answer a blocked network gets. When a request is refused, `GET /organizations` and `GET /organization` show the mode the organization has set and the scopes the token has there, so you can tell the user what to change instead of retrying. The refusals are decisions, not faults: do not retry them, and do not try the same request in another organization on your own.
 
 <span id="organization-header-required" className="error-alias" />
 
@@ -382,6 +382,13 @@ These come from a request made with a [personal access token](/api-reference/aut
 - **Status:** 403
 - **Problem:** The organization does not allow personal access tokens, so a token cannot act in it.
 - **Solution:** Ask an administrator of the organization to allow personal access tokens in the AI agents settings.
+
+<span id="agent-client-not-allowed" className="error-alias" />
+
+### `agent_client_not_allowed`
+- **Status:** 403
+- **Problem:** The organization allows only certain apps to act in it, and the app that made the request, one a member connected through the [hosted connector](/pages/integrations/hosted-connector), is not on its list. The `message` is `This app is not allowed to act in this organization.` Personal access tokens are not affected by the list of allowed apps.
+- **Solution:** Ask an administrator of the organization to add the app under **Organization Settings → AI agents → Allowed apps**, or to allow any app. The app's connection is not removed, and it works in the organization again once it is allowed. Do not retry the request, and do not try the same request in another organization on your own.
 
 <span id="insufficient-scope" className="error-alias" />
 
