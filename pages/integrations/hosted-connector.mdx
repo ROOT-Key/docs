@@ -1,0 +1,200 @@
+---
+title: Hosted connector for any MCP client
+sidebarTitle: Hosted connector
+description: Connect Claude, or any MCP client, to ROOTKey by signing in to your ROOTKey account, with no token to create or paste. Choose the organizations and permissions on the consent screen, and disconnect at any time.
+icon: plug
+---
+
+ROOTKey runs a hosted [Model Context Protocol](https://modelcontextprotocol.io) connector at `https://mcp.rootkey.ai/mcp`. You add that address to an AI app, sign in to your ROOTKey account, and choose what the app may do and where. There is no [personal access token](/api-reference/auth#personal-access-tokens) to create, copy or store, and nothing to install on your machine.
+
+Any app that supports MCP can connect, not only Claude. This page shows how to connect Claude, how any other client connects, what the consent screen tells you, and how to disconnect. If you would rather run the server on your own machine with a personal access token, see [Claude (MCP)](/pages/integrations/claude-mcp).
+
+<Note>
+  A connected app acts as you. It can never do more than you can do in the ROOTKey app, only in the organizations you choose, and only within what each of those organizations allows agents to do. It is limited to live data: test data is not available through this connector.
+</Note>
+
+---
+
+## Connect Claude
+
+<Tabs>
+  <Tab title="Claude on claude.ai">
+    <Steps>
+      <Step title="Add a custom connector">
+        On claude.ai, open **Settings → Connectors** and choose **Add custom connector**.
+      </Step>
+
+      <Step title="Name it and give the address">
+        Name it, for example `ROOTKey`, and enter the address `https://mcp.rootkey.ai/mcp`. Choose **Add**.
+      </Step>
+
+      <Step title="Connect">
+        Choose **Connect** next to the new connector. You are taken to ROOTKey.
+      </Step>
+
+      <Step title="Sign in and choose what it may do">
+        Sign in to ROOTKey if you are not already. On the consent screen, choose the organizations the connector may work in and the permissions it may have, then allow access. See [The consent screen](#the-consent-screen).
+      </Step>
+
+      <Step title="Return to claude.ai">
+        ROOTKey sends you back to claude.ai, and the connector shows as connected.
+      </Step>
+    </Steps>
+
+    To use it, open a chat, enable the ROOTKey connector in the chat's tools menu, and ask for something, for example: `List my ROOTKey organizations`.
+  </Tab>
+
+  <Tab title="Claude Code">
+    Add the connector from your terminal:
+
+    ```bash
+    claude mcp add --transport http rootkey https://mcp.rootkey.ai/mcp
+    ```
+
+    Then run `/mcp` inside Claude Code, choose **rootkey** and sign in. Your browser opens on ROOTKey, where you choose the organizations and permissions on the [consent screen](#the-consent-screen). Claude Code runs on your own computer, so its consent screen shows the notice described under [Apps on your own computer](#apps-on-your-own-computer).
+
+    Ask Claude what ROOTKey tools it has, or ask it to list your ROOTKey organizations.
+  </Tab>
+</Tabs>
+
+---
+
+## Connect any other MCP client
+
+A client that supports remote MCP servers connects the same way:
+
+1. Add `https://mcp.rootkey.ai/mcp` as a remote MCP server, in whatever shape that client's configuration takes.
+2. Start the connection from the client. It opens ROOTKey in your browser so you can sign in.
+3. Choose the organizations and permissions on the [consent screen](#the-consent-screen), and allow access.
+4. The client receives the result and can use ROOTKey as you, within what you allowed.
+
+You do not register the client with ROOTKey first, and you do not create a key for it. The consent screen is where you decide whether to let it in.
+
+---
+
+## The consent screen
+
+When an app asks to connect, ROOTKey shows you a screen in two steps. Nothing is shared with the app until you choose **Allow access** at the end.
+
+**Choose where it can work.** Choose what the app may do and in which organizations:
+
+| Choice | What it means |
+|---|---|
+| **Read** | See the vaults, files and records you can see. |
+| **Write** | Create and update vaults, files and records. |
+| **Delete** | Delete vaults, files and records. |
+| **Stay connected** | Keep working without asking you to sign in again, until you disconnect the app or the connection expires. |
+| **Organizations** | The organizations the app may reach, or **All my organizations**, which also covers organizations you join later. |
+
+An organization may be shown as unavailable, with the reason, when it does not allow this connection: for example, because an administrator turned agents off or blocked your agents, or because it requires two-factor authentication that you have not turned on. An organization that restricts which apps may act in it, see [Allowed apps](#for-administrators-allowed-apps), shows as unavailable for an app that is not on its list.
+
+**Review and allow.** Check what the app will be able to do and where, then choose **Allow access** or **Deny**.
+
+### What "Unverified app" means
+
+Under the name of the app, the consent screen may show an **Unverified app** badge.
+
+The name and logo shown on the screen are declared by the app itself. ROOTKey has not confirmed who publishes an app that carries the badge. The badge says only that: ROOTKey has no confirmation of who is behind the app. It is not a result of a review, and it does not say the app is good or bad. Apps without the badge are ones whose publisher ROOTKey has confirmed, and that confirmation is likewise about who publishes the app, not about what it does.
+
+Use the badge as a prompt to check, not as a verdict:
+
+- Continue only if you started the connection yourself, from an app you recognise.
+- Read **Details** on the consent screen: the address the app will return you to, and its identifier.
+- Give the app only the permissions it needs. **Read** is enough for an app that only looks things up. Allow **Delete** only for an app you intend to let delete data.
+- Choose only the organizations you want it to reach.
+
+You can disconnect any app at any time; see [Disconnect an app](#disconnect-an-app).
+
+### Apps on your own computer
+
+Some apps receive the result of the sign-in on your own computer instead of on the internet. When that is the case, the consent screen shows a notice before you continue.
+
+For an app that receives the sign-in code through a custom address such as `cursor://`, the notice reads along the lines of: this app receives the sign-in code through `cursor://`, which opens an app on this device, so continue only if you started this connection from an app you recognise. The same care applies to tools that run on your computer, such as Claude Code, whose notice says the app receives the result at an address on your device and not on the internet.
+
+If you did not just start a connection from an app on your computer, choose **Deny**.
+
+---
+
+## For administrators: allowed apps
+
+Any member can connect an app to their own account, and the app can reach an organization only if the member chose that organization and the organization lets agents in. Administrators can go further and decide which apps may act in their organization.
+
+Open **Organization Settings → AI agents**. In the **Agent access policy**, the **Allowed apps** section has two settings:
+
+| Setting | What it means |
+|---|---|
+| **Any app** | Any app a member connects may act in the organization, within that member's own access. This is the setting until an administrator chooses another. |
+| **Only these apps** | Only the apps on your list may act in the organization. |
+
+To build the list, choose from the apps your members have already connected, or add an app by its address (the `https://` address of its client metadata, which the app's documentation gives you). You need the **AI agents** update permission to change it, as for the rest of the policy. ROOTKey asks you to confirm before you restrict the list or open it to any app. A list holds up to 50 apps.
+
+When the list is on:
+
+- **On the consent screen**, the organization shows as unavailable for an app that is not on the list, so a member cannot choose it for that app.
+- **For an app that is already connected**, a request that reaches the organization is refused with [`agent_client_not_allowed`](/api-reference/errors#agent_client_not_allowed) (`403`, with the message `This app is not allowed to act in this organization.`). The connection is not deleted: the app works in the organization again as soon as you add it back to the list.
+- **In the organization's agent activity**, the refusal is shown as a refused request from an app that is not on the list of allowed apps.
+- A request from a person who is not a member of the organization gets the same answer as before, whether or not a list is on: the list does not reveal who is a member.
+
+<Warning>
+  The list covers apps that people connect with their ROOTKey account through the hosted connector. It does not apply to [personal access tokens](/api-reference/auth#personal-access-tokens), which are governed by the other settings in the same policy, or to organization API keys.
+</Warning>
+
+<Note>
+  Your organization governs the credentials it delegates to agents, not the AI itself. ROOTKey does not detect or control every AI: an app on the list can still be used by whoever is signed in to it, and an agent that uses a person's own browser session, or a script that holds an organization API key, cannot be told apart from that person.
+</Note>
+
+The [admin guide](/pages/integrations/ai-agents) describes the other settings: the access mode, personal access tokens, two-factor authentication and blocking a member.
+
+---
+
+## What a connected app can do
+
+A connected app uses the same ROOTKey tools as the local server: it lists organizations, vaults, tables, files and records, creates and updates them, and shows their history and validations, within the permissions you allowed.
+
+- It acts in one organization per request, and asks you which one when it is unclear. A change it makes always reports the organization it acted in.
+- Each organization's [agent access mode](/pages/integrations/ai-agents#choose-what-agents-may-do), block list and two-factor requirement apply, together with your role, your teams and the organization's IP and country rules. A refusal names the cause and what has to change, and the app is told to stop and not to retry or try another organization on its own.
+- **Restricted** vaults and tables are listed so the app can tell you they exist, and are never readable or changeable by it.
+- Recovery points, file audit reports and the Restore Center are not offered to a connected app. Use the ROOTKey app for them.
+- Changes are recorded in your organization's activity like any other.
+
+---
+
+## Disconnect an app
+
+Open **Account Settings → Connected apps** in the ROOTKey app. The list shows each app, its permissions, its organizations, when it was connected and when it was last used. Open the actions menu of an app and choose **Disconnect app**. The app is disconnected immediately and stops working on its next request. You can connect it again later.
+
+Disconnecting an app in ROOTKey does not remove the connector from the app itself: remove it there as well if you no longer want it listed.
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The consent screen says this request is out of date, or cannot be used on its own">
+    Open the consent screen only from the app: start the connection there and ROOTKey brings you to it. A request that expired or was changed has to be started again from the app.
+  </Accordion>
+
+  <Accordion title="An organization is shown as unavailable">
+    The reason is shown next to it. An administrator may have turned agents off or blocked your agents, the organization may require two-factor authentication that you have not turned on, its network rules may not allow the connector, or it may allow only certain apps and this one is not on its list. Ask an administrator of the organization to change the setting, or choose another organization.
+  </Accordion>
+
+  <Accordion title="The app was connected, and is now refused in an organization">
+    Refusals from an organization are decisions, not faults. The error code says which one applies: see the agent codes on the [Errors](/api-reference/errors#personal-access-tokens-and-agents) page. [`agent_client_not_allowed`](/api-reference/errors#agent_client_not_allowed) means the organization has restricted which apps may act in it and this one is not on the list: ask an administrator to add it in **Organization Settings → AI agents**.
+  </Accordion>
+
+  <Accordion title="I connected an app I do not recognise">
+    Open **Account Settings → Connected apps** and choose **Disconnect app**. It stops working on its next request. If you think someone else used your account, change your password and contact [support@rootkey.ai](mailto:support@rootkey.ai).
+  </Accordion>
+</AccordionGroup>
+
+<CardGroup cols={2}>
+  <Card title="AI agents in your organization" icon="shield-check" href="/pages/integrations/ai-agents">
+    Choose what agents may do in your organization, and which apps may act in it.
+  </Card>
+  <Card title="Claude (MCP)" icon="robot" href="/pages/integrations/claude-mcp">
+    Run the MCP server on your own machine with a personal access token.
+  </Card>
+  <Card title="Errors" icon="triangle-exclamation" href="/api-reference/errors#personal-access-tokens-and-agents">
+    Every code an agent can be refused with, and what to change.
+  </Card>
+</CardGroup>

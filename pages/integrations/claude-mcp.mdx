@@ -9,6 +9,10 @@ The ROOTKey MCP server connects Claude to your ROOTKey workspace. It implements 
 
 Ask Claude to anchor a contract, check whether a file still matches its proof, or pull the audit trail for a record, and it happens in your real workspace. The server signs in with your own [personal access token](/api-reference/auth#personal-access-tokens), so every tool call is an ordinary API request made as you. It can never do more than you can do in the ROOTKey app, everything it does is visible in the ROOTKey dashboard, and the organization it acts in decides whether agents may use its data at all.
 
+<Tip>
+  Prefer not to manage a token? The [hosted connector](/pages/integrations/hosted-connector) lets Claude, or any MCP client that supports remote servers, connect by signing in to ROOTKey, and you choose the organizations and permissions on a consent screen. This page covers the local server, which uses a personal access token.
+</Tip>
+
 <Note>
   The server runs locally on your machine and talks directly to `api.rootkey.ai`. Your token stays in your own environment: it is never sent to Anthropic, and it is sent to ROOTKey only as the credential of the API call itself.
 </Note>
@@ -443,7 +447,7 @@ What you keep until then is the seven tools in [Only with an organization API ke
 
 The server runs **locally**, which is what keeps your token on your machine. That has two consequences worth stating plainly.
 
-- **It works in clients that can start a local program**, such as Claude Code, Claude Desktop and Cursor.
+- **It works in clients that can start a local program**, such as Claude Code, Claude Desktop and Cursor. For an app that connects to a remote server instead, such as Claude on claude.ai, use the [hosted connector](/pages/integrations/hosted-connector).
 - **It covers the public API and nothing beyond it.** There are no tools for managing tokens, API keys or organization members. You manage tokens in the ROOTKey app, and organization settings are an administrator's job there.
 
 ---
@@ -455,6 +459,9 @@ The server is open source at [github.com/ROOT-Key/rootkey-mcp](https://github.co
 <CardGroup cols={2}>
   <Card title="AI agents in your organization" icon="shield-check" href="/pages/integrations/ai-agents">
     Choose what agents may do in your organization, require two-factor authentication and block a member.
+  </Card>
+  <Card title="Hosted connector" icon="plug" href="/pages/integrations/hosted-connector">
+    Connect Claude or any MCP client by signing in, with no token.
   </Card>
   <Card title="Authentication" icon="key" href="/api-reference/auth#personal-access-tokens">
     Create, scope and revoke the personal access token the server uses.

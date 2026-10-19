@@ -5,7 +5,7 @@ description: Decide whether and how AI agents can use your organization's data, 
 icon: shield-check
 ---
 
-Members of your organization can connect an AI agent, such as Claude, to ROOTKey with a [personal access token](/api-reference/auth#personal-access-tokens). The agent then acts as that member, with no more access than the member has in the ROOTKey app. As an administrator, you decide whether agents may use your organization's data at all, and how far.
+Members of your organization can connect an AI agent, such as Claude, to ROOTKey with a [personal access token](/api-reference/auth#personal-access-tokens), or by signing in to ROOTKey from an app through the [hosted connector](/pages/integrations/hosted-connector). Any app that supports MCP can connect that way, not only Claude. The agent then acts as that member, with no more access than the member has in the ROOTKey app. As an administrator, you decide whether agents may use your organization's data at all, and how far.
 
 This page is for administrators. If you are a member who wants to connect an agent, start with [Claude (MCP)](/pages/integrations/claude-mcp).
 
@@ -47,9 +47,24 @@ When you turn on **Require two-factor authentication**, only members who have tu
 
 Members can turn on two-factor authentication themselves under **Account Settings → Security**, with an authenticator app and backup codes. Ask your members to do this before you turn the requirement on, or they will lose their agents until they have.
 
+### Choose which apps may act
+
+**Allowed apps** decides which apps a member can connect to your organization through the [hosted connector](/pages/integrations/hosted-connector):
+
+- **Any app** is the setting until you choose another. Any app a member connects may act in the organization, within that member's own access.
+- **Only these apps** lets only the apps on your list act in the organization. Build the list from the apps your members have already connected, or add an app by the `https://` address of its client metadata. A list holds up to 50 apps.
+
+With a list on, your organization shows as unavailable on the consent screen for an app that is not on it, and a request from an app that is already connected but not on the list is refused with [`agent_client_not_allowed`](/api-reference/errors#agent_client_not_allowed). That app's connection is not removed: it works again as soon as you add it back. The organization's agent activity shows the refusals as requests from an app that is not on the list.
+
+<Warning>
+  The list applies to apps that people connect with their ROOTKey account. Personal access tokens are not affected by it, and neither are organization API keys: the other settings on this page govern tokens.
+</Warning>
+
+On the consent screen, an app may carry an **Unverified app** badge. It means ROOTKey has not confirmed who publishes the app, because the name and logo are declared by the app itself. It is not a review of the app, and it does not mean the app is safe or unsafe. See [What "Unverified app" means](/pages/integrations/hosted-connector#what-unverified-app-means). An allowed-apps list is how you decide which apps act in your organization, whatever their badge.
+
 ### When a change takes effect
 
-A change you save applies to the next request an agent makes. Nothing waits for a token to expire or for a member to reconnect. ROOTKey asks you to confirm the changes that cut access: turning agents **Off**, switching to **Full access**, turning off personal access tokens and requiring two-factor authentication.
+A change you save applies to the next request an agent makes. Nothing waits for a token to expire or for a member to reconnect. ROOTKey asks you to confirm the changes that cut access: turning agents **Off**, switching to **Full access**, turning off personal access tokens, requiring two-factor authentication, restricting the allowed apps and allowing any app.
 
 ---
 
@@ -90,7 +105,7 @@ This is the honest limit of the policy. It controls the tokens members create fo
 
 ## See who has connected an agent
 
-**Connected agents** lists every active token that can reach your organization, with:
+**Connected agents** lists every active token and every connected app that can reach your organization (a connected app has the type **Connected app**), with:
 
 | Column | What it shows |
 |---|---|
@@ -118,10 +133,14 @@ When an agent is refused by your policy, the error names the cause and what has 
 | **Allow personal access tokens** off | [`agent_personal_tokens_disabled`](/api-reference/errors#agent_personal_tokens_disabled) on every request |
 | **Require two-factor authentication** on | [`agent_two_factor_required`](/api-reference/errors#agent_two_factor_required) until the member turns it on |
 | A member blocked | [`agent_user_blocked`](/api-reference/errors#agent_user_blocked) on every request |
+| **Only these apps** on, and the app is not on the list | [`agent_client_not_allowed`](/api-reference/errors#agent_client_not_allowed) on every request from that app |
 
 <CardGroup cols={2}>
   <Card title="Claude (MCP)" icon="robot" href="/pages/integrations/claude-mcp">
     How a member connects Claude to ROOTKey, and what it can do.
+  </Card>
+  <Card title="Hosted connector" icon="plug" href="/pages/integrations/hosted-connector">
+    How any MCP client connects by signing in, and what the consent screen shows.
   </Card>
   <Card title="Personal access tokens" icon="key" href="/api-reference/auth#personal-access-tokens">
     How tokens, scopes and organizations fit together.
