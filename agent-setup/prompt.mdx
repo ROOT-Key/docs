@@ -228,13 +228,13 @@ Every setting is an environment variable on the server process, alongside the to
 
 The full list, including timeouts and the base URL override, is on the [connector page](/pages/integrations/claude-mcp#configuration).
 
-Do not set `ROOTKEY_API_KEY` in a new setup. It is the organization API key of earlier versions: it is deprecated and is removed in version 0.3.0. If the user's existing configuration still uses it, it keeps working until then, and the [connector page](/pages/integrations/claude-mcp#moving-from-an-api-key) explains how to move to a token.
+Do not set `ROOTKEY_API_KEY`. Since version 0.3.0 the server accepts only a personal access token and refuses to start when `ROOTKEY_API_KEY` is set or when `ROOTKEY_TOKEN` holds an organization API key. If the user's existing configuration uses one, replace it with a token: the [connector page](/pages/integrations/claude-mcp#upgrading-from-an-api-key) explains how.
 
 ---
 
 ## Step 4: verify
 
-Restart the agent so it loads the new server, then call the `rootkey_get_environment_info` tool. It never reveals the token. It reports the server version and the API address, and it asks the API who the token acts as, what the token may do, and, if an organization is selected, that organization's agent mode and the scopes the token has there. Expect 32 tools, or only the read tools with `ROOTKEY_READ_ONLY=true`.
+Restart the agent so it loads the new server, then call the `rootkey_get_environment_info` tool. It never reveals the token. It reports the server version and the API address, and it asks the API who the token acts as, what the token may do, and, if an organization is selected, that organization's agent mode and the scopes the token has there. Expect 32 tools, or 20 with `ROOTKEY_READ_ONLY=true`.
 
 Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-named tool from another server in the same session.
 

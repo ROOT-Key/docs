@@ -29,7 +29,7 @@ Ask Claude to anchor a contract, check whether a file still matches its proof, o
   A token acts as you. Treat it like a password: keep it in a password manager or a secret store, create one token per tool, and revoke it under **Account Settings → Personal access tokens** if you suspect it leaked.
 </Warning>
 
-Organization API keys still work in version 0.2 through `ROOTKEY_API_KEY`, but they are deprecated and are removed in 0.3.0. See [Moving from an API key](#moving-from-an-api-key).
+Since version 0.3.0 the server accepts only a personal access token. Organization API keys still work with the [REST API](/api-reference/auth), but not with this server: see [Upgrading from an API key](#upgrading-from-an-api-key).
 
 ---
 
@@ -166,10 +166,9 @@ Every setting is an environment variable on the server process.
 | `ROOTKEY_TOKEN` | required | Your personal access token (`rk_pat_` followed by 64 hexadecimal characters), sent as a Bearer token. The server exits immediately if it is missing or malformed, and never prints it. |
 | `ROOTKEY_ORGANIZATION` | - | Default organization id for the token. A tool's own `organization` argument overrides it for that call. |
 | `ROOTKEY_TEST_MODE` | unset (live) | `true` or `false`: whether the token works on your organization's test data or its live data. The two are separate, and live is the default. See [Test and Live Data](/pages/environments). |
-| `ROOTKEY_API_KEY` | - | **Deprecated, removed in 0.3.0.** An organization API key, accepted in place of `ROOTKEY_TOKEN`, never together with it. See [Moving from an API key](#moving-from-an-api-key). |
 | `ROOTKEY_ENV` | `production` | Optional. `production` is the only accepted value, and the server refuses to start with `development`. ROOTKey has one public API. |
 | `ROOTKEY_API_URL` | - | Full base URL including the `/api-v1/` path. Use it for a self-hosted or on-premise deployment. Plain `http://` is accepted only for loopback hosts, since the credential travels in a header. |
-| `ROOTKEY_READ_ONLY` | `false` | When `true`, only the read tools are registered (20 with a token, 20 with an API key), and downloads may only write inside `ROOTKEY_DOWNLOAD_DIR`. |
+| `ROOTKEY_READ_ONLY` | `false` | When `true`, only the 20 read tools are registered, and downloads may only write inside `ROOTKEY_DOWNLOAD_DIR`. |
 | `ROOTKEY_TIMEOUT_MS` | `30000` | Timeout for ordinary requests, in milliseconds. |
 | `ROOTKEY_TRANSFER_TIMEOUT_MS` | `300000` | Timeout for uploads and downloads, in milliseconds. |
 | `ROOTKEY_DOWNLOAD_DIR` | `~/Downloads` | Where downloads are saved when no path is given. |
@@ -208,10 +207,8 @@ An organization can also stop accepting personal access tokens, require two-fact
 
 ## Available tools
 
-38 tools in all: the operations of the [API Reference](/api-reference/overview) that suit an agent, the listings that find what to operate on, a wait helper and one diagnostic. What Claude is offered depends on the credential, because a tool that can only fail is not worth advertising:
+32 tools: the operations of the [API Reference](/api-reference/overview) that an agent may use, the listings that find what to operate on, and one diagnostic. Every tool except `rootkey_list_organizations` takes the optional `organization` argument. Deleting a record and every recovery point operation except the listing are not offered, because the API refuses them to agents.
 
-- **A personal access token gets 32.** `rootkey_delete_record` and five of the six recovery point tools are left out, because the API refuses them to agents: only `rootkey_list_recovery_points` is offered. Every tool except `rootkey_list_organizations` takes the optional `organization` argument.
-- **An organization API key (deprecated) gets 35.** Everything except `rootkey_list_organizations` and the two tools that ask for access to Restricted data, and none of the tools take an `organization` argument: the key is bound to one organization.
 - **The hosted connector gets 28.** The same as a token, without the four tools that read or write the local disk of the machine running the server: `rootkey_upload_file`, `rootkey_upload_file_version`, `rootkey_validate_file` and `rootkey_download_file`.
 
 Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-named tool from another MCP server in the same session. The **Scope** column is the scope your token needs for the call; a token that lacks it gets [`insufficient_scope`](/api-reference/errors#insufficient_scope).
@@ -220,7 +217,7 @@ Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-nam
 
 | Tool | Scope | What it does |
 |---|---|---|
-| `rootkey_list_organizations` | none | List the organizations the token can act in, with each one's agent mode and whether you are blocked. Token only |
+| `rootkey_list_organizations` | none | List the organizations the token can act in, with each one's agent mode and whether you are blocked |
 
 ### Vaults
 
@@ -268,11 +265,11 @@ Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-nam
 
 | Tool | Scope | What it does |
 |---|---|---|
-| `rootkey_list_recovery_points` | `rootkey.read` | List the recovery points whose vaults you can all read. The other recovery point tools are for an organization API key |
+| `rootkey_list_recovery_points` | `rootkey.read` | List the recovery points whose vaults you can all read. Creating, fetching, downloading and deleting one is done in the ROOTKey app |
 
 ### Restricted data
 
-These two are offered to personal access tokens and to the hosted connector, and are useful only where the organization lets members open Restricted data to their agents. See [Restricted data and agents](/pages/integrations/restricted-step-up).
+These two are useful only where the organization lets members open Restricted data to their agents. See [Restricted data and agents](/pages/integrations/restricted-step-up).
 
 | Tool | Scope | What it does |
 |---|---|---|
@@ -284,21 +281,6 @@ These two are offered to personal access tokens and to the hosted connector, and
 | Tool | Scope | What it does |
 |---|---|---|
 | `rootkey_get_environment_info` | none | Report the server version and the API address. With a token it also asks the API who you are and what the token may do: the user, the token name, its scopes and expiry, and, for the selected organization, its agent mode and the scopes that are effective there. Never reveals the token |
-
-### Only with an organization API key
-
-These six are offered only when the server runs with the deprecated `ROOTKEY_API_KEY`, because the API refuses them to agents:
-
-| Tool | What it does |
-|---|---|
-| `rootkey_delete_record` | Move a record to the trash, recoverable until retention purges it |
-| `rootkey_create_recovery_point` | Start building an encrypted backup archive |
-| `rootkey_get_recovery_point` | Check build status and progress |
-| `rootkey_wait_for_recovery_point` | Wait for the archive to finish building, reporting progress while it waits |
-| `rootkey_download_recovery_point` | Download the encrypted archive |
-| `rootkey_delete_recovery_point` | Permanently delete a recovery point |
-
-With an organization API key, `rootkey_list_recovery_points` lists every recovery point of the organization.
 
 Every tool declares whether it only reads, whether it is destructive and whether repeating it is safe, so your client can ask before it runs one that changes something. The delete tools and `rootkey_update_vault`, which overwrites the previous name or description, are marked destructive.
 
@@ -313,7 +295,6 @@ Besides the tools, the server offers whole workflows your client can list, so yo
 | `anchor_folder` | Anchors every file in a local folder into a vault, confirming first and reporting what landed |
 | `compliance_evidence_pack` | Gathers the anchor, activity history, validations and version chain for one file, and writes it up |
 | `verify_local_copies` | Validates local files against their anchors and leads with the failures |
-| `backup_workspace` | Creates a recovery point, waits for it, downloads it, and handles the one-time password carefully. Only with an organization API key |
 
 In read-only mode only `compliance_evidence_pack` is offered, since the others write.
 
@@ -342,7 +323,7 @@ A few behaviours are worth knowing before your first session, because they follo
 ## Safety
 
 <Warning>
-  **Deletions need your confirmation.** `rootkey_delete_vault` and `rootkey_delete_file` move the item to the trash: it leaves every listing at once and stays recoverable until the retention policy purges it. Every delete is recorded in the activity log, and a file that was anchored keeps its on-chain proof either way. Both are marked as destructive so Claude asks for confirmation, but the final responsibility for approving them is yours. `rootkey_delete_record` exists only with an organization API key.
+  **Deletions need your confirmation.** `rootkey_delete_vault` and `rootkey_delete_file` move the item to the trash: it leaves every listing at once and stays recoverable until the retention policy purges it. Every delete is recorded in the activity log, and a file that was anchored keeps its on-chain proof either way. Both are marked as destructive so Claude asks for confirmation, but the final responsibility for approving them is yours.
 
   You can bring a deleted vault, file or record back in the ROOTKey app, and Claude can do it too with `rootkey_restore_vault`, `rootkey_restore_file` and `rootkey_restore_record`, if your token has the `rootkey.delete` scope. A restore never needs your approval. If your organization asks you to approve every delete, the delete is refused the first time, you approve it in the ROOTKey app under **Pending approvals**, and Claude then repeats the same call once: see [Delete approvals](/pages/integrations/delete-approvals).
 </Warning>
@@ -375,22 +356,20 @@ This is useful for analysis and reporting sessions where nothing should change. 
 
 ---
 
-## Moving from an API key
+## Upgrading from an API key
 
-Version 0.1 of the server used an organization API key in `ROOTKEY_API_KEY`. That still works in 0.2, with one warning line at start-up, and it is removed in 0.3.0. To move to a personal access token:
+Version 0.3.0 accepts only a personal access token. A configuration that still sets `ROOTKEY_API_KEY`, or that puts an organization API key in `ROOTKEY_TOKEN`, stops the server at start-up with a message that says what to do. To move to a personal access token:
 
 1. Create a personal access token with the scopes you need, covering the organization or organizations the key belonged to.
 2. In your client configuration, replace `ROOTKEY_API_KEY` with `ROOTKEY_TOKEN`, and set `ROOTKEY_ORGANIZATION` to the organization id (`rootkey_list_organizations` shows it). If the key was a test key, add `ROOTKEY_TEST_MODE=true`.
 3. Expect the organization's agent mode to apply. Under the default **Read only** mode, the write tools are refused until an administrator chooses **Full access**.
 
-Staying on `ROOTKEY_API_KEY` until 0.3.0 changes nothing you rely on, but it gives up what the token adds:
+What changes with the token:
 
-- **No choice of organization.** The key is bound to its one organization, so `rootkey_list_organizations` and the `organization` argument are not offered, and `ROOTKEY_ORGANIZATION` and `ROOTKEY_TEST_MODE` are ignored with a warning. A test key works on test data and a live key on live data.
-- **No scopes.** An API key carries the full privileges of the account that owns it, so a session cannot be narrowed to reading.
-- **No organization control.** The organization's agent mode, its block list and its two-factor requirement apply to personal access tokens, not to API keys.
-- **A shorter future.** The key stops working with this server in 0.3.0.
+- **Removed tools.** `rootkey_delete_record`, `rootkey_create_recovery_point`, `rootkey_get_recovery_point`, `rootkey_wait_for_recovery_point`, `rootkey_download_recovery_point`, `rootkey_delete_recovery_point` and the `backup_workspace` prompt are gone: the API refuses them to agents. Use the ROOTKey app for them. `rootkey_list_recovery_points` stays.
+- **Your organization decides.** The organization's agent mode, its block list and its two-factor requirement apply to the token, and its scopes limit what a session can do.
 
-What you keep until then is the six tools in [Only with an organization API key](#only-with-an-organization-api-key). With a token, Claude can still list recovery points and queue audit reports. Use the ROOTKey app to fetch, download, create or delete a recovery point, or to delete a record.
+The organization API key itself keeps working with the [REST API](/api-reference/auth). To stay on version 0.2 for now, run `npx -y @rootkey/mcp@0.2`.
 
 ---
 
@@ -402,7 +381,7 @@ What you keep until then is the six tools in [Only with an organization API key]
   </Accordion>
 
   <Accordion title="The server exits immediately">
-    The server refuses to start, and says why on stderr, when `ROOTKEY_TOKEN` is missing or is not a whole personal access token (`rk_pat_` followed by 64 hexadecimal characters). It also refuses when both `ROOTKEY_TOKEN` and `ROOTKEY_API_KEY` are set, or when a personal access token was pasted into `ROOTKEY_API_KEY`. Check that the variable is set inside the `env` block of the configuration, not only in your shell: Claude Desktop does not pass your shell environment to the server.
+    The server refuses to start, and says why on stderr, when `ROOTKEY_TOKEN` is missing or is not a whole personal access token (`rk_pat_` followed by 64 hexadecimal characters). It also refuses when `ROOTKEY_API_KEY` is set, or when `ROOTKEY_TOKEN` holds an organization API key: version 0.3.0 accepts only a personal access token (see [Upgrading from an API key](#upgrading-from-an-api-key)). Check that the variable is set inside the `env` block of the configuration, not only in your shell: Claude Desktop does not pass your shell environment to the server.
   </Accordion>
 
   <Accordion title="Every call returns 401">
