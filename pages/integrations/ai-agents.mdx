@@ -27,7 +27,7 @@ The **Access mode** decides what an agent can do in your organization, whoever c
 |---|---|
 | **Off** | Nothing. No agent can use the organization's data. Every request from an agent is refused. |
 | **Read only** | Read what the member who connected the agent can read. Agents cannot create, change or delete anything. |
-| **Full access** | Read, and also create, change and delete, within the member's own permissions and the scopes of the member's token. |
+| **Full access** | Read, and also create, change and delete, within the member's own permissions and the scopes of the member's token. Deletes can need the member's approval: see [Approve every delete an agent asks for](#approve-every-delete-an-agent-asks-for). |
 
 **Read only** is the mode of every organization until an administrator saves another one. Nothing is switched on for you: an organization that has never opened this tab lets agents read and nothing more.
 
@@ -46,6 +46,19 @@ Even in **Full access**, an agent is bounded three times over. It can do only wh
 When you turn on **Require two-factor authentication**, only members who have turned on two-factor authentication on their own ROOTKey account can use agents in your organization. A member who has not loses their agents' access at once, and the refusal says why ([`agent_two_factor_required`](/api-reference/errors#agent_two_factor_required)). Their own access in the ROOTKey app does not change.
 
 Members can turn on two-factor authentication themselves under **Account Settings → Security**, with an authenticator app and backup codes. Ask your members to do this before you turn the requirement on, or they will lose their agents until they have.
+
+### Approve every delete an agent asks for
+
+**Delete approval** decides whether a person must approve an agent's delete of a file or a vault. It has two values:
+
+- **Not required** is the setting until you choose another. An agent's delete runs as soon as it asks, within the member's permissions and the token's scopes.
+- **I approve every delete an agent asks for** refuses the delete first ([`agent_approval_required`](/api-reference/errors#agent_approval_required)) and deletes nothing. The member whose agent asked approves it in the ROOTKey app under **Pending approvals**, with a fresh two-factor check, and the agent then repeats the same request, which runs once. A member who has not turned on two-factor authentication cannot approve.
+
+A request waits 24 hours. Restores never need an approval, and agents never delete records. See [Delete approvals](/pages/integrations/delete-approvals).
+
+### Let members open Restricted data to their own agents
+
+By default no agent reaches **Restricted** vaults and tables. This option, which is off until you turn it on, lets a member open one Restricted vault or table to their own agent for a few minutes: the agent asks, and the member approves with a fresh two-factor check. It covers reading and writing only. See [Restricted data and agents](/pages/integrations/restricted-step-up).
 
 ### Choose which apps may act
 
@@ -85,13 +98,14 @@ An administrator cannot revoke a single token that belongs to a member. Members 
 
 Whatever mode you choose, and whatever scopes a token carries, an agent that uses a personal access token never gets:
 
-- **Restricted vaults and tables.** They are listed to the agent with `agentAccessible: false`, so it can tell the member they exist, and every request that would read or change them is refused ([`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied)).
-- **Recovery points.** Listing, creating, fetching, downloading and deleting them is for a person in the ROOTKey app.
-- **File audit reports.**
-- **The Restore Center.** Listing and restoring deleted vaults, files and records is for a person in the ROOTKey app.
+- **Restricted vaults and tables, unless you allow approvals.** They are listed to the agent with `agentAccessible: false`, so it can tell the member they exist. With the option to open Restricted data to members' agents off, every request that would read or change them is refused ([`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied)). With it on, a read or a write needs the member's approval first, and **deleting or restoring Restricted data stays refused, even with an approval**.
+- **Deleting a record.** Agents never delete records. They can restore them.
+- **Fetching, downloading, creating or deleting a recovery point.** An agent can only list them, and only the ones whose every vault the member can read now. A recovery point that covers a Restricted vault, a deleted vault or a vault an IP rule hides is never listed, administrators included.
 - **Changing a vault's data classification.** How a vault's data is treated stays with a person.
 
-These are refused with [`agent_route_not_available`](/api-reference/errors#agent_route_not_available) or [`agent_classification_change_not_allowed`](/api-reference/errors#agent_classification_change_not_allowed). The agent is told to stop and send the member to the ROOTKey app.
+These are refused with [`agent_route_not_available`](/api-reference/errors#agent_route_not_available), [`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied) or [`agent_classification_change_not_allowed`](/api-reference/errors#agent_classification_change_not_allowed). The agent is told to stop and send the member to the ROOTKey app.
+
+Agents can list what is in the trash and restore it, and can queue a file audit report, within the member's permissions and the scopes of the token. See [Trash and restore for agents](/pages/integrations/agent-trash-and-restore).
 
 The rules you already set still apply. Your organization's IP and country access rules judge the requests of a personal access token like any other request, and an agent sees only what its member sees in the ROOTKey app: for vaults, those of the member's teams, unless the member is an owner or an administrator.
 
@@ -134,6 +148,9 @@ When an agent is refused by your policy, the error names the cause and what has 
 | **Require two-factor authentication** on | [`agent_two_factor_required`](/api-reference/errors#agent_two_factor_required) until the member turns it on |
 | A member blocked | [`agent_user_blocked`](/api-reference/errors#agent_user_blocked) on every request |
 | **Only these apps** on, and the app is not on the list | [`agent_client_not_allowed`](/api-reference/errors#agent_client_not_allowed) on every request from that app |
+| **Delete approval** on | [`agent_approval_required`](/api-reference/errors#agent_approval_required) on a delete of a file or a vault, until the member approves |
+| Restricted data opened to members' agents: off | [`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied) on every request to Restricted data |
+| Restricted data opened to members' agents: on | [`agent_step_up_required`](/api-reference/errors#agent_step_up_required) on a read or a write of Restricted data, until the member approves |
 
 <CardGroup cols={2}>
   <Card title="Claude (MCP)" icon="robot" href="/pages/integrations/claude-mcp">
@@ -141,6 +158,12 @@ When an agent is refused by your policy, the error names the cause and what has 
   </Card>
   <Card title="Hosted connector" icon="plug" href="/pages/integrations/hosted-connector">
     How any MCP client connects by signing in, and what the consent screen shows.
+  </Card>
+  <Card title="Delete approvals" icon="user-check" href="/pages/integrations/delete-approvals">
+    Approve every delete an agent asks for.
+  </Card>
+  <Card title="Restricted data and agents" icon="lock" href="/pages/integrations/restricted-step-up">
+    Open one Restricted vault or table to a member's agent for a few minutes.
   </Card>
   <Card title="Personal access tokens" icon="key" href="/api-reference/auth#personal-access-tokens">
     How tokens, scopes and organizations fit together.

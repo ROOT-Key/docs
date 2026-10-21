@@ -169,7 +169,7 @@ Every setting is an environment variable on the server process.
 | `ROOTKEY_API_KEY` | - | **Deprecated, removed in 0.3.0.** An organization API key, accepted in place of `ROOTKEY_TOKEN`, never together with it. See [Moving from an API key](#moving-from-an-api-key). |
 | `ROOTKEY_ENV` | `production` | Optional. `production` is the only accepted value, and the server refuses to start with `development`. ROOTKey has one public API. |
 | `ROOTKEY_API_URL` | - | Full base URL including the `/api-v1/` path. Use it for a self-hosted or on-premise deployment. Plain `http://` is accepted only for loopback hosts, since the credential travels in a header. |
-| `ROOTKEY_READ_ONLY` | `false` | When `true`, only the read tools are registered (14 with a token, 17 with an API key), and downloads may only write inside `ROOTKEY_DOWNLOAD_DIR`. |
+| `ROOTKEY_READ_ONLY` | `false` | When `true`, only the read tools are registered (20 with a token, 20 with an API key), and downloads may only write inside `ROOTKEY_DOWNLOAD_DIR`. |
 | `ROOTKEY_TIMEOUT_MS` | `30000` | Timeout for ordinary requests, in milliseconds. |
 | `ROOTKEY_TRANSFER_TIMEOUT_MS` | `300000` | Timeout for uploads and downloads, in milliseconds. |
 | `ROOTKEY_DOWNLOAD_DIR` | `~/Downloads` | Where downloads are saved when no path is given. |
@@ -190,13 +190,14 @@ Your token is yours, but the organization decides whether an agent may use its d
 | **Read only** (`READ_ONLY`) | Read what you can read. Creating, changing or deleting is refused. This is the setting until an administrator chooses another. |
 | **Full access** (`FULL`) | Read, create, change and delete, within your own permissions and your token's scopes. |
 
-An organization can also stop accepting personal access tokens, require two-factor authentication from members who use agents, and block a member's agents. Your role, your teams and the organization's IP and country rules still apply on top of all of this.
+An organization can also stop accepting personal access tokens, require two-factor authentication from members who use agents, and block a member's agents. It can ask you to approve every delete your agent asks for (see [Delete approvals](/pages/integrations/delete-approvals)), and it can let you open one Restricted vault or table to your agent for a few minutes (see [Restricted data and agents](/pages/integrations/restricted-step-up)). Your role, your teams and the organization's IP and country rules still apply on top of all of this.
 
 **Some things are never available to an agent, whatever the organization allows:**
 
-- Recovery points, and file audit reports. The server does not offer these tools when you use a token. Use the ROOTKey app.
-- The Restore Center: listing and restoring deleted vaults, files and records. Use the ROOTKey app.
-- **Restricted** vaults and tables. They appear in `rootkey_list_vaults` and `rootkey_list_tables` with `agentAccessible: false` so that Claude can tell you they exist, and nothing more.
+- Deleting a record. Agents can restore a record that a person deleted, and cannot delete one.
+- Fetching, downloading, creating or deleting a recovery point. Claude can only list them. Use the ROOTKey app for the rest.
+- Deleting or restoring **Restricted** vaults and tables, or anything in them. They appear in `rootkey_list_vaults` and `rootkey_list_tables` with `agentAccessible: false` so that Claude can tell you they exist. Unless the organization lets you open Restricted data to your agent, nothing more: with that option on, you can approve reading and writing one vault or table at a time.
+- Restoring a table. Deleted tables are restored in the ROOTKey app.
 - Changing the data classification of a vault.
 
 <Note>
@@ -207,10 +208,11 @@ An organization can also stop accepting personal access tokens, require two-fact
 
 ## Available tools
 
-30 tools in all: the operations of the [API Reference](/api-reference/overview) that suit an agent, the listings that find what to operate on, a wait helper and one diagnostic. What Claude is offered depends on the credential, because a tool that can only fail is not worth advertising:
+38 tools in all: the operations of the [API Reference](/api-reference/overview) that suit an agent, the listings that find what to operate on, a wait helper and one diagnostic. What Claude is offered depends on the credential, because a tool that can only fail is not worth advertising:
 
-- **A personal access token gets 23.** The six recovery point tools and `rootkey_generate_file_audit_report` are left out, because the API refuses them to agents. Every tool except `rootkey_list_organizations` takes the optional `organization` argument.
-- **An organization API key (deprecated) gets 29.** Everything except `rootkey_list_organizations`, and none of the tools take an `organization` argument: the key is bound to one organization.
+- **A personal access token gets 32.** `rootkey_delete_record` and five of the six recovery point tools are left out, because the API refuses them to agents: only `rootkey_list_recovery_points` is offered. Every tool except `rootkey_list_organizations` takes the optional `organization` argument.
+- **An organization API key (deprecated) gets 35.** Everything except `rootkey_list_organizations` and the two tools that ask for access to Restricted data, and none of the tools take an `organization` argument: the key is bound to one organization.
+- **The hosted connector gets 28.** The same as a token, without the four tools that read or write the local disk of the machine running the server: `rootkey_upload_file`, `rootkey_upload_file_version`, `rootkey_validate_file` and `rootkey_download_file`.
 
 Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-named tool from another MCP server in the same session. The **Scope** column is the scope your token needs for the call; a token that lacks it gets [`insufficient_scope`](/api-reference/errors#insufficient_scope).
 
@@ -228,6 +230,8 @@ Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-nam
 | `rootkey_create_vault` | `rootkey.write` | Create a vault and return its address |
 | `rootkey_update_vault` | `rootkey.write` | Rename a vault or change its description. The old values are overwritten |
 | `rootkey_delete_vault` | `rootkey.delete` | Move a vault and its files to the trash, recoverable until retention purges them |
+| `rootkey_list_deleted_vaults` | `rootkey.read` | List the deleted vaults you can see, newest deletion first |
+| `rootkey_restore_vault` | `rootkey.delete` | Bring a deleted vault back, with the files deleted with it |
 
 ### Files
 
@@ -243,6 +247,9 @@ Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-nam
 | `rootkey_validate_file` | `rootkey.read` | Check a local copy against the anchor and return ownership, integrity and validity |
 | `rootkey_get_file_history` | `rootkey.read` | Read the activity log for a file |
 | `rootkey_get_file_validations` | `rootkey.read` | List past validations, with current and previous hashes |
+| `rootkey_list_deleted_files` | `rootkey.read` | List the deleted files you can see, newest deletion first |
+| `rootkey_restore_file` | `rootkey.delete` | Bring a deleted file back, with its versions. Its vault must not be deleted |
+| `rootkey_generate_file_audit_report` | `rootkey.write` | Queue a NIS2 or DORA compliance report. It is delivered in the ROOTKey app |
 
 ### Records
 
@@ -254,7 +261,23 @@ Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-nam
 | `rootkey_list_record_versions` | `rootkey.read` | List every version of a record |
 | `rootkey_get_record_history` | `rootkey.read` | Read the activity log for a record |
 | `rootkey_get_record_validations` | `rootkey.read` | List past validations of a record |
-| `rootkey_delete_record` | `rootkey.delete` | Move a record to the trash, recoverable until retention purges it |
+| `rootkey_list_deleted_records` | `rootkey.read` | List the deleted records you can see, or those of one table |
+| `rootkey_restore_record` | `rootkey.delete` | Bring a deleted record back. Its table must not be deleted |
+
+### Recovery points
+
+| Tool | Scope | What it does |
+|---|---|---|
+| `rootkey_list_recovery_points` | `rootkey.read` | List the recovery points whose vaults you can all read. The other recovery point tools are for an organization API key |
+
+### Restricted data
+
+These two are offered to personal access tokens and to the hosted connector, and are useful only where the organization lets members open Restricted data to their agents. See [Restricted data and agents](/pages/integrations/restricted-step-up).
+
+| Tool | Scope | What it does |
+|---|---|---|
+| `rootkey_request_restricted_access` | `rootkey.read` | Ask for access to one Restricted vault or table. It returns the link to give to the user, who approves it in ROOTKey |
+| `rootkey_get_restricted_access_status` | `rootkey.read` | Check once, after the user says they approved, whether the request is approved. Never in a loop |
 
 ### Diagnostics
 
@@ -264,19 +287,20 @@ Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-nam
 
 ### Only with an organization API key
 
-These seven are offered only when the server runs with the deprecated `ROOTKEY_API_KEY`, because the API refuses them to agents:
+These six are offered only when the server runs with the deprecated `ROOTKEY_API_KEY`, because the API refuses them to agents:
 
 | Tool | What it does |
 |---|---|
-| `rootkey_list_recovery_points` | List all recovery points |
+| `rootkey_delete_record` | Move a record to the trash, recoverable until retention purges it |
 | `rootkey_create_recovery_point` | Start building an encrypted backup archive |
 | `rootkey_get_recovery_point` | Check build status and progress |
 | `rootkey_wait_for_recovery_point` | Wait for the archive to finish building, reporting progress while it waits |
 | `rootkey_download_recovery_point` | Download the encrypted archive |
 | `rootkey_delete_recovery_point` | Permanently delete a recovery point |
-| `rootkey_generate_file_audit_report` | Queue a NIS2 or DORA compliance report |
 
-Every tool declares whether it only reads, whether it is destructive and whether repeating it is safe, so your client can ask before it runs one that changes something. The four delete tools and `rootkey_update_vault`, which overwrites the previous name or description, are marked destructive.
+With an organization API key, `rootkey_list_recovery_points` lists every recovery point of the organization.
+
+Every tool declares whether it only reads, whether it is destructive and whether repeating it is safe, so your client can ask before it runs one that changes something. The delete tools and `rootkey_update_vault`, which overwrites the previous name or description, are marked destructive.
 
 ---
 
@@ -318,7 +342,9 @@ A few behaviours are worth knowing before your first session, because they follo
 ## Safety
 
 <Warning>
-  **Deletions need your confirmation.** `rootkey_delete_vault`, `rootkey_delete_file` and `rootkey_delete_record` move the item to the trash: it leaves every listing at once and stays recoverable from the Restore Center until the retention policy purges it. Every delete is recorded in the activity log, and a file that was anchored keeps its on-chain proof either way. All three are marked as destructive so Claude asks for confirmation, but the final responsibility for approving them is yours.
+  **Deletions need your confirmation.** `rootkey_delete_vault` and `rootkey_delete_file` move the item to the trash: it leaves every listing at once and stays recoverable until the retention policy purges it. Every delete is recorded in the activity log, and a file that was anchored keeps its on-chain proof either way. Both are marked as destructive so Claude asks for confirmation, but the final responsibility for approving them is yours. `rootkey_delete_record` exists only with an organization API key.
+
+  You can bring a deleted vault, file or record back in the ROOTKey app, and Claude can do it too with `rootkey_restore_vault`, `rootkey_restore_file` and `rootkey_restore_record`, if your token has the `rootkey.delete` scope. A restore never needs your approval. If your organization asks you to approve every delete, the delete is refused the first time, you approve it in the ROOTKey app under **Pending approvals**, and Claude then repeats the same call once: see [Delete approvals](/pages/integrations/delete-approvals).
 </Warning>
 
 ### Keep the token narrow
@@ -364,7 +390,7 @@ Staying on `ROOTKEY_API_KEY` until 0.3.0 changes nothing you rely on, but it giv
 - **No organization control.** The organization's agent mode, its block list and its two-factor requirement apply to personal access tokens, not to API keys.
 - **A shorter future.** The key stops working with this server in 0.3.0.
 
-What you keep until then is the seven tools in [Only with an organization API key](#only-with-an-organization-api-key). With a token, use the ROOTKey app for recovery points and audit reports.
+What you keep until then is the six tools in [Only with an organization API key](#only-with-an-organization-api-key). With a token, Claude can still list recovery points and queue audit reports. Use the ROOTKey app to fetch, download, create or delete a recovery point, or to delete a record.
 
 ---
 
@@ -400,9 +426,11 @@ What you keep until then is the seven tools in [Only with an organization API ke
     | [`agent_org_not_allowed`](/api-reference/errors#agent_org_not_allowed) | The token was not created for this organization. | Use an organization the token covers, or create a new token that includes this one. |
     | [`insufficient_scope`](/api-reference/errors#insufficient_scope) | The token lacks the scope the tool needs. | Create a new token with the scope. Scopes cannot be changed afterwards. |
     | [`insufficient_permission`](/api-reference/errors#insufficient_permission) | Your role does not grant what the call does. | An administrator changes your role. |
-    | [`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied) | The vault or table is classified Restricted. | Nothing: agents never reach Restricted data. Use the ROOTKey app. |
+    | [`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied) | The vault or table is classified Restricted and the organization does not let agents reach it, or the call deletes or restores it. | Use the ROOTKey app. Deleting and restoring Restricted data is never available to an agent. |
+    | [`agent_step_up_required`](/api-reference/errors#agent_step_up_required) | The vault or table is classified Restricted, and the organization lets you open it to your agent. | You approve it in ROOTKey, using the link from `rootkey_request_restricted_access`. See [Restricted data and agents](/pages/integrations/restricted-step-up). |
+    | [`agent_approval_required`](/api-reference/errors#agent_approval_required) | The organization asks you to approve every delete your agent asks for. Nothing was deleted. | You approve it in the ROOTKey app under **Pending approvals**, then Claude repeats the call once. See [Delete approvals](/pages/integrations/delete-approvals). |
     | [`agent_classification_change_not_allowed`](/api-reference/errors#agent_classification_change_not_allowed) | An agent cannot change a vault's data classification. | You change it in the ROOTKey app. |
-    | [`agent_route_not_available`](/api-reference/errors#agent_route_not_available) | The operation is never available to agents, such as recovery points or the Restore Center. | Use the ROOTKey app. |
+    | [`agent_route_not_available`](/api-reference/errors#agent_route_not_available) | The operation is never available to agents, such as deleting a record or downloading a recovery point. | Use the ROOTKey app. |
     | [`access_policy_denied`](/api-reference/errors#access_policy_denied) | The organization id is wrong, you are not a member, or the organization's IP or country rules block this machine. The answer never says which. | Check the id with `rootkey_list_organizations`, or ask an administrator to review the access rules. |
 
     Not sure which one applies? Ask Claude to run `rootkey_get_environment_info`: it shows the organization's agent mode and the scopes your token has there.
@@ -413,11 +441,15 @@ What you keep until then is the seven tools in [Only with an organization API ke
   </Accordion>
 
   <Accordion title="A vault or table is listed but cannot be opened">
-    It is classified Restricted. Restricted vaults and tables are listed with `agentAccessible: false` so that Claude can tell you they exist, and no agent can read or change them, in any mode. Open them in the ROOTKey app.
+    It is classified Restricted. Restricted vaults and tables are listed with `agentAccessible: false` so that Claude can tell you they exist. Unless your organization lets you open Restricted data to your agent, no agent can read or change them, in any mode: open them in the ROOTKey app. If it does, Claude can ask you to approve one vault or table for a few minutes: see [Restricted data and agents](/pages/integrations/restricted-step-up). Deleting and restoring Restricted data stays in the ROOTKey app.
   </Accordion>
 
-  <Accordion title="The recovery point tools are missing">
-    That is expected with a personal access token. The API refuses recovery points, audit reports and the Restore Center to agents, so the server does not offer the tools. Use the ROOTKey app for them.
+  <Accordion title="Most of the recovery point tools are missing">
+    That is expected with a personal access token. An agent can only list recovery points, so the server offers `rootkey_list_recovery_points` and not the tools that fetch, download, create or delete one. `rootkey_delete_record` is missing for the same reason: the API refuses it to agents. Use the ROOTKey app for them.
+  </Accordion>
+
+  <Accordion title="Claude says a delete is waiting for my approval">
+    Your organization asks you to approve every delete an agent asks for. Nothing was deleted. Open the ROOTKey app, go to **Pending approvals** and approve it with a fresh two-factor check, then tell Claude to repeat the call. Claude should do it once and not in a loop. See [Delete approvals](/pages/integrations/delete-approvals).
   </Accordion>
 
   <Accordion title="The server exits with a message about ROOTKEY_ENV">

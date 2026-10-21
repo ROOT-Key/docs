@@ -1,0 +1,97 @@
+---
+title: Trash and restore for agents
+sidebarTitle: Trash and restore
+description: What an AI agent can list and restore from the trash, what stays with a person in the ROOTKey app, and what an agent can and cannot do with recovery points and audit reports.
+icon: trash-can-arrow-up
+---
+
+An agent that uses a [personal access token](/api-reference/auth#personal-access-tokens), or an app connected through the [hosted connector](/pages/integrations/hosted-connector), can look in the trash and bring back what was deleted. It acts as the member who connected it, so it sees and restores only what that member could.
+
+This page is for members and developers. Administrators decide whether agents may write at all: see [AI agents in your organization](/pages/integrations/ai-agents).
+
+---
+
+## List what was deleted
+
+Three listings show the trash. Each returns a page of results, newest deletion first, with `data`, `pagination` and `metadata`. They need the `rootkey.read` scope, and they work in a read-only organization.
+
+| What | Endpoint |
+|---|---|
+| Deleted files | [`GET /files/deleted`](/api-reference/platform/endpoint/files/list-deleted-files) |
+| Deleted records | [`GET /records/deleted`](/api-reference/platform/endpoint/records/list-deleted-records). Add `ownerAddress` to list the trash of one table. |
+| Deleted vaults | [`GET /vaults/deleted`](/api-reference/platform/endpoint/vaults/list-deleted-vaults) |
+
+`limit` is a whole number from 1 to 100, otherwise the request gets [`invalid_filters`](/api-reference/errors#invalid_filters). A cursor that is not valid gets [`invalid_cursor`](/api-reference/errors#invalid_cursor).
+
+An agent sees only the deleted files and vaults of the vaults its member can see: those of the member's teams, or all of them for an owner or an administrator. It never sees anything of a **Restricted** vault or table.
+
+<Note>
+  Vaults hold files, and tables hold records. A deleted table is not in these listings, and neither are the records that were deleted with it. They come back with the table, and a table is restored only in the ROOTKey app.
+</Note>
+
+---
+
+## Restore
+
+| What | Endpoint | Result |
+|---|---|---|
+| A file | [`PATCH /files/{fileId}/restore?ownerAddress=<vault>`](/api-reference/platform/endpoint/files/restore-file) | `skippedPurgedIds` |
+| A record | [`PATCH /records/{recordId}/restore?ownerAddress=<table>`](/api-reference/platform/endpoint/records/restore-record) | `200` with an empty body |
+| A vault | [`PATCH /vaults/{vaultAddress}/restore`](/api-reference/platform/endpoint/vaults/restore-vault) | `skippedPurgedIds` |
+
+- **Restoring a vault** brings back the files deleted with it. A file that was deleted on its own before the vault stays in the trash.
+- **Files the retention policy already removed for good** cannot come back. They are named in `skippedPurgedIds`.
+- **A file whose vault is deleted** is refused with [`vault_also_deleted`](/api-reference/errors#vault_also_deleted): restore the vault first.
+- **A record whose table is deleted** is refused with [`table_also_deleted`](/api-reference/errors#table_also_deleted): restore the table in the ROOTKey app first.
+- **Something that is not in the trash** gets [`file_not_deleted`](/api-reference/errors#file_not_deleted) or [`record_not_deleted`](/api-reference/errors#record_not_deleted). A record asked for in the wrong table gets [`invalid_ownership`](/api-reference/errors#invalid_ownership).
+
+### What a restore needs
+
+- The `rootkey.delete` scope. A restore undoes a delete, and a write scope is not enough.
+- A role that may restore that kind of item, and, for a vault, a team that owns it (owners and administrators need none).
+- An organization that lets agents write (**Full access**).
+
+A restore never needs a person's approval, even when the organization asks for one on deletes. See [Delete approvals](/pages/integrations/delete-approvals).
+
+<Warning>
+  An agent never restores a Restricted vault or table, or a file or record in one, even with an approval to open Restricted data. It is refused with [`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied). A person restores it in the ROOTKey app.
+</Warning>
+
+Agents never delete records ([`agent_route_not_available`](/api-reference/errors#agent_route_not_available), whatever the organization allows), so the records an agent finds in the trash were deleted by a person or by an API key. Agents can restore them.
+
+---
+
+## In the ROOTKey MCP server
+
+The [ROOTKey MCP server](/pages/integrations/claude-mcp) has a tool for each call above, for every credential:
+
+| Tool | Scope |
+|---|---|
+| `rootkey_list_deleted_files`, `rootkey_list_deleted_records`, `rootkey_list_deleted_vaults` | `rootkey.read` |
+| `rootkey_restore_file`, `rootkey_restore_record`, `rootkey_restore_vault` | `rootkey.delete` |
+
+---
+
+## Recovery points
+
+An agent can only **list** recovery points: [`GET /platform/recovery-point`](/api-reference/platform/endpoint/recovery/list-recovery-points), in pages. Fetching, downloading, creating and deleting one are refused with [`agent_route_not_available`](/api-reference/errors#agent_route_not_available).
+
+- The listing needs the `rootkey.read` scope, a role that may read recovery points, and a plan with data restore.
+- It shows only the recovery points whose every vault the member can read now. A recovery point that covers a Restricted vault, a deleted vault or a vault an IP rule hides is never listed, administrators included.
+
+---
+
+## Audit reports
+
+An agent can queue a file audit report: [`POST /platform/files/{fileId}/audit-report`](/api-reference/platform/endpoint/files/generate-audit-report). It needs the `rootkey.write` scope, a role that may create audit reports and an organization with **Full access**.
+
+The report is delivered in the ROOTKey app. There is no endpoint to fetch it, so the agent tells the member where to look. For a file in a Restricted vault, the agent first needs an approval to open that vault: see [Restricted data](/pages/integrations/restricted-step-up).
+
+<CardGroup cols={2}>
+  <Card title="Delete approvals" icon="user-check" href="/pages/integrations/delete-approvals">
+    Ask for your approval before an agent deletes a file or a vault.
+  </Card>
+  <Card title="Restricted data" icon="lock" href="/pages/integrations/restricted-step-up">
+    Let a member open one Restricted vault or table to their own agent, for a few minutes.
+  </Card>
+</CardGroup>

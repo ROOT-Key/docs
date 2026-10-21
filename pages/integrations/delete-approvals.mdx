@@ -1,0 +1,65 @@
+---
+title: Delete approvals
+sidebarTitle: Delete approvals
+description: Ask for your own approval, with a fresh two-factor check, before an AI agent deletes a file or a vault in your organization. How administrators turn it on, what the agent sees and how members approve.
+icon: user-check
+---
+
+By default an agent with the right scope and a **Full access** organization can delete a file or a vault, and the item goes to the trash. **Delete approval** adds a person to that step: the agent asks, and the member whose agent it is decides.
+
+It applies to the agents of personal access tokens and of apps connected through the [hosted connector](/pages/integrations/hosted-connector). It does not govern organization API keys.
+
+---
+
+## For administrators
+
+Open **Organization Settings**, go to the **AI agents** tab and find **Delete approval**:
+
+| Setting | What happens |
+|---|---|
+| **Not required** | An agent's delete runs as soon as it asks, within the member's permissions and the token's scopes. This is the default. |
+| **I approve every delete an agent asks for** | An agent's delete of a file or a vault does not run until the member whose agent asked has approved it. |
+
+The API reports the setting as `deleteApproval` on [`GET /organization`](/api-reference/platform/endpoint/identity/get-organization): `NONE` or `SELF`.
+
+The approval is the member's own, not an administrator's. It covers deleting a file or a vault. Restoring never needs it ([Trash and restore for agents](/pages/integrations/agent-trash-and-restore)), and agents never delete records.
+
+---
+
+## For members: what happens
+
+<Steps>
+  <Step title="The agent asks to delete">
+    The delete is refused with [`agent_approval_required`](/api-reference/errors#agent_approval_required) (403). Nothing is deleted. The error carries an `actionId`, the status `PENDING` and `expiresAt`: the request stays open for 24 hours.
+  </Step>
+  <Step title="You get the request">
+    In the ROOTKey app you get the notification **An agent is waiting for your approval**. The request is under **Pending approvals**, on its own page at `/agent-approvals/{actionId}`. The ROOTKey MCP server puts the link in the error, so your agent can hand it to you.
+  </Step>
+  <Step title="You approve or deny">
+    You approve with a fresh two-factor check. A member who has not turned on two-factor authentication cannot approve.
+  </Step>
+  <Step title="The agent repeats the same request">
+    It runs once. The approval can be used for about 10 minutes after you give it.
+  </Step>
+</Steps>
+
+If the agent repeats the request while it waits, it gets the same `actionId` back and nothing new is created. It should wait for you, then repeat the call once, never in a loop.
+
+If you deny it, the agent gets [`agent_approval_denied`](/api-reference/errors#agent_approval_denied) with the same `actionId` and the status `DENIED`. If too many requests of yours are waiting, a new one gets [`agent_approval_limit_reached`](/api-reference/errors#agent_approval_limit_reached).
+
+---
+
+## What an approval does not change
+
+- A delete in a **Restricted** vault is refused whatever you approve ([`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied)).
+- Everything else about the call still applies: the scope, the organization's mode, your role and your teams.
+- The delete goes to the trash, as always. You can bring it back: see [Trash and restore for agents](/pages/integrations/agent-trash-and-restore).
+
+<CardGroup cols={2}>
+  <Card title="AI agents in your organization" icon="shield-check" href="/pages/integrations/ai-agents">
+    The other settings an administrator chooses for agents.
+  </Card>
+  <Card title="Errors" icon="triangle-exclamation" href="/api-reference/errors#personal-access-tokens-and-agents">
+    Every code an agent can be refused with, and what to change.
+  </Card>
+</CardGroup>

@@ -153,7 +153,7 @@ Add a little random delay to every wait, so that clients refused together do not
 ### `no_promotable_version`
 - **Status:** 409
 - **Problem:** You asked for a new version of a file that is deleted and has no live version left to attach it to, in a plain request or in a [direct upload](/api-reference/platform/endpoint/files/direct-uploads). If a deleted file still has a live version, ROOTKey attaches the new version to the oldest live one; this error means every version is deleted. The `message` is `File '<id>' is deleted and has no live version to attach a new version to. Restore it first, then retry.`
-- **Solution:** Restore the file, from the **Deleted Items** page (the Restore Center) of the ROOTKey app or with `PATCH /platform/files/{fileId}/restore`, then create the version again. If you no longer need the deleted file, upload the content as a new file instead.
+- **Solution:** Restore the file, from the **Deleted Items** page (the Restore Center) of the ROOTKey app or with [`PATCH /files/{fileId}/restore`](/api-reference/platform/endpoint/files/restore-file), then create the version again. If you no longer need the deleted file, upload the content as a new file instead.
 
 <span id="waiting-for-registration" className="error-alias" />
 
@@ -209,14 +209,14 @@ Add a little random delay to every wait, so that clients refused together do not
 ### `vault_also_deleted`
 - **Status:** 400
 - **Problem:** You asked to restore a file whose vault is deleted too. Restoring the file alone would leave it unreachable, so ROOTKey refuses. The `message` is `File <id>'s owning vault is currently deleted.` followed by the instruction to restore the vault first.
-- **Solution:** Restore the vault first, from the **Deleted Items** page of the ROOTKey app or with `PATCH /platform/vaults/{vaultAddress}/restore`, then restore the file again.
+- **Solution:** Restore the vault first, from the **Deleted Items** page of the ROOTKey app or with [`PATCH /vaults/{vaultAddress}/restore`](/api-reference/platform/endpoint/vaults/restore-vault), then restore the file again.
 
 <span id="table-also-deleted" className="error-alias" />
 
 ### `table_also_deleted`
 - **Status:** 400
 - **Problem:** You asked to restore a record whose table is deleted too. Restoring the record alone would leave it unreachable, so ROOTKey refuses. The `message` is `Record <id>'s owning table is currently deleted.` followed by the instruction to restore the table first.
-- **Solution:** Restore the table from the **Deleted Items** page of the ROOTKey app (the API has no endpoint to restore a table), then restore the record again.
+- **Solution:** Restore the table from the **Deleted Items** page of the ROOTKey app (an agent cannot restore a table, and the API has no endpoint for it), then restore the record again.
 
 <span id="retention-deadline-expired" className="error-alias" />
 
@@ -390,6 +390,27 @@ These come from a request made with a [personal access token](/api-reference/aut
 - **Problem:** The organization allows only certain apps to act in it, and the app that made the request, one a member connected through the [hosted connector](/pages/integrations/hosted-connector), is not on its list. The `message` is `This app is not allowed to act in this organization.` Personal access tokens are not affected by the list of allowed apps.
 - **Solution:** Ask an administrator of the organization to add the app under **Organization Settings → AI agents → Allowed apps**, or to allow any app. The app's connection is not removed, and it works in the organization again once it is allowed. Do not retry the request, and do not try the same request in another organization on your own.
 
+<span id="agent-approval-required" className="error-alias" />
+
+### `agent_approval_required`
+- **Status:** 403
+- **Problem:** The organization asks the member to approve every delete an agent makes (**Delete approval**), and the request deletes a file or a vault. Nothing was deleted. The error carries the `actionId` of the request, the status `PENDING` and `expiresAt`: the request stays open for 24 hours.
+- **Solution:** Tell the member. They approve it in the ROOTKey app under **Pending approvals**, with a fresh two-factor check. Then send the same request again: it runs once, and the approval can be used for about 10 minutes. Sending it again while it waits answers the same request. Wait for the member, and do not retry in a loop. See [Delete approvals](/pages/integrations/delete-approvals).
+
+<span id="agent-approval-denied" className="error-alias" />
+
+### `agent_approval_denied`
+- **Status:** 403
+- **Problem:** The member denied the request to delete. Nothing was deleted. The error carries the same `actionId` and the status `DENIED`.
+- **Solution:** Do not send the delete again. Tell the member that it was denied and ask what they want to do.
+
+<span id="agent-approval-limit-reached" className="error-alias" />
+
+### `agent_approval_limit_reached`
+- **Status:** 403
+- **Problem:** Too many delete requests of this member are waiting for approval, so a new one cannot be opened.
+- **Solution:** Ask the member to approve or deny the requests that are waiting under **Pending approvals** in the ROOTKey app, then try again.
+
 <span id="insufficient-scope" className="error-alias" />
 
 ### `insufficient_scope`
@@ -408,8 +429,43 @@ These come from a request made with a [personal access token](/api-reference/aut
 
 ### `agent_restricted_data_denied`
 - **Status:** 403
-- **Problem:** The vault or table is classified Restricted, and Restricted data is never available to agents, in any mode. The listings still show it, with `agentAccessible: false`, so that an agent can tell the user it exists.
-- **Solution:** Open it in the ROOTKey app.
+- **Problem:** The vault or table is classified Restricted, and the organization does not let an agent reach it. With the option that lets members open Restricted data to their own agents turned off, which is the default, no agent reaches Restricted data, in any mode. With it turned on, a read or a write needs the member's approval ([`agent_step_up_required`](#agent_step_up_required)), but deleting and restoring Restricted data, or anything in it, is always refused, even with an approval. The listings still show Restricted vaults and tables, with `agentAccessible: false`, so that an agent can tell the user they exist.
+- **Solution:** Open it in the ROOTKey app. If the organization allows approvals, ask the member to approve access to the vault or table, as described under [`agent_step_up_required`](#agent_step_up_required).
+
+<span id="agent-step-up-required" className="error-alias" />
+
+### `agent_step_up_required`
+- **Status:** 403
+- **Problem:** The vault or table is classified Restricted, and the organization lets members open Restricted data to their own agents. The request reads or writes it without an approval.
+- **Solution:** Call [`POST /agent-step-ups`](/api-reference/platform/endpoint/agents/request-restricted-access) with the vault or table address, give the `url` it returns to the member, and wait for them to approve it with a fresh two-factor check. Then check the request once with [`GET /agent-step-ups/{stepUpId}`](/api-reference/platform/endpoint/agents/get-restricted-access) and send the request again. See [Restricted data and agents](/pages/integrations/restricted-step-up).
+
+<span id="agent-step-up-not-required" className="error-alias" />
+
+### `agent_step_up_not_required`
+- **Status:** 400
+- **Problem:** You asked for an approval for a vault or table that is not Restricted, so it needs none.
+- **Solution:** Send the request you meant to make, without asking for an approval.
+
+<span id="agent-step-up-limit-reached" className="error-alias" />
+
+### `agent_step_up_limit_reached`
+- **Status:** 403
+- **Problem:** Too many approval requests of this connection are waiting for the member.
+- **Solution:** Wait for the member to answer the requests that are open, or for them to expire, then ask again.
+
+<span id="invalid-agent-step-up-request" className="error-alias" />
+
+### `invalid_agent_step_up_request`
+- **Status:** 400
+- **Problem:** The body of the approval request has no usable `vaultAddress`.
+- **Solution:** Send the address of the vault or table in `vaultAddress`, in the body.
+
+<span id="conflicting-request-identifiers" className="error-alias" />
+
+### `conflicting_request_identifiers`
+- **Status:** 400
+- **Problem:** The same identifier, such as a vault address or an id, was given different values in the query and in the body of the request. The error lists the `fields` in conflict.
+- **Solution:** Give each identifier once, in the place the endpoint documents.
 
 <span id="agent-classification-change-not-allowed" className="error-alias" />
 
@@ -422,7 +478,7 @@ These come from a request made with a [personal access token](/api-reference/aut
 
 ### `agent_route_not_available`
 - **Status:** 403
-- **Problem:** The endpoint is never available to a personal access token, whatever the organization allows. Recovery points, file audit reports, the list of open direct uploads and the Restore Center (listing and restoring deleted vaults, files and records) are in this group. The `message` is `This endpoint is not available to agents.`
+- **Problem:** The endpoint is never available to a personal access token, whatever the organization allows. Deleting a record, and fetching, downloading, creating or deleting a recovery point, are in this group. An agent can list recovery points, list and restore what is in the trash, queue a file audit report and list its open direct uploads. The `message` is `This endpoint is not available to agents.`
 - **Solution:** Use the ROOTKey app, or an organization API key, for these.
 
 ## Direct file uploads

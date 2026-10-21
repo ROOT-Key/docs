@@ -82,7 +82,7 @@ When an app asks to connect, ROOTKey shows you a screen in two steps. Nothing is
 |---|---|
 | **Read** | See the vaults, files and records you can see. |
 | **Write** | Create and update vaults, files and records. |
-| **Delete** | Delete vaults, files and records. |
+| **Delete** | Delete vaults and files, and restore what is in the trash. No agent deletes records. |
 | **Stay connected** | Keep working without asking you to sign in again, until you disconnect the app or the connection expires. |
 | **Organizations** | The organizations the app may reach, or **All my organizations**, which also covers organizations you join later. |
 
@@ -143,7 +143,7 @@ When the list is on:
   Your organization governs the credentials it delegates to agents, not the AI itself. ROOTKey does not detect or control every AI: an app on the list can still be used by whoever is signed in to it, and an agent that uses a person's own browser session, or a script that holds an organization API key, cannot be told apart from that person.
 </Note>
 
-The [admin guide](/pages/integrations/ai-agents) describes the other settings: the access mode, personal access tokens, two-factor authentication and blocking a member.
+The [admin guide](/pages/integrations/ai-agents) describes the other settings: the access mode, personal access tokens, two-factor authentication, blocking a member, delete approvals and opening Restricted data to members' agents.
 
 ---
 
@@ -153,8 +153,9 @@ A connected app uses the same ROOTKey tools as the local server: it lists organi
 
 - It acts in one organization per request, and asks you which one when it is unclear. A change it makes always reports the organization it acted in.
 - Each organization's [agent access mode](/pages/integrations/ai-agents#choose-what-agents-may-do), block list and two-factor requirement apply, together with your role, your teams and the organization's IP and country rules. A refusal names the cause and what has to change, and the app is told to stop and not to retry or try another organization on its own.
-- **Restricted** vaults and tables are listed so the app can tell you they exist, and are never readable or changeable by it.
-- Recovery points, file audit reports and the Restore Center are not offered to a connected app. Use the ROOTKey app for them.
+- **Restricted** vaults and tables are listed so the app can tell you they exist. By default the app cannot read or change them. If your organization lets members open Restricted data to their own agents, the app can ask you to approve one vault or table for a few minutes, and you approve it with a fresh two-factor check. Deleting and restoring Restricted data stays in the ROOTKey app. See [Restricted data and agents](/pages/integrations/restricted-step-up).
+- The app can list what is in the trash with **Read**, and restore it with **Delete**. An organization can also ask you to approve each delete the app asks for. See [Trash and restore for agents](/pages/integrations/agent-trash-and-restore) and [Delete approvals](/pages/integrations/delete-approvals).
+- The app can list recovery points and queue a file audit report, within your role. It cannot fetch, download, create or delete a recovery point, and it cannot delete a record. Use the ROOTKey app for those.
 - Changes are recorded in your organization's activity like any other.
 
 ---

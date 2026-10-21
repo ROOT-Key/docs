@@ -1,0 +1,79 @@
+---
+title: Restricted data and agents
+sidebarTitle: Restricted data
+description: Let a member open one Restricted vault or table to their own AI agent for a few minutes, with a fresh two-factor approval. How administrators opt in, how members approve and what is never unlocked.
+icon: lock
+---
+
+**Restricted** vaults and tables are the most protected data in ROOTKey. By default no agent reaches them. An organization can choose to let its members open one of them, for a few minutes, to their own agent.
+
+---
+
+## For administrators
+
+The option is off until you turn it on. It is in **Organization Settings**, on the **AI agents** tab: the option that lets members open Restricted data to their own agents. The API reports it as `allowRestrictedStepUp` on [`GET /organization`](/api-reference/platform/endpoint/identity/get-organization).
+
+| Option | What an agent gets on a Restricted vault or table |
+|---|---|
+| **Off** (default) | [`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied), always. Agents never reach Restricted data. |
+| **On** | [`agent_step_up_required`](/api-reference/errors#agent_step_up_required) on a read or a write, until the member approves. |
+
+---
+
+## For members: how an approval works
+
+<Steps>
+  <Step title="The agent is refused">
+    It reads or writes a Restricted vault or table and gets [`agent_step_up_required`](/api-reference/errors#agent_step_up_required).
+  </Step>
+  <Step title="The agent asks you">
+    It calls [`POST /agent-step-ups`](/api-reference/platform/endpoint/agents/request-restricted-access) with the vault or table address, and gets an `id`, a `url` and `expiresAt`. It gives you the url. The request stays open for 10 minutes. If the agent asks again while it waits, it gets the same request.
+  </Step>
+  <Step title="You approve or deny">
+    You open the url in ROOTKey and approve with a fresh two-factor check, or you deny.
+  </Step>
+  <Step title="The agent checks once">
+    It reads the answer with [`GET /agent-step-ups/{stepUpId}`](/api-reference/platform/endpoint/agents/get-restricted-access): `PENDING`, `APPROVED`, `DENIED` or `EXPIRED`. It checks once after you say you approved, never in a loop, and then repeats its call.
+  </Step>
+</Steps>
+
+In the [ROOTKey MCP server](/pages/integrations/claude-mcp), the two tools are `rootkey_request_restricted_access`, which returns the link to give you, and `rootkey_get_restricted_access_status`. Both need only the `rootkey.read` scope.
+
+---
+
+## What an approval unlocks
+
+| | |
+|---|---|
+| **What** | One vault or one table. A table needs its own approval. |
+| **Who** | The one connection that asked. |
+| **How long** | About 5 minutes. |
+| **Allowed** | Reading, and writing. |
+| **Never allowed** | Deleting, and restoring. They are refused with [`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied) even with an approval. |
+
+Everything else still applies: the scopes of the token, the organization's mode, your role and your teams. Listings keep showing Restricted rows with `agentAccessible: false`, approved or not.
+
+If you deny a request whose approval is still running, the approval is withdrawn at once. A file audit report on a file in a Restricted vault also works once you have approved that vault.
+
+---
+
+## Errors
+
+| Code | When |
+|---|---|
+| [`agent_step_up_not_required`](/api-reference/errors#agent_step_up_not_required) | The vault or table is not Restricted. |
+| [`invalid_agent_step_up_request`](/api-reference/errors#invalid_agent_step_up_request) | The request has no usable address. |
+| [`conflicting_request_identifiers`](/api-reference/errors#conflicting_request_identifiers) | The same address is named differently in the query and in the body. |
+| [`agent_step_up_limit_reached`](/api-reference/errors#agent_step_up_limit_reached) | Too many requests of the connection are waiting. |
+| [`resource_not_found`](/api-reference/errors#resource_not_found) | There is no such vault, table or request for this connection. |
+
+With the option off, the request itself is refused with `agent_restricted_data_denied`.
+
+<CardGroup cols={2}>
+  <Card title="Delete approvals" icon="user-check" href="/pages/integrations/delete-approvals">
+    Approve every delete an agent asks for.
+  </Card>
+  <Card title="AI agents in your organization" icon="shield-check" href="/pages/integrations/ai-agents">
+    The settings an administrator chooses for agents.
+  </Card>
+</CardGroup>

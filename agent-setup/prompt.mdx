@@ -17,7 +17,7 @@ Complete the following steps yourself by running the commands directly. Do not a
 
 ## What this gives the user
 
-The [ROOTKey MCP server](https://github.com/ROOT-Key/rootkey-mcp) is the official [Model Context Protocol](https://modelcontextprotocol.io) server for the ROOTKey platform. It runs locally, talks directly to `api.rootkey.ai`, and offers 23 tools: create vaults, anchor and validate files, write and version records, and read audit trails. It acts as the user, through a personal access token, in the organizations the user chose, and an organization decides whether and how far agents may use its data.
+The [ROOTKey MCP server](https://github.com/ROOT-Key/rootkey-mcp) is the official [Model Context Protocol](https://modelcontextprotocol.io) server for the ROOTKey platform. It runs locally, talks directly to `api.rootkey.ai`, and offers 32 tools: create vaults, anchor and validate files, write and version records, read audit trails, and list and restore what was deleted. It acts as the user, through a personal access token, in the organizations the user chose, and an organization decides whether and how far agents may use its data.
 
 Requirement: **Node.js 20 or newer** on the machine running the agent.
 
@@ -221,7 +221,7 @@ Every setting is an environment variable on the server process, alongside the to
 | `ROOTKEY_ORGANIZATION` | unset | The user has told you which organization to work in |
 | `ROOTKEY_TEST_MODE` | unset (live) | The session should work on test data. Set it to `true` |
 | `ROOTKEY_ENV` | `production` | Almost never: `production` is the only accepted value, so leave it unset. For a self-hosted or on-premise deployment, set `ROOTKEY_API_URL` instead |
-| `ROOTKEY_READ_ONLY` | `false` | The session should only read. Registers the 14 read tools and hides the rest |
+| `ROOTKEY_READ_ONLY` | `false` | The session should only read. Registers the 20 read tools and hides the rest |
 | `ROOTKEY_DOWNLOAD_DIR` | `~/Downloads` | Downloads should land somewhere specific |
 | `ROOTKEY_ALLOWED_DIRS` | home, temp, cwd | A file to be uploaded lives outside those directories. Uploads are confined to them and refuse hidden directories inside them |
 | `ROOTKEY_LOG_LEVEL` | `info` | Diagnosing a problem. Logs go to stderr, where the client shows them |
@@ -234,7 +234,7 @@ Do not set `ROOTKEY_API_KEY` in a new setup. It is the organization API key of e
 
 ## Step 4: verify
 
-Restart the agent so it loads the new server, then call the `rootkey_get_environment_info` tool. It never reveals the token. It reports the server version and the API address, and it asks the API who the token acts as, what the token may do, and, if an organization is selected, that organization's agent mode and the scopes the token has there. Expect 23 tools, or 14 with `ROOTKEY_READ_ONLY=true`.
+Restart the agent so it loads the new server, then call the `rootkey_get_environment_info` tool. It never reveals the token. It reports the server version and the API address, and it asks the API who the token acts as, what the token may do, and, if an organization is selected, that organization's agent mode and the scopes the token has there. Expect 32 tools, or only the read tools with `ROOTKEY_READ_ONLY=true`.
 
 Every tool name is prefixed `rootkey_`, so it cannot be confused with a same-named tool from another server in the same session.
 
@@ -248,6 +248,8 @@ If no ROOTKey tools appear:
 
 If a call is refused with a message that names a policy (for example agent access off or read only, a blocked member, a missing scope or a Restricted vault), the organization, the user's role or the token does not allow it. Relay the reason to the user and stop. Do not retry, and do not try the same thing in another organization. The codes are explained on the [Errors](/api-reference/errors#personal-access-tokens-and-agents) page.
 
+Two refusals are different, because they ask for a person to decide: `agent_approval_required` (the organization asks the user to approve a delete) and `agent_step_up_required` (the organization lets the user open a Restricted vault or table to the agent). Give the user the link in the error, or the one `rootkey_request_restricted_access` returns, and wait for the user to say they approved. Then repeat the call once, or check `rootkey_get_restricted_access_status` once. Never repeat either in a loop.
+
 ---
 
 ## Before the user starts using it
@@ -255,8 +257,9 @@ If a call is refused with a message that names a policy (for example agent acces
 A few behaviours follow from how the ROOTKey API works, and are worth stating up front:
 
 - **Organizations decide what agents may do.** Reading is the default; writing and deleting need the organization to allow full access, and the token needs the matching scope. Your organization governs the credentials it delegates to agents, not the AI itself: an agent using a person's own browser session, or a script holding an organization API key, cannot be told apart from that person.
-- **Some things are never available to an agent.** Recovery points, audit reports, the Restore Center, Restricted vaults and tables, and changing a vault's data classification are for a person in the ROOTKey app. The server does not offer the recovery point and audit report tools with a token.
-- **Deleting a vault, file or record moves it to the trash.** It leaves every listing at once and stays recoverable from the Restore Center in the dashboard until the retention policy purges it. All three delete tools are marked destructive so the client asks first.
+- **Some things are never available to an agent.** Deleting a record, fetching, downloading, creating or deleting a recovery point (an agent can only list them), deleting or restoring Restricted vaults and tables, restoring a table, and changing a vault's data classification are for a person in the ROOTKey app. The server does not offer the tools for them with a token. Unless the organization lets the user open Restricted data to their agent, an agent cannot read or change Restricted vaults and tables at all.
+- **Deleting a vault or a file moves it to the trash.** It leaves every listing at once and stays recoverable until the retention policy purges it. Both delete tools are marked destructive so the client asks first. You can list the trash and restore from it with the `rootkey_list_deleted_*` and `rootkey_restore_*` tools, and a restore never needs the user's approval.
+- **An organization can ask the user to approve every delete.** The delete is refused with `agent_approval_required` and nothing is deleted. The user approves it in the ROOTKey app under **Pending approvals**, with a fresh two-factor check, and then you repeat the same call once.
 - **Only files are anchored on chain.** Records are stored, hashed and audited and come back `REGISTERED` immediately, with no pending phase and no transaction hash. Do not describe a record as being on a blockchain.
 - **Records are versioned by primary key.** Creating a record whose key matches an existing one adds a version rather than a duplicate, so retrying a create is not a no-op.
 - **Vault and table addresses come from the list tools.** `rootkey_list_vaults` finds the vaults, which hold files, and `rootkey_list_tables` finds the tables, which hold records. Keep the address `rootkey_create_vault` returns.
@@ -266,7 +269,7 @@ Once done, tell the user:
 
 ```
 ┌─ ROOTKey Agent Setup Complete ───────────────────────┐
-│  ✓ MCP      rootkey (@rootkey/mcp), 23 tools         │
+│  ✓ MCP      rootkey (@rootkey/mcp), 32 tools         │
 │  ✓ Config   <path>                                   │
 │                                                      │
 │  ⚡ Restart your agent to load the MCP server        │
@@ -284,6 +287,8 @@ ROOTKey documentation:
 - Connector reference, tool by tool: [docs.rootkey.ai/pages/integrations/claude-mcp](/pages/integrations/claude-mcp)
 - Creating and revoking tokens: [docs.rootkey.ai/api-reference/auth](/api-reference/auth#personal-access-tokens)
 - What an organization lets agents do: [docs.rootkey.ai/pages/integrations/ai-agents](/pages/integrations/ai-agents)
+- Delete approvals: [docs.rootkey.ai/pages/integrations/delete-approvals](/pages/integrations/delete-approvals)
+- Restricted data and agents: [docs.rootkey.ai/pages/integrations/restricted-step-up](/pages/integrations/restricted-step-up)
 - The API behind every tool: [docs.rootkey.ai/api-reference/overview](/api-reference/overview)
 - Source and issue tracker: [github.com/ROOT-Key/rootkey-mcp](https://github.com/ROOT-Key/rootkey-mcp)
 
