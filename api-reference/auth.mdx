@@ -121,9 +121,9 @@ A scope is a permission you give the token when you create it. You cannot change
 
 | Scope | Lets the token | Endpoints |
 | --- | --- | --- |
-| `rootkey.read` | See what you can see | List and fetch vaults, tables, files, file versions, file history and validations, records and their versions, history and validations; download a file; validate a file |
-| `rootkey.write` | Create and update | Create a vault, update a vault, create a file or a file version (including [direct uploads](/api-reference/platform/endpoint/files/direct-uploads)), create a record |
-| `rootkey.delete` | Delete | Delete a vault, a file or a record |
+| `rootkey.read` | See what you can see | List and fetch vaults, tables, files, file versions, file history and validations, records and their versions, history and validations; download a file; validate a file; list deleted vaults, files and records; list recovery points; ask for access to Restricted data ([`POST /agent-step-ups`](/api-reference/platform/endpoint/agents/request-restricted-access) and [`GET /agent-step-ups/{stepUpId}`](/api-reference/platform/endpoint/agents/get-restricted-access)) |
+| `rootkey.write` | Create and update | Create a vault, update a vault, create a file or a file version (including [direct uploads](/api-reference/platform/endpoint/files/direct-uploads)), create a record, queue a file audit report |
+| `rootkey.delete` | Delete | Delete a vault or a file, and restore a deleted vault, file or record (a restore undoes a delete). A token cannot delete a record: see [below](#not-available-to-personal-access-tokens) |
 
 A request that needs a scope the token does not carry gets [`insufficient_scope`](/api-reference/errors#insufficient_scope). `GET /me` and `GET /organizations` need no scope, and `GET /organization` needs `rootkey.read`.
 
@@ -144,8 +144,10 @@ An organization can also:
 - **Switch off personal access tokens.** No personal access token works in the organization from that moment, including tokens created later.
 - **Require two-factor authentication.** Only members who have turned on two-factor authentication can use agents there.
 - **Block a member's agents.** Every token that member created stops working in that organization at once. The member keeps their own access in the app, and an administrator can unblock them at any time.
+- **Ask for approval of every delete.** With **Delete approval** on, an agent's delete of a file or a vault is refused with [`agent_approval_required`](/api-reference/errors#agent_approval_required) until the member the agent acts for approves it in the ROOTKey app, with a fresh two-factor check. Then the same request runs once. See [Delete approvals](/pages/integrations/delete-approvals).
+- **Let members open Restricted data to their own agents.** Off by default. See below.
 
-Whatever the mode, **Restricted** vaults and tables are never available to agents. They are listed with `agentAccessible: false`, so an agent can tell you they exist, and every request that would read or change them is refused with [`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied). The organization's [IP access rules](/api-reference/errors#access_policy_denied) apply to a token's requests like any other.
+**Restricted** vaults and tables are listed with `agentAccessible: false`, so an agent can tell you they exist. With the option that lets members open Restricted data to their own agents off, which is the default, every request that would read or change them is refused with [`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied). With it on, a read or a write is refused with [`agent_step_up_required`](/api-reference/errors#agent_step_up_required) until the member approves that one vault or table, for a few minutes, with a fresh two-factor check. Deleting and restoring Restricted data is never available to an agent, even with an approval. See [Restricted data and agents](/pages/integrations/restricted-step-up). The organization's [IP access rules](/api-reference/errors#access_policy_denied) apply to a token's requests like any other.
 
 <Note>
 Your organization governs the credentials it delegates to agents, not the AI itself: an agent using a person's own browser session, or a script holding an organization API key, cannot be told apart from that person.
@@ -157,10 +159,10 @@ When an organization refuses a request, the error says why, and [`GET /organizat
 
 Some endpoints are never available to a personal access token, whatever the organization allows. A request that carries one is refused with [`agent_route_not_available`](/api-reference/errors#agent_route_not_available). Use an API key or the ROOTKey app for these:
 
-- Recovery points: list, create, fetch, download and delete.
-- File audit reports.
-- The list of open direct uploads.
-- The Restore Center: listing and restoring deleted vaults, files and records.
+- Deleting a record.
+- Recovery points: fetch, download, create and delete. A token can only list them.
+
+A token can list and restore what is in the trash ([`GET /files/deleted`](/api-reference/platform/endpoint/files/list-deleted-files), [`GET /records/deleted`](/api-reference/platform/endpoint/records/list-deleted-records), [`GET /vaults/deleted`](/api-reference/platform/endpoint/vaults/list-deleted-vaults) and the matching restore calls). Deleted tables, and anything of a Restricted vault or table, are restored by a person in the ROOTKey app. See [Trash and restore for agents](/pages/integrations/agent-trash-and-restore).
 
 A token also cannot change a vault's data classification: that stays with a person in the app ([`agent_classification_change_not_allowed`](/api-reference/errors#agent_classification_change_not_allowed)).
 

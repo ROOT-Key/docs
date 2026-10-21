@@ -62,6 +62,9 @@
               "pages/integrations/claude-mcp",
               "pages/integrations/hosted-connector",
               "pages/integrations/ai-agents",
+              "pages/integrations/agent-trash-and-restore",
+              "pages/integrations/delete-approvals",
+              "pages/integrations/restricted-step-up",
               "agent-setup/prompt"
             ]
           },
@@ -239,6 +242,13 @@
             ]
           },
           {
+            "group": "Agents",
+            "pages": [
+              "api-reference/platform/endpoint/agents/request-restricted-access",
+              "api-reference/platform/endpoint/agents/get-restricted-access"
+            ]
+          },
+          {
             "group": "Files",
             "pages": [
               "api-reference/platform/endpoint/files/get-files",
@@ -258,7 +268,9 @@
               "api-reference/platform/endpoint/files/validate-file",
               "api-reference/platform/endpoint/files/download-file",
               "api-reference/platform/endpoint/files/generate-audit-report",
-              "api-reference/platform/endpoint/files/delete-file"
+              "api-reference/platform/endpoint/files/delete-file",
+              "api-reference/platform/endpoint/files/list-deleted-files",
+              "api-reference/platform/endpoint/files/restore-file"
             ]
           },
           {
@@ -267,7 +279,9 @@
               "api-reference/platform/endpoint/vaults/list-vaults",
               "api-reference/platform/endpoint/vaults/create-vault",
               "api-reference/platform/endpoint/vaults/update-vault",
-              "api-reference/platform/endpoint/vaults/delete-vault"
+              "api-reference/platform/endpoint/vaults/delete-vault",
+              "api-reference/platform/endpoint/vaults/list-deleted-vaults",
+              "api-reference/platform/endpoint/vaults/restore-vault"
             ]
           },
           {
@@ -285,7 +299,9 @@
               "api-reference/platform/endpoint/records/get-record-versions",
               "api-reference/platform/endpoint/records/get-record-history",
               "api-reference/platform/endpoint/records/get-record-validations",
-              "api-reference/platform/endpoint/records/delete-record"
+              "api-reference/platform/endpoint/records/delete-record",
+              "api-reference/platform/endpoint/records/list-deleted-records",
+              "api-reference/platform/endpoint/records/restore-record"
             ]
           },
           {

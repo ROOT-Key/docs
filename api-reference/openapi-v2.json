@@ -40,7 +40,7 @@
     },
     {
       "name": "api-v1-vaults",
-      "description": "Vault lifecycle: create / update / delete (/api-v1/platform/vaults)"
+      "description": "Vault lifecycle: create / update / delete / restore (/api-v1/platform/vaults, /api-v1/vaults)"
     },
     {
       "name": "api-v1-recovery-points",
@@ -49,6 +49,10 @@
     {
       "name": "api-v1-organizations",
       "description": "The identity of a personal access token and the organizations it can act in (/api-v1/me, /api-v1/organizations, /api-v1/organization)"
+    },
+    {
+      "name": "api-v1-agents",
+      "description": "What an agent asks the person it acts for: access to RESTRICTED data for a short time (/api-v1/agent-step-ups)"
     }
   ],
   "paths": {
@@ -218,7 +222,7 @@
     "/organization": {
       "get": {
         "summary": "Get the organization a token acts in",
-        "description": "Returns the organization named by `X-RootKey-Organization` as the token sees it: its name, its agent mode and the scopes the token effectively has there. It needs the `rootkey.read` scope. When the organization does not allow the request, the answer is the `403` whose `errorCode` says why, so this is the call to make first to find out whether a token can work in an organization. Only a personal access token can call it: a request with an API key gets the `404` that any path the API does not have gets.",
+        "description": "Returns the organization named by `X-RootKey-Organization` as the token sees it: its name, its agent mode, whether an agent's deletes need a person's approval (`deleteApproval`), whether an agent may ask for RESTRICTED data (`allowRestrictedStepUp`) and the scopes the token effectively has there. It needs the `rootkey.read` scope. When the organization does not allow the request, the answer is the `403` whose `errorCode` says why, so this is the call to make first to find out whether a token can work in an organization. Only a personal access token can call it: a request with an API key gets the `404` that any path the API does not have gets.",
         "tags": [
           "api-v1-organizations"
         ],
@@ -683,7 +687,7 @@
       },
       "delete": {
         "summary": "Delete vault",
-        "description": "Deletes a vault. Returns 200 with an empty body on success. A personal access token with the `rootkey.delete` scope can call it, in an organization that lets agents write.",
+        "description": "Moves a vault and its files to the trash. Returns 200 with an empty body on success. A personal access token with the `rootkey.delete` scope can call it, in an organization that lets agents write. If the organization requires a person to approve agent deletes, the first request is refused with `agent_approval_required` and nothing is deleted: the person approves it in ROOTKey, then the same request runs once.",
         "tags": [
           "api-v1-vaults"
         ],
@@ -722,7 +726,14 @@
             "description": "Unauthenticated"
           },
           "403": {
-            "$ref": "#/components/responses/AgentAccessDenied"
+            "description": "With a personal access token, in an organization where a person approves agent deletes (`deleteApproval` `SELF`): `agent_approval_required` (nothing was deleted; the body names the `actionId` the person approves in ROOTKey, with a fresh second factor, after which the SAME request runs once), `agent_approval_denied` (the person said no) or `agent_approval_limit_reached` (too many deletes are waiting for that person). Otherwise one of the agent refusals on the [Errors](/api-reference/errors) page; a RESTRICTED vault is never deleted by an agent (`agent_restricted_data_denied`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentApprovalRefusal"
+                }
+              }
+            }
           },
           "404": {
             "description": "Vault not found",
@@ -1108,16 +1119,25 @@
       },
       "get": {
         "summary": "List open uploads",
-        "description": "Lists the uploads that API keys of your organization have open: started and not yet completed or expired, or waiting for verification. Use it to find an upload your client lost track of and abort it. The `metadata.organization` block shows what your whole organization has open, which is what the open-upload limits judge. Not available to personal access tokens or agents: a request that carries one is refused with `agent_route_not_available`. Use an API key, or the ROOTKey app.",
+        "description": "Lists the uploads that API keys of your organization have open: started and not yet completed or expired, or waiting for verification. Use it to find an upload your client lost track of and abort it. The `metadata.organization` block shows what your whole organization has open, which is what the open-upload limits judge. With a personal access token (or an app connected through the hosted connector) it lists the uploads the user opened in the organization named by `X-RootKey-Organization` and can still write into; `metadata.organization` still shows what the whole organization has open. It needs the `rootkey.read` scope.",
         "tags": [
           "api-v1-files"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          },
           {
             "name": "limit",
             "in": "query",
@@ -1175,14 +1195,7 @@
             "description": "Unauthenticated"
           },
           "403": {
-            "description": "A personal access token was used: this endpoint is not available to agents (`agent_route_not_available`).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DomainErrorResponse"
-                }
-              }
-            }
+            "$ref": "#/components/responses/AgentAccessDenied"
           },
           "404": {
             "description": "Direct uploads are not available on this deployment (`presigned_file_upload_disabled`).",
@@ -1927,7 +1940,14 @@
             "description": "Unauthenticated"
           },
           "403": {
-            "$ref": "#/components/responses/AgentAccessDenied"
+            "description": "With a personal access token, in an organization where a person approves agent deletes (`deleteApproval` `SELF`): `agent_approval_required` (nothing was deleted; the body names the `actionId` the person approves in ROOTKey, with a fresh second factor, after which the SAME request runs once), `agent_approval_denied` (the person said no) or `agent_approval_limit_reached` (too many deletes are waiting for that person). Otherwise one of the agent refusals on the [Errors](/api-reference/errors) page; a RESTRICTED vault is never deleted by an agent (`agent_restricted_data_denied`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentApprovalRefusal"
+                }
+              }
+            }
           },
           "404": {
             "description": "File not found"
@@ -1936,7 +1956,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "description": "A personal access token with the `rootkey.delete` scope can call it, in an organization that lets agents write."
+        "description": "Moves the file to the trash, where it stays restorable until the retention policy removes it for good. A personal access token with the `rootkey.delete` scope can call it, in an organization that lets agents write. If the organization requires a person to approve agent deletes, the first request is refused with `agent_approval_required` and nothing is deleted: the person approves it in ROOTKey, then the same request runs once."
       }
     },
     "/platform/files/{fileId}/download": {
@@ -2281,16 +2301,25 @@
     "/platform/files/{fileId}/audit-report": {
       "post": {
         "summary": "Create file audit report",
-        "description": "Enqueues a compliance audit report for the given file. The report is generated asynchronously; the response returns the report ID and its initial pending status. Not available to personal access tokens or agents: a request that carries one is refused with `agent_route_not_available`. Use an API key, or the ROOTKey app.",
+        "description": "Enqueues a compliance audit report for the given file. The report is generated asynchronously; the response returns the report ID and its initial pending status, and the finished report is delivered in the ROOTKey app. A personal access token can ask for one with the `rootkey.write` scope and a role that may create audit reports, in an organization that lets agents write. For a file of a RESTRICTED vault, an agent needs the user's approval first, as for any other access to it (`agent_step_up_required`).",
         "tags": [
           "api-v1-files"
         ],
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          },
           {
             "name": "fileId",
             "in": "path",
@@ -2345,7 +2374,14 @@
             "description": "Unauthenticated"
           },
           "403": {
-            "description": "Subscription limit exceeded, feature not found, or user is not an organization member A personal access token was used: this endpoint is not available to agents (`agent_route_not_available`)."
+            "description": "The plan does not include reports or its limit is used up, or the user is not a member of the organization. A personal access token can also be refused by the organization: see the [Errors](/api-reference/errors) page.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "File not found"
@@ -2842,7 +2878,7 @@
     "/platform/records/{recordId}": {
       "delete": {
         "summary": "Delete record",
-        "description": "Deletes a record. Once deleted, it no longer appears in list or fetch responses.\n\nAuthorization: the caller's organization must own the table identified by `ownerAddress`, and that table must own the record. A personal access token with the `rootkey.delete` scope can call it, in an organization that lets agents write.",
+        "description": "Deletes a record. Once deleted, it no longer appears in list or fetch responses.\n\nAuthorization: the caller's organization must own the table identified by `ownerAddress`, and that table must own the record. Not available to personal access tokens or agents, whatever the organization allows: a request that carries one is refused with `agent_route_not_available`. Agents never delete records; use an API key, or the ROOTKey app.",
         "tags": [
           "api-v1-records"
         ],
@@ -2902,7 +2938,7 @@
             "description": "Unauthenticated"
           },
           "403": {
-            "description": "The table does not own this record A personal access token can also be refused: see the [Errors](/api-reference/errors) page.",
+            "description": "The table does not own this record. A personal access token is refused with `agent_route_not_available`.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2936,35 +2972,53 @@
         "security": [
           {
             "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Recovery points",
+            "description": "Recovery points: `{ recoveryPoints }` with an API key, a page with a personal access token",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "recoveryPoints": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/RecoveryPointDTO"
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "recoveryPoints": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/RecoveryPointDTO"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/RecoveryPointDTO"
+                          }
+                        },
+                        "pagination": {
+                          "$ref": "#/components/schemas/PaginationBlock"
+                        },
+                        "metadata": {
+                          "$ref": "#/components/schemas/PaginationMetadata"
+                        }
                       }
                     }
-                  }
+                  ]
                 }
               }
             }
           },
           "400": {
-            "$ref": "#/components/responses/DomainError"
-          },
-          "401": {
-            "description": "Unauthenticated"
-          },
-          "403": {
-            "description": "A personal access token was used: this endpoint is not available to agents (`agent_route_not_available`).",
+            "description": "With a personal access token, a malformed query (`invalid_query_parameters`) or a cursor that is not valid (`invalid_cursor`).",
             "content": {
               "application/json": {
                 "schema": {
@@ -2973,11 +3027,58 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthenticated. A missing, malformed, unknown, inactive, revoked or expired credential all get the same answer."
+          },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "description": "Not available to personal access tokens or agents: a request that carries one is refused with `agent_route_not_available`. Use an API key, or the ROOTKey app."
+        "description": "With an API key it lists every recovery point of the organization, newest first, as `{ recoveryPoints }`, with no pages. With a personal access token (or an app connected through the hosted connector) it lists, in pages, the recovery points the user may read: a recovery point is listed only when the user can read every vault it covers now, and one that covers a RESTRICTED vault, a deleted vault or a vault an IP access rule hides from your network is never listed, administrators included. Every status is listed, including points still being built. It needs the `rootkey.read` scope, a role that may read recovery points and a plan with data restore. The listing is the only recovery point operation an agent may use: fetching, downloading, creating and deleting one are refused with `agent_route_not_available`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Personal access token only: the `pagination.nextCursor` of the previous page. A cursor that is not valid gets `invalid_cursor`."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Personal access token only. Ignored with an API key."
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            },
+            "description": "Personal access token only: by creation time."
+          }
+        ]
       },
       "post": {
         "summary": "Create recovery point",
@@ -3258,6 +3359,860 @@
           }
         }
       }
+    },
+    "/files/deleted": {
+      "get": {
+        "summary": "List deleted files",
+        "description": "Lists the files in the trash of your organization, newest deletion first, with who deleted each one and until when it can be restored. A deleted file stays restorable until the retention policy removes it for good (`purgeDeadline`). With an API key it lists every deleted file of the organization. With a personal access token it lists only the deleted files the user could see before they were deleted (the vaults of the user's teams, every vault for an owner or an administrator), and never a file of a RESTRICTED vault; what is left out never shortens a page or enters `metadata.totalCount`. Versions of a file are not listed: they come back with it. A personal access token needs the `rootkey.read` scope and an organization role that may read vaults; a listing is allowed in a read-only organization.",
+        "tags": [
+          "api-v1-files"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `pagination.nextCursor` of the previous page. With a personal access token it is opaque, and a cursor that is not valid gets `invalid_cursor`, never a restart from the first page."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            },
+            "description": "With a personal access token, a whole number from 1 to 100; anything else gets `invalid_filters`."
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            },
+            "description": "By deletion time."
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Only files whose name contains this text."
+          },
+          {
+            "name": "deletedFrom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Only what was deleted at or after this time."
+          },
+          {
+            "name": "deletedTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Only what was deleted at or before this time."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of deleted files",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DeletedFileListItem"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/PaginationBlock"
+                    },
+                    "metadata": {
+                      "$ref": "#/components/schemas/PaginationMetadata"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An invalid filter, `limit` or `order` (`invalid_filters`), a cursor that is not valid (`invalid_cursor`), or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. A missing, malformed, unknown, inactive, revoked or expired credential all get the same answer."
+          },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
+          "429": {
+            "description": "Too many requests for the Restore Center. The `Retry-After` header says how many seconds to wait. See [Rate Limits](/pages/rate-limits)."
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/files/{fileId}/restore": {
+      "patch": {
+        "summary": "Restore a deleted file",
+        "description": "Brings a deleted file back, with the versions its delete took with it. Versions the retention policy already removed for good cannot come back and are named in `skippedPurgedIds`. If the file's vault is itself deleted, the request is refused with `vault_also_deleted`: restore the vault first, then the file. With a personal access token the restore is made as the user, in the organization named by `X-RootKey-Organization`, and the activity names the user and the agent. It needs the `rootkey.delete` scope (a restore undoes a delete), an organization role that may restore files and an organization that lets agents write. A file of a RESTRICTED vault is never restored by an agent, whoever asks: a person does it in the ROOTKey app. A restore never needs a person's approval.",
+        "tags": [
+          "api-v1-files"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          },
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ownerAddress",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The vault the file belongs to."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File restored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoreResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The file is not deleted (`file_not_deleted`), its vault is deleted (`vault_also_deleted`), the vault address is not valid (`invalid_wallet_address`), or the retention deadline passed (`retention_deadline_expired`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. A missing, malformed, unknown, inactive, revoked or expired credential all get the same answer."
+          },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
+          "404": {
+            "description": "No such deleted file in that vault (`resource_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "The retention policy already removed the file for good (`file_already_purged`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for the Restore Center. The `Retry-After` header says how many seconds to wait. See [Rate Limits](/pages/rate-limits)."
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/records/deleted": {
+      "get": {
+        "summary": "List deleted records",
+        "description": "Lists the records in the trash of your organization's tables, newest deletion first. Records deleted together with their table are not listed here: they come back with the table, which is restored in the ROOTKey app. Pass `ownerAddress` to list the trash of one table. With a personal access token, a record of a RESTRICTED table is never listed. Agents never delete records, so what is here was deleted by a person or an API key. A personal access token needs the `rootkey.read` scope.",
+        "tags": [
+          "api-v1-records"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `pagination.nextCursor` of the previous page. With a personal access token it is opaque, and a cursor that is not valid gets `invalid_cursor`, never a restart from the first page."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            },
+            "description": "With a personal access token, a whole number from 1 to 100; anything else gets `invalid_filters`."
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            },
+            "description": "By deletion time."
+          },
+          {
+            "name": "ownerAddress",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Only the trash of this table. It must be a table of the organization, or the request gets a `404`."
+          },
+          {
+            "name": "deletedFrom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Only what was deleted at or after this time."
+          },
+          {
+            "name": "deletedTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Only what was deleted at or before this time."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of deleted records",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DeletedRecordListItem"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/PaginationBlock"
+                    },
+                    "metadata": {
+                      "$ref": "#/components/schemas/PaginationMetadata"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An invalid filter, `limit` or `order` (`invalid_filters`), a cursor that is not valid (`invalid_cursor`), or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. A missing, malformed, unknown, inactive, revoked or expired credential all get the same answer."
+          },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
+          "404": {
+            "description": "`ownerAddress` is not a table of the organization (`resource_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for the Restore Center. The `Retry-After` header says how many seconds to wait. See [Rate Limits](/pages/rate-limits)."
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/records/{recordId}/restore": {
+      "patch": {
+        "summary": "Restore a deleted record",
+        "description": "Brings a deleted record back. Returns 200 with an empty body. If the record's table is itself deleted, the request is refused with `table_also_deleted`: restore the table in the ROOTKey app first, then the record. With a personal access token it needs the `rootkey.delete` scope (a restore undoes a delete), an organization role that may restore records and an organization that lets agents write; a record of a RESTRICTED table is never restored by an agent. Agents can restore records but never delete one.",
+        "tags": [
+          "api-v1-records"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          },
+          {
+            "name": "recordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ownerAddress",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The table the record belongs to."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Record restored"
+          },
+          "400": {
+            "description": "The record is not deleted (`record_not_deleted`), its table is deleted (`table_also_deleted`), or the address is not valid (`invalid_wallet_address`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. A missing, malformed, unknown, inactive, revoked or expired credential all get the same answer."
+          },
+          "403": {
+            "description": "The table does not own this record (`invalid_ownership`). A personal access token can also be refused by the organization: see the [Errors](/api-reference/errors) page.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such table or record (`resource_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "The retention policy already removed the record for good (`record_already_purged`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for the Restore Center. The `Retry-After` header says how many seconds to wait. See [Rate Limits](/pages/rate-limits)."
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/vaults/deleted": {
+      "get": {
+        "summary": "List deleted vaults",
+        "description": "Lists the vaults in the trash of your organization (vaults only: deleted tables are restored in the ROOTKey app), newest deletion first. With an API key it lists every deleted vault of the organization. With a personal access token it lists the deleted vaults the user could see now (the vaults of the user's teams, every vault for an owner or an administrator), and never a RESTRICTED vault, whoever asks; what is left out never shortens a page or enters `metadata.totalCount`. A personal access token needs the `rootkey.read` scope and an organization role that may read vaults.",
+        "tags": [
+          "api-v1-vaults"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `pagination.nextCursor` of the previous page. With a personal access token it is opaque, and a cursor that is not valid gets `invalid_cursor`, never a restart from the first page."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            },
+            "description": "With a personal access token, a whole number from 1 to 100; anything else gets `invalid_filters`."
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            },
+            "description": "By deletion time."
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Only vaults whose name contains this text."
+          },
+          {
+            "name": "deletedFrom",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Only what was deleted at or after this time."
+          },
+          {
+            "name": "deletedTo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Only what was deleted at or before this time."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of deleted vaults",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DeletedVaultListItem"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/PaginationBlock"
+                    },
+                    "metadata": {
+                      "$ref": "#/components/schemas/PaginationMetadata"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An invalid filter, `limit` or `order` (`invalid_filters`), a cursor that is not valid (`invalid_cursor`), or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. A missing, malformed, unknown, inactive, revoked or expired credential all get the same answer."
+          },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
+          "429": {
+            "description": "Too many requests for the Restore Center. The `Retry-After` header says how many seconds to wait. See [Rate Limits](/pages/rate-limits)."
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/vaults/{vaultAddress}/restore": {
+      "patch": {
+        "summary": "Restore a deleted vault",
+        "description": "Brings a deleted vault back, with the files its delete took with it. A file that was deleted on its own before the vault stays in the trash. Files the retention policy already removed for good are named in `skippedPurgedIds`. With a personal access token the restore is made as the user and the activity names the user and the agent. It needs the `rootkey.delete` scope (a write scope is not enough), an organization role that may restore vaults, a team that owns the vault (an owner or an administrator of the organization needs none) and an organization that lets agents write. A RESTRICTED vault is never restored by an agent, whoever asks: a person does it in the ROOTKey app, with a second factor. A restore never needs a person's approval.",
+        "tags": [
+          "api-v1-vaults"
+        ],
+        "security": [
+          {
+            "x-api-key": []
+          },
+          {
+            "personalAccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          },
+          {
+            "name": "vaultAddress",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vault restored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoreResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The vault is not deleted (`wallet_not_deleted`), the retention deadline passed (`retention_deadline_expired`), the address is not valid (`invalid_wallet_address`), or the plan has no room for it (`usage_limit_exceeded`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. A missing, malformed, unknown, inactive, revoked or expired credential all get the same answer."
+          },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
+          "404": {
+            "description": "No such vault in the organization (`resource_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "The retention policy already removed the vault for good (`wallet_already_purged`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for the Restore Center. The `Retry-After` header says how many seconds to wait. See [Rate Limits](/pages/rate-limits)."
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/agent-step-ups": {
+      "post": {
+        "summary": "Ask for access to RESTRICTED data",
+        "description": "An agent asks the person it acts for to open ONE RESTRICTED vault or table for a short time. It is the answer to `agent_step_up_required`, which an agent gets only in an organization that allows it (`allowRestrictedStepUp` on `GET /organization`). The answer has a `url`: give it to the person. They open it in ROOTKey and approve with a fresh second factor (or deny). Once approved, the same connection may read and write that vault or table until the approval ends (a few minutes), and never delete anything in it. Follow the request with `GET /agent-step-ups/{stepUpId}`. Asking again while the request waits, or while an approval runs, answers `200` with the same request. Everything else still applies: scopes, the organization's mode, the user's role and teams. The vault is named in the body only. Only a personal access token or an app connected through the hosted connector can call it; it needs the `rootkey.read` scope and a role that may read vaults (for a table, also tables).",
+        "tags": [
+          "api-v1-agents"
+        ],
+        "security": [
+          {
+            "personalAccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentStepUpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "This connection already has a live request for that vault or table: the same one, nothing new.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentStepUp"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "The request was created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentStepUp"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The vault or table is not RESTRICTED, so it needs no approval (`agent_step_up_not_required`), the body has no usable `vaultAddress` (`invalid_agent_step_up_request`), or the address was named differently in the query and the body (`conflicting_request_identifiers`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. A missing, malformed, unknown, inactive, revoked or expired credential all get the same answer."
+          },
+          "403": {
+            "description": "The organization does not allow approvals for RESTRICTED data (`agent_restricted_data_denied`), too many requests of this connection are waiting (`agent_step_up_limit_reached`), or one of the agent refusals on the [Errors](/api-reference/errors) page.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such vault or table in the organization (`resource_not_found`). An API key gets a `404` too: this endpoint is for agents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests for this user. The `Retry-After` header says how many seconds to wait. See [Rate Limits](/pages/rate-limits)."
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/agent-step-ups/{stepUpId}": {
+      "get": {
+        "summary": "Get a request for RESTRICTED data",
+        "description": "The state of a request made with `POST /agent-step-ups`, for the connection that made it only: anything else is the same `404`. `status` follows the clock, so an approval that ended reads `EXPIRED` at once. Only a personal access token or an app connected through the hosted connector can call it; it needs the `rootkey.read` scope.",
+        "tags": [
+          "api-v1-agents"
+        ],
+        "security": [
+          {
+            "personalAccessToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationHeader"
+          },
+          {
+            "$ref": "#/components/parameters/TestModeHeader"
+          },
+          {
+            "name": "stepUpId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentStepUpStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. A missing, malformed, unknown, inactive, revoked or expired credential all get the same answer."
+          },
+          "403": {
+            "$ref": "#/components/responses/AgentAccessDenied"
+          },
+          "404": {
+            "description": "No such request for this connection (`resource_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3297,7 +4252,7 @@
         }
       },
       "AgentAccessDenied": {
-        "description": "Forbidden. With a personal access token or an app connected through the hosted connector, the organization, the user or the token does not allow the request, and the `errorCode` says which: `agent_org_not_allowed`, `agent_user_blocked`, `agent_two_factor_required`, `agent_access_disabled`, `agent_write_not_allowed`, `agent_personal_tokens_disabled`, `agent_client_not_allowed`, `insufficient_scope`, `insufficient_permission`, `agent_restricted_data_denied` or `email_verification_required`. A user who is not a member of the organization, or a network an IP access rule blocks, gets `access_policy_denied`. Each code has an entry on the [Errors](/api-reference/errors) page.",
+        "description": "Forbidden. With a personal access token or an app connected through the hosted connector, the organization, the user or the token does not allow the request, and the `errorCode` says which: `agent_org_not_allowed`, `agent_user_blocked`, `agent_two_factor_required`, `agent_access_disabled`, `agent_write_not_allowed`, `agent_personal_tokens_disabled`, `agent_client_not_allowed`, `insufficient_scope`, `insufficient_permission`, `agent_restricted_data_denied`, `agent_step_up_required` or `email_verification_required`. A user who is not a member of the organization, or a network an IP access rule blocks, gets `access_policy_denied`. Each code has an entry on the [Errors](/api-reference/errors) page.",
         "content": {
           "application/json": {
             "schema": {
@@ -5434,6 +6389,18 @@
           "mode": {
             "$ref": "#/components/schemas/AgentOrganizationMode"
           },
+          "deleteApproval": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "SELF"
+            ],
+            "description": "Whether a person must approve what an agent deletes in this organization. `SELF`: an agent's file or vault delete is refused with `agent_approval_required` until the person the agent acts for approves it in ROOTKey; then the same request runs once. `NONE`: no approval."
+          },
+          "allowRestrictedStepUp": {
+            "type": "boolean",
+            "description": "Whether an agent may ask the person it acts for to open one RESTRICTED vault or table for a short time (see [Ask for access to RESTRICTED data](/api-reference/platform/endpoint/agents/request-restricted-access)). `false`: RESTRICTED data stays out of reach of every agent."
+          },
           "effectiveScopes": {
             "type": "array",
             "items": {
@@ -5497,6 +6464,278 @@
           "agentAccessible": {
             "type": "boolean",
             "description": "Only in the answer to a personal access token. False for a RESTRICTED vault or table: it is listed so that an agent can tell the user it exists, and every endpoint that would read or change it is refused with `agent_restricted_data_denied`. True for every other classification."
+          }
+        }
+      },
+      "DeletedFileListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "ownerAddress": {
+            "type": "string",
+            "description": "The vault the file belongs to."
+          },
+          "size": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "FAILED",
+              "REGISTERED"
+            ]
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "member": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "imagePath": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "description": "Who deleted it."
+          },
+          "purgeDeadline": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the retention policy removes it for good."
+          },
+          "redacted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "DeletedRecordListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "ownerAddress": {
+            "type": "string",
+            "description": "The table the record belongs to."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "REGISTERED",
+              "FAILED"
+            ]
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "apiKey": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "description": "The API key that deleted it, when an API key did."
+          },
+          "purgeDeadline": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "redacted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "DeletedVaultListItem": {
+        "type": "object",
+        "properties": {
+          "walletAddress": {
+            "type": "string",
+            "description": "The vault address."
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "VAULT"
+            ]
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "member": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "imagePath": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "description": "Who deleted it."
+          },
+          "purgeDeadline": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "redacted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RestoreResponse": {
+        "type": "object",
+        "required": [
+          "skippedPurgedIds"
+        ],
+        "properties": {
+          "skippedPurgedIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What could not come back because the retention policy had already removed it for good."
+          }
+        }
+      },
+      "AgentStepUpRequest": {
+        "type": "object",
+        "required": [
+          "vaultAddress"
+        ],
+        "properties": {
+          "vaultAddress": {
+            "type": "string",
+            "description": "The RESTRICTED vault or table, from `GET /vaults` or `GET /tables`."
+          }
+        }
+      },
+      "AgentStepUp": {
+        "type": "object",
+        "required": [
+          "id",
+          "url",
+          "expiresAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The request. `GET /agent-step-ups/{stepUpId}` reports its state."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "The page in ROOTKey where the person approves or denies it. Give it to the person; it names nothing else."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Until when the person can approve it; for an approval that is running, when it ends."
+          }
+        }
+      },
+      "AgentStepUpStatus": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "expiresAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "DENIED",
+              "EXPIRED"
+            ],
+            "description": "`PENDING`: waiting for the person. `APPROVED`: the connection may read and write that vault or table until `expiresAt`. `DENIED`: the person said no, or withdrew an approval. `EXPIRED`: nobody answered in time, or the approval ended."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AgentApprovalRefusal": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "requestId": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "errorCode": {
+                "type": "string",
+                "enum": [
+                  "agent_approval_required",
+                  "agent_approval_denied"
+                ]
+              },
+              "docUrl": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "actionId": {
+                "type": "string",
+                "description": "The delete waiting for the person. In the ROOTKey app it is under Pending approvals, at `/agent-approvals/{actionId}`."
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "DENIED"
+                ]
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Until when the person can approve it."
+              }
+            }
           }
         }
       }
