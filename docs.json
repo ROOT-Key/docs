@@ -3,11 +3,21 @@
   "theme": "mint",
   "name": "ROOTKey",
   "colors": {
-    "primary": "#6100FF",
-    "light": "#B800E6",
-    "dark": "#6100FF"
+    "primary": "#F73936",
+    "light": "#F73936",
+    "dark": "#F73936"
   },
-  "favicon": "/favicon.png",
+  "favicon": "/favicon.svg",
+  "fonts": {
+    "heading": {
+      "family": "IBM Plex Sans",
+      "weight": 600
+    },
+    "body": {
+      "family": "IBM Plex Sans",
+      "weight": 400
+    }
+  },
   "openapi": "api-reference/openapi-v2.json",
   "api": {
     "playground": {
@@ -17,13 +27,14 @@
   "metadata": {
     "og:site_name": "ROOTKey Documentation",
     "og:type": "website",
-    "og:image": "https://media.rootkey.ai/logo_rootkey/png/og.png",
+    "og:image": "https://docs.rootkey.ai/images/brand/og-docs.png",
     "og:locale": "en_US",
     "twitter:card": "summary_large_image",
     "twitter:site": "@__rootkey__",
     "twitter:creator": "@__rootkey__",
     "author": "ROOTKey",
-    "robots": "index, follow"
+    "robots": "index, follow",
+    "twitter:image": "https://docs.rootkey.ai/images/brand/og-docs.png"
   },
   "navigation": {
     "tabs": [
@@ -339,12 +350,13 @@
     }
   ],
   "logo": {
-    "light": "https://media.rootkey.ai/logo_rootkey/png/280x60_preto.png",
-    "dark": "https://media.rootkey.ai/logo_rootkey/png/280x60_branco.png"
+    "light": "/logo/rootkey-wordmark-ink-red.svg",
+    "dark": "/logo/rootkey-wordmark-white-red.svg"
   },
   "background": {
     "color": {
-      "dark": "#0a090d"
+      "light": "#F4F3FF",
+      "dark": "#060606"
     }
   },
   "navbar": {

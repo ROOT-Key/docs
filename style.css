@@ -1,6 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/* ROOTKey brand (Oct 2026, red identity, Editorial line). Tokens from brand-assets/BRAND-SYSTEM.md.
+   The palette, logo and Plex Sans live in docs.json; this file adds Plex Mono, the dot grid and the tile field. */
+:root {
+    --rk-red: #F73936;
+    --rk-ground: #F4F3FF;
+    --rk-muted: #6F6C85;
+    --rk-hairline: #DEDCEE;
+    --rk-tile: #DAD8E9;
+    --rk-dot: rgba(6, 6, 6, 0.10);
+    --rk-tiles: url('/images/brand/tiles-light.svg');
+}
+html.dark {
+    --rk-ground: #060606;
+    --rk-muted: #A9A7B5;
+    --rk-hairline: #262628;
+    --rk-tile: #202025;
+    --rk-dot: rgba(244, 243, 255, 0.09);
+    --rk-tiles: url('/images/brand/tiles-dark.svg');
+}
+
+/* Plex Mono for code, kickers and labels */
+code, pre, kbd, samp, .font-mono {
+    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important;
+}
+
+/* The dot grid ground (24 px pitch), at the quiet tier so body text keeps its contrast.
+   html:root:root outranks Mintlify's `html.dark { background: … !important }`, which would reset the image. */
+html:root:root {
+    background-image: radial-gradient(var(--rk-dot) 1px, transparent 1.2px) !important;
+    background-size: 24px 24px !important;
+    background-position: 12px 12px !important;
+    background-attachment: fixed !important;
+}
+
+/* The tile field with its three red cells, fading in from the bottom-right corner, under the
+   table of contents and clear of the navbar and the reading column */
+body::before {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 300px;
+    height: 150px;
+    background: var(--rk-tiles) no-repeat top right / contain;
+    transform: scaleY(-1);
+    pointer-events: none;
+    z-index: 0;
+}
+@media (max-width: 1399px) {
+    body::before { display: none; }
+}
+
+/* Squares, not pills: the brand's tiles have near-sharp corners. Cards, callouts, code blocks,
+   the search box, sidebar items and buttons all take the tile radius. */
+.rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl,
+#topbar-cta-button, #topbar-cta-button * {
+    border-radius: 2px !important;
+}
+
 .animations {
     overflow: hidden;
-    border-radius: 10px;
+    border-radius: 2px;
 }
 
 /* api-reference/errors.mdx: the hidden alias above each error-code heading. Lands an
