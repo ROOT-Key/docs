@@ -15,6 +15,8 @@ This page is for administrators. If you are a member who wants to connect an age
 
 Open **Organization Settings** and go to the **AI agents** tab. It has two parts: the **Agent access policy**, where you choose what agents may do, and **Connected agents**, which lists the members who have connected one.
 
+<img style={{ borderRadius: "2px" }} src="/images/ai-agents/01-access-mode.png" alt="Organization Settings, AI agents tab with the Agent access policy and the access mode" />
+
 The tab is for members whose role has the **AI agents** permissions: **read** lets a member see the policy and the connections, and **update** lets them change the policy and block members. Owners and administrators have both by default, and you can give them to a custom role under **Roles and permissions**. If you do not see the tab, your role does not have the permission, or agent access is not available on your deployment.
 
 ---
@@ -47,6 +49,8 @@ When you turn on **Require two-factor authentication**, only members who have tu
 
 Members can turn on two-factor authentication themselves under **Account Settings → Security**, with an authenticator app and backup codes. Ask your members to do this before you turn the requirement on, or they will lose their agents until they have.
 
+<img style={{ borderRadius: "2px" }} src="/images/ai-agents/02-tokens-2fa.png" alt="Allow personal access tokens, Exempt the hosted connector from IP rules and Require two-factor authentication" />
+
 ### Approve every delete an agent asks for
 
 **Delete approval** decides whether a person must approve an agent's delete of a file or a vault. It has two values:
@@ -55,6 +59,8 @@ Members can turn on two-factor authentication themselves under **Account Setting
 - **I approve every delete an agent asks for** refuses the delete first ([`agent_approval_required`](/api-reference/errors#agent_approval_required)) and deletes nothing. The member whose agent asked approves it in the ROOTKey app under **Pending approvals**, with a fresh two-factor check, and the agent then repeats the same request, which runs once. A member who has not turned on two-factor authentication cannot approve.
 
 A request waits 24 hours. Restores never need an approval, and agents never delete records. See [Delete approvals](/pages/integrations/delete-approvals).
+
+<img style={{ borderRadius: "2px" }} src="/images/ai-agents/03-approvals.png" alt="Delete approval and Restricted data approvals, with Save policy" />
 
 ### Let members open Restricted data to their own agents
 
@@ -68,6 +74,8 @@ By default no agent reaches **Restricted** vaults and tables. This option, which
 - **Only these apps** lets only the apps on your list act in the organization. Build the list from the apps your members have already connected, or add an app by the `https://` address of its client metadata. A list holds up to 50 apps.
 
 With a list on, your organization shows as unavailable on the consent screen for an app that is not on it, and a request from an app that is already connected but not on the list is refused with [`agent_client_not_allowed`](/api-reference/errors#agent_client_not_allowed). That app's connection is not removed: it works again as soon as you add it back. The organization's agent activity shows the refusals as requests from an app that is not on the list.
+
+<img style={{ borderRadius: "2px" }} src="/images/ai-agents/04-allowed-apps.png" alt="Allowed apps set to Only these apps, with the app list and Add app" />
 
 <Warning>
   The list applies to apps that people connect with their ROOTKey account. Personal access tokens are not affected by it, and neither are organization API keys: the other settings on this page govern tokens.
@@ -131,6 +139,8 @@ This is the honest limit of the policy. It controls the tokens members create fo
 | **Status** | **Active**, or **Blocked** when you have blocked the member. |
 
 Until a member connects an agent that includes your organization, the list is empty.
+
+<img style={{ borderRadius: "2px" }} src="/images/ai-agents/05-connected-activity.png" alt="Connected agents and Agent activity" />
 
 Each member sees and revokes their own tokens under **Account Settings → Personal access tokens**.
 

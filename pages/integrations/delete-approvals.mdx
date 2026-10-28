@@ -15,6 +15,8 @@ It applies to the agents of personal access tokens and of apps connected through
 
 Open **Organization Settings**, go to the **AI agents** tab and find **Delete approval**:
 
+<img style={{ borderRadius: "2px" }} src="/images/ai-agents/03-approvals.png" alt="Delete approval and Restricted data approvals on the AI agents tab" />
+
 | Setting | What happens |
 |---|---|
 | **Not required** | An agent's delete runs as soon as it asks, within the member's permissions and the token's scopes. This is the default. |
@@ -34,6 +36,8 @@ The approval is the member's own, not an administrator's. It covers deleting a f
   </Step>
   <Step title="You get the request">
     In the ROOTKey app you get the notification **An agent is waiting for your approval**. The request is under **Pending approvals**, on its own page at `/agent-approvals/{actionId}`. The ROOTKey MCP server puts the link in the error, so your agent can hand it to you.
+
+    <img style={{ borderRadius: "2px" }} src="/images/ai-agents/06-pending-approvals.png" alt="Pending approvals page" />
   </Step>
   <Step title="You approve or deny">
     You approve with a fresh two-factor check. A member who has not turned on two-factor authentication cannot approve.

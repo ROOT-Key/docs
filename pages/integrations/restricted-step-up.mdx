@@ -13,6 +13,8 @@ icon: lock
 
 The option is off until you turn it on. It is in **Organization Settings**, on the **AI agents** tab: the option that lets members open Restricted data to their own agents. The API reports it as `allowRestrictedStepUp` on [`GET /organization`](/api-reference/platform/endpoint/identity/get-organization).
 
+<img style={{ borderRadius: "2px" }} src="/images/ai-agents/03-approvals.png" alt="Restricted data approvals, Allow agents to ask for access to restricted data" />
+
 | Option | What an agent gets on a Restricted vault or table |
 |---|---|
 | **Off** (default) | [`agent_restricted_data_denied`](/api-reference/errors#agent_restricted_data_denied), always. Agents never reach Restricted data. |

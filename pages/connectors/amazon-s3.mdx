@@ -189,55 +189,72 @@ The setup has a natural ordering dependency: the dashboard requires the **IAM Ro
   </Step>
 
   <Step title="Create the connector in the dashboard">
-    Go to [app.rootkey.ai](https://app.rootkey.ai) → **Connectors** → **New Connector** → select **Amazon S3**.
+    Sign in to [app.rootkey.ai](https://app.rootkey.ai) and, in the left sidebar under **Connect**, open **Integration Center**. On the **Amazon S3** card, click **Activate** (or **Connect a source** at the top).
 
-    Fill in all required fields:
-    - **Connector Name**
-    - **Destination Vault**
-    - **S3 Bucket Name**
-    - **AWS Region**
-    - **IAM Role ARN** — paste the ARN copied in step 1
-    - **Prefix** (optional)
+    <img style={{ borderRadius: "2px" }} src="/images/connectors/01-integration-center.png" alt="Integration Center with the Amazon S3, SharePoint and OneDrive cards" />
 
-    Save the connector.
+    The **New connector** wizard has four steps: **Basics**, **Config**, **Rules** and **Deploy**. In **Basics**, enter the **Connector name**, check that **Amazon S3** is selected and choose the **Destination vault**. Click **Continue**.
 
-    {/* TODO: screenshot */}
+    <img style={{ borderRadius: "2px" }} src="/images/connectors/02-basics.png" alt="New connector, Basics step" />
+
+    In **Config**, fill in the **Bucket name**, the **Region**, the **IAM Role ARN** you copied in step 1 and, optionally, a **Prefix**. **Advanced options** holds the **Max file size (bytes)** and the **Log retention (days)**. Click **Continue**.
+
+    <img style={{ borderRadius: "2px" }} src="/images/connectors/03-s3-config.png" alt="Config step with bucket name, region, IAM Role ARN and prefix" />
+
+    <img style={{ borderRadius: "2px" }} src="/images/connectors/04-s3-advanced.png" alt="Config step with the advanced options open" />
+
+    In **Rules**, add [filtering rules](/pages/connectors/rules) if only some files should be anchored. With no rules, every file uploaded to the bucket is anchored. Click **Create connector**.
+
+    <img style={{ borderRadius: "2px" }} src="/images/connectors/05-rules.png" alt="Rules step with no rules configured" />
   </Step>
 
-  <Step title="Copy the Connector API Key and the Terraform block">
-    At the end of the wizard, the dashboard displays two things:
+  <Step title="Copy the Terraform block and the secrets">
+    The **Deploy** step shows two panels:
 
-    1. The **Connector API Key** — copy it immediately.
-    2. A **ready-to-run Terraform block**, pre-filled with your bucket name, region, IAM Role ARN, and Connector API Key.
+    1. **main.tf**: a ready-to-run Terraform block, pre-filled with your bucket name, region, IAM Role ARN and prefix. It contains no credentials and is safe to commit.
+    2. **secrets**: the commands that put your **Connector API Key** in the environment (`TF_VAR_rootkey_api_key`), for bash or PowerShell. Run them in the terminal you will run Terraform from; they are deliberately kept out of `main.tf`.
+
+    <img style={{ borderRadius: "2px" }} src="/images/connectors/06-deploy.png" alt="Deploy step with main.tf and the secrets panel, key hidden" />
 
     <Warning>
-      The Connector API Key is shown **only once** and is already embedded in the Terraform block. Copy both now and store them securely before closing this screen. The key cannot be retrieved again — only rotated by recreating the connector.
+      The Connector API Key is shown **only once**. Copy both panels now and store the key securely before closing this screen. The key cannot be retrieved again, only rotated.
     </Warning>
 
-    The generated block will look like this (with your actual values already substituted):
+    Tick **I have copied both the Terraform block and the secrets, and stored them safely** and click **Done**.
+
+    <img style={{ borderRadius: "2px" }} src="/images/connectors/07-deploy-confirm.png" alt="Deploy step with the confirmation checkbox" />
+
+    The generated `main.tf` looks like this (with your values already substituted):
 
     ```hcl
+    terraform {
+      required_version = ">= 1.11"
+    }
+
+    variable "rootkey_api_key" {
+      type      = string
+      sensitive = true
+      ephemeral = true
+    }
+
     module "rootkey_s3_connector" {
       source = "github.com/ROOT-Key/rootkey-connectors//aws-s3?ref=v1.0.1"
 
-      bucket_name     = "my-company-documents"
-      aws_region      = "eu-west-1"
-      iam_role_arn    = "arn:aws:iam::123456789012:role/rootkey-s3-connector-role"
-      rootkey_api_key = "rk_conn_xxxxxxxxxxxxxxxxxxxx"
+      bucket_name  = "my-company-documents"
+      aws_region   = "eu-west-1"
+      iam_role_arn = "arn:aws:iam::123456789012:role/rootkey-connector"
+      prefix       = "contracts/"
 
+      rootkey_api_key = var.rootkey_api_key
+
+      # Increment the matching counter whenever you rotate a secret above.
       rootkey_api_key_version = 1
-
-      # Optional
-      prefix              = "documents/"
-      max_file_size_bytes = 524288000
-      log_retention_days  = 30
-      tags = {
-        "cost-center" = "security"
-      }
     }
     ```
 
-    {/* TODO: screenshot */}
+    The connector now appears under **Your connectors** in the Integration Center.
+
+    <img style={{ borderRadius: "2px" }} src="/images/connectors/08-active.jpg" alt="Integration Center with the new S3 connector" />
   </Step>
 
   <Step title="Deploy the Terraform module">
@@ -274,9 +291,7 @@ The setup has a natural ordering dependency: the dashboard requires the **IAM Ro
     aws logs tail $(terraform output -raw log_group_name) --follow
     ```
 
-    Check the connector status in the dashboard — it should show **ACTIVE**. If the status is **ERROR**, the detail panel shows the reason.
-
-    {/* TODO: screenshot */}
+    Check the connector status in the Integration Center — it should show **Active**. If the status is **Error**, the detail panel shows the reason.
   </Step>
 </Steps>
 
