@@ -8,50 +8,48 @@ icon: key
 ## How to Create an API Key
 
 <Note>
-  To create a **test key**, turn on test mode in Developer Tools first, then create the key. A test key works on your organization's test data, against the same API as a live key. See [Test and Live Data](/pages/environments).
+  A key belongs to the environment that is active when you create it. To create a **test key**, turn on test mode first (step 3), then create the key. A test key works on your organization's test data, against the same API as a live key. See [Test and Live Data](/pages/environments).
 </Note>
 
 <Steps>
   <Step title="Log in and open the Dashboard">
-    Go to [app.rootkey.ai](https://app.rootkey.ai/sign-in?utm_source=api_docs&utm_medium=api_keys_page&utm_content=login) and sign in. You will land on the main Dashboard.
+    Go to [app.rootkey.ai](https://app.rootkey.ai/sign-in?utm_source=api_docs&utm_medium=api_keys_page&utm_content=login) and sign in. You will land on the Dashboard. If you belong to more than one organization, select the one the key is for.
 
-    <img style={{ borderRadius: "0.5rem" }} src="https://media.rootkey.ai/docs/dev-api-step-1.png" />
+    <img style={{ borderRadius: "2px" }} src="/images/api-keys/01-dashboard.png" alt="ROOTKey Dashboard with the organization selected" />
   </Step>
 
-  <Step title="Navigate to Developer Tools">
-    In the left sidebar, scroll down to the **Platform** section and click **Developer Tools**. The Overview tab shows your active integrations, total request volume, and overall success rate.
+  <Step title="Open Developer Tools">
+    In the left sidebar, under **Connect**, click **Developer Tools**. If your organization has no keys yet, you will see the getting-started page with **Create your first API key**.
 
-    <img style={{ borderRadius: "0.5rem" }} src="https://media.rootkey.ai/docs/dev-api-step-2.png" />
+    <img style={{ borderRadius: "2px" }} src="/images/api-keys/02-developer-tools.png" alt="Developer Tools getting-started page" />
   </Step>
 
-  <Step title="Open the API Keys tab">
-    Click the **API Keys** tab at the top of the Developer Tools panel.
+  <Step title="Choose the environment">
+    Open the **API Keys** tab and click **Actions** in the top right corner. For a test key, click **Turn on test mode**. For a live key, leave test mode off.
 
-    <img style={{ borderRadius: "0.5rem" }} src="https://media.rootkey.ai/docs/dev-api-step-3.png" />
-  </Step>
+    <img style={{ borderRadius: "2px" }} src="/images/api-keys/03-actions-menu.png" alt="Actions menu with Create API key and Turn on test mode" />
 
-  <Step title="Start creating a new key">
-    If no keys exist yet, you will see the empty state. Click **+ Create API Key** in the top right corner to open the creation form.
+    While test mode is on, a yellow banner is shown at the top of the page.
 
-    <img style={{ borderRadius: "0.5rem" }} src="https://media.rootkey.ai/docs/dev-api-step-4.png" />
+    <img style={{ borderRadius: "2px" }} src="/images/api-keys/04-test-mode.png" alt="API Keys tab in test mode, with the test mode banner" />
   </Step>
 
   <Step title="Fill in the key details">
-    Enter a **Key Name**, an optional description, and choose an icon to help identify this key. Click **Generate Key** when ready.
+    Click **Actions** > **Create API key**. Enter a **Key Name**, an optional description, and choose an icon to help identify this key. Click **Generate Key** when ready.
 
-    <img style={{ borderRadius: "0.5rem" }} src="https://media.rootkey.ai/docs/dev-api-step-5.png" />
+    <img style={{ borderRadius: "2px" }} src="/images/api-keys/05-key-details.png" alt="Create your new API Key form" />
   </Step>
 
   <Step title="Copy and store your key">
-    Your new API key is displayed once. Copy it now and store it in a secure location - it will not be shown again after you close this modal.
+    Your new API key is displayed once. Copy it, or download it, and store it in a secure location - it will not be shown again after you click **Done**.
 
-    <img style={{ borderRadius: "0.5rem" }} src="https://media.rootkey.ai/docs/dev-api-step-6.png" />
+    <img style={{ borderRadius: "2px" }} src="/images/api-keys/06-key-created.png" alt="API Key Created dialog, with the key value hidden" />
   </Step>
 
   <Step title="Confirm the key is active">
-    After closing the modal, the key appears in the API Keys list with an **Active** status and a request counter. You are ready to authenticate API calls.
+    The key appears in the API Keys list with an **Active** status and a request counter. Expand it to see its environment and permissions. You are ready to authenticate API calls.
 
-    <img style={{ borderRadius: "0.5rem" }} src="https://media.rootkey.ai/docs/dev-api-step-7.png" />
+    <img style={{ borderRadius: "2px" }} src="/images/api-keys/07-key-active.png" alt="API Keys list with the new key active" />
   </Step>
 </Steps>
 

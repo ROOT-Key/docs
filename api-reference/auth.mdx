@@ -46,11 +46,15 @@ A token works in one organization per request, and you name that organization in
 
 <Steps>
   <Step title="Open Account Settings">
-    Sign in to [app.rootkey.ai](https://app.rootkey.ai/sign-in?utm_source=api_docs&utm_medium=authentication_page&utm_content=personal_access_tokens) and open your **Account Settings**. Go to the **Personal access tokens** tab and click **Create personal access token**.
+    Sign in to [app.rootkey.ai](https://app.rootkey.ai/sign-in?utm_source=api_docs&utm_medium=authentication_page&utm_content=personal_access_tokens) and open your **Account Settings**. Under **Third-party access**, go to the **Personal access tokens** tab and click **Create token**.
+
+    <img style={{ borderRadius: "2px" }} src="/images/tokens/01-tokens-tab.png" alt="Account Settings, Personal access tokens tab with Create token" />
   </Step>
 
   <Step title="Name it">
     Give the token a name that tells you which tool uses it, for example `Claude Desktop on my laptop`. Use one token per tool, so you can revoke one without touching the others. A name is at most 64 characters, and two of your active tokens cannot share one.
+
+    <img style={{ borderRadius: "2px" }} src="/images/tokens/02-name-scopes.png" alt="Create personal access token with the name and the Read, Write and Delete scopes" />
   </Step>
 
   <Step title="Choose what it can do">
@@ -59,6 +63,8 @@ A token works in one organization per request, and you name that organization in
 
   <Step title="Choose where it works">
     Choose the organizations the token may reach, or **All my organizations**, which also covers organizations you join later. A token reaches only the organizations you choose, and each organization can still restrict or block agents; see [What an organization controls](#what-an-organization-controls).
+
+    <img style={{ borderRadius: "2px" }} src="/images/tokens/03-organizations-expiry.png" alt="Where it works and Expires after" />
   </Step>
 
   <Step title="Set when it expires">
@@ -66,7 +72,9 @@ A token works in one organization per request, and you name that organization in
   </Step>
 
   <Step title="Confirm it is you">
-    ROOTKey asks you to confirm before it creates the token. If you have two-factor authentication, enter the 6-digit code from your authenticator app, or a backup code. Otherwise enter the 6-digit code that ROOTKey emails to you, which works once and expires after 10 minutes.
+    ROOTKey asks you to confirm before it creates the token. If you have two-factor authentication, enter the 6-digit code from your authenticator app, or a backup code. Otherwise enter the 6-digit code that ROOTKey emails to you, which works once and expires after 10 minutes. Then click **Verify and create token**.
+
+    <img style={{ borderRadius: "2px" }} src="/images/tokens/04-confirm.png" alt="Confirm it is you, with the 6-digit code" />
   </Step>
 
   <Step title="Copy the token">

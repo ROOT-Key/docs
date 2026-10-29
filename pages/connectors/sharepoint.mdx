@@ -214,11 +214,21 @@ The setup has a natural ordering: the dashboard requires the Tenant/Client/Site 
   </Step>
 
   <Step title="Create the connector in the dashboard">
-    Go to [app.rootkey.ai](https://app.rootkey.ai) → **Connectors** → **New Connector** → select **SharePoint**.
+    Sign in to [app.rootkey.ai](https://app.rootkey.ai) and, in the left sidebar under **Connect**, open **Integration Center**. On the **SharePoint** card, click **Activate**.
 
-    Fill in all required fields (see [Configuration Fields](#configuration-fields) above). Save the connector.
+    <img style={{ borderRadius: "2px" }} src="/images/connectors/01-integration-center.png" alt="Integration Center with the Amazon S3, SharePoint and OneDrive cards" />
 
-    {/* TODO: screenshot */}
+    The **New connector** wizard has four steps: **Basics**, **Config**, **Rules** and **Deploy**. In **Basics**, enter the **Connector name**, select **SharePoint** as the storage type and choose the **Destination vault**. Click **Continue**.
+
+    <img style={{ borderRadius: "2px" }} src="/images/connectors/02-basics.png" alt="New connector, Basics step" />
+
+    In **Config**, enter the **Tenant ID**, **Client ID** and **Client Secret** of your App Registration, the **Site URL**, and the **Azure deployment target** (resource group, Azure location and name suffix). The client secret and the deployment target are used only to fill the Terraform block; ROOTKey does not store them. See [Configuration Fields](#configuration-fields) above. Click **Continue**.
+
+    <img style={{ borderRadius: "2px" }} src="/images/connectors/09-sharepoint-config.png" alt="Config step with tenant ID, client ID, client secret, site URL and the Azure deployment target" />
+
+    In **Rules**, add [filtering rules](/pages/connectors/rules) if only some files should be anchored, then click **Create connector**.
+
+    <img style={{ borderRadius: "2px" }} src="/images/connectors/05-rules.png" alt="Rules step with no rules configured" />
   </Step>
 
   <Step title="Copy the Connector API Key and the Terraform block">

@@ -41,6 +41,78 @@ There is no `POST` or `PUT` endpoint for tables: creating and updating a table h
 
 ---
 
+## Create a table in the app
+
+<Steps>
+  <Step title="Open Tables">
+    Sign in to [app.rootkey.ai](https://app.rootkey.ai/sign-in?utm_source=api_docs&utm_medium=tables_page&utm_content=create_table) and, in the left sidebar under **Protect**, click **Database**. If the organization has no tables yet, click **Create your first table**. Otherwise click **Create Table** in the top right corner.
+
+    <img style={{ borderRadius: "2px" }} src="/images/tables/01-empty.png" alt="Tables page with Create your first table" />
+  </Step>
+
+  <Step title="Name the table">
+    Enter a **Table Name** and an optional **Description**. The preview on the right shows the table as it will be created. Click **Next**.
+
+    <img style={{ borderRadius: "2px" }} src="/images/tables/02-basic-info.png" alt="Create New Table, Basic info step" />
+  </Step>
+
+  <Step title="Define the schema">
+    The schema lists the table's columns. You can import the schema you already use, or build it column by column:
+
+    - **Import**: drop a schema file, or click to browse.
+    - **Paste**: paste the schema as text and click **Import pasted schema**.
+    - **Add columns manually**: open the visual builder (see the next step).
+
+    <img style={{ borderRadius: "2px" }} src="/images/tables/03-schema-import.png" alt="Schema step with the Import, Paste and Guide tabs" />
+
+    The **Guide** tab shows the four accepted formats: JSON (an array of column objects with `name`, `type` and the optional `required`, `primaryKey` and `limit`), Prisma (a `model` block), SQL (a `CREATE TABLE` statement) and plain text (one `name:type` per line, with `*` marking the primary key).
+
+    <img style={{ borderRadius: "2px" }} src="/images/tables/04-schema-guide.png" alt="Guide tab with the JSON, Prisma, SQL and plain text formats" />
+
+    For example, this JSON schema describes an invoices table:
+
+    ```json
+    [
+      { "name": "invoice_id", "type": "string",  "required": true, "primaryKey": true, "limit": 36 },
+      { "name": "customer",   "type": "string",  "required": true, "limit": 255 },
+      { "name": "amount",     "type": "number",  "required": true },
+      { "name": "issued_at",  "type": "date",    "required": true },
+      { "name": "paid",       "type": "boolean", "required": false }
+    ]
+    ```
+
+    <img style={{ borderRadius: "2px" }} src="/images/tables/05-schema-paste.png" alt="Paste tab with a JSON schema" />
+
+    After the import, the preview confirms how many columns were mapped.
+
+    <img style={{ borderRadius: "2px" }} src="/images/tables/06-schema-mapped.png" alt="Preview showing 5 columns successfully mapped" />
+  </Step>
+
+  <Step title="Review the columns">
+    Click **Add columns manually** to see and edit each column: its name, its **Type** (Text, Number, Boolean, Date or JSON), the optional **Char. limit** for text, whether it is **Required**, and which column is the **Primary key**. Use the dashed card on the right to add a column, and **Import a schema** to go back to the import. When the columns are right, click **Create Table**.
+
+    <img style={{ borderRadius: "2px" }} src="/images/tables/07-schema-builder.png" alt="Visual column builder with type, character limit, required and primary key" />
+  </Step>
+
+  <Step title="Send the first record">
+    The table is created and the last step, **Validate**, shows a ready-made request with the table's address, for creating, deleting, restoring and listing deleted records. Send your first record with your [API key](/pages/api-keys): the step waits for it and confirms the integration. You can also click **Close** and send it later.
+
+    <img style={{ borderRadius: "2px" }} src="/images/tables/08-validate.png" alt="Validate step with the create record request and Waiting for first record" />
+  </Step>
+
+  <Step title="Find the table in the list">
+    The table appears in the list. Until it receives its first record it is marked **Awaiting integration**, with a **Finish integration** button that reopens the request.
+
+    <img style={{ borderRadius: "2px" }} src="/images/tables/09-list.png" alt="Tables list with the invoices table awaiting integration" />
+
+    The table's actions menu lets you **Edit Table** (its name and description), **Copy address**, **Finish integration**, open the **Delete/restore guide (API)**, **Add Teams** and **Delete table**.
+
+    <img style={{ borderRadius: "2px" }} src="/images/tables/10-actions.jpg" alt="Table actions menu" />
+  </Step>
+</Steps>
+
+---
+
 ## Related
 
 - [Records API](/api-reference/platform/endpoint/records/overview) - manage individual records within a table
