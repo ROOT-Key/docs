@@ -3,6 +3,8 @@ title: Direct file uploads
 sidebarTitle: Direct uploads
 icon: cloud-arrow-up
 description: Upload a file straight to ROOTKey's storage with a signed URL, then complete the upload to anchor it. Built for large files and for high volumes of files.
+"og:image": "https://docs.rootkey.ai/images/og/api-reference/platform/endpoint/files/direct-uploads.png"
+"twitter:image": "https://docs.rootkey.ai/images/og/api-reference/platform/endpoint/files/direct-uploads.png"
 ---
 
 With a direct upload, the file's bytes never pass through the ROOTKey API. You declare the file and its SHA-256, ROOTKey answers with a signed URL, you send the bytes **straight to the storage**, and then you complete the upload so ROOTKey can anchor the hash and create the file. The API only handles small JSON requests, so uploads stay fast for large files and keep up when you send many files at once.
