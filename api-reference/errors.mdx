@@ -33,7 +33,7 @@ Branch on `errorCode` rather than on `message` when you handle an error in code,
 | `401` Unauthorized | The `x-api-key` header is missing, or the key is malformed, unknown, inactive or belongs to the other data set (test or live). Every one of these gets the same `401` with the `message` `Access Denied` and no `errorCode`, so the response never says which it was. A personal access token that is missing, malformed, unknown, revoked or expired gets one identical `401`, so the response never says which. |
 | `403` Forbidden | The key is valid, but the request is not allowed: for example, your organization has no subscription ([`resource_not_found`](#resource_not_found)), your plan does not include the feature ([`unauthorized_access`](#unauthorized_access), or [`feature_not_found`](#feature_not_found) for an audit report), an access rule set for your organization blocks the request ([`access_policy_denied`](#access_policy_denied)), or a Restricted vault is being downloaded from a country your organization does not allow ([`geofence_blocked`](#geofence_blocked)). A personal access token can also be refused because the organization, the user or the token does not allow the request: see [Personal access tokens and agents](#personal-access-tokens-and-agents). |
 | `404` Not Found | The vault, table, file, record or recovery point does not exist in your organization ([`resource_not_found`](#resource_not_found)). A path the API does not have also gets a `404`, with an HTML body instead of JSON; so does `GET /me`, `GET /organizations` or `GET /organization` with an API key, because only a personal access token can call them. |
-| `409` Conflict | The request conflicts with the current state of the resource, such as adding a version to a deleted file. Restore the file first. |
+| `409` Conflict | The request conflicts with the current state of the resource, such as adding a version to a file whose original and versions are all deleted ([`no_promotable_version`](#no_promotable_version)). Restore the file first. |
 | `410` Gone | The vault, file or record was permanently removed, so it can no longer be restored or downloaded. A direct upload that expired ([`file_upload_expired`](#file_upload_expired)) also gets it, and so does Create file where it is turned off ([`legacy_file_upload_disabled`](#legacy_file_upload_disabled)). |
 | `413` Payload Too Large | The upload or the request body is larger than the API accepts. A direct upload over 5 GiB gets [`file_too_large`](#file_too_large); otherwise there is no `errorCode`. |
 | `422` Unprocessable Entity | A direct upload was refused because what was stored is not what you declared: [`file_upload_checksum_mismatch`](#file_upload_checksum_mismatch) or [`file_upload_size_mismatch`](#file_upload_size_mismatch). |
@@ -126,7 +126,7 @@ Add a little random delay to every wait, so that clients refused together do not
 
 ### `invalid_filters`
 - **Status:** 400
-- **Problem:** A filter on a listing has a value ROOTKey cannot use. The `message` is `Invalid filters. Please check the input data.`, and the `details` array lists each offending parameter as a `field` and a `message`, such as `startDate` with `Invalid ISO date`. It applies to the lists of files and records (`startDate`, `endDate` and `status`) and to the lists of deleted vaults, files and records (`deletedFrom` and `deletedTo`).
+- **Problem:** A filter on a listing has a value ROOTKey cannot use. The `message` is `Invalid filters. Please check the input data.`, and the `details` array lists each offending parameter as a `field` and a `message`, such as `startDate` with `Invalid ISO date`. It applies to the lists of files and records (`startDate`, `endDate` and `status`) and to the lists of deleted vaults, files and records (`deletedFrom` and `deletedTo`). A record has no name, so a `name` on the list of records gets it too.
 - **Solution:** Correct the parameters named in `details`. Dates are in ISO 8601 format, and `status` is `pending`, `registered` or `error`.
 
 <span id="invalid-query-parameters" className="error-alias" />
@@ -136,12 +136,19 @@ Add a little random delay to every wait, so that clients refused together do not
 - **Problem:** A parameter of [List vaults](/api-reference/platform/endpoint/vaults/list-vaults), [List tables](/api-reference/platform/endpoint/tables/list-tables) or [List the organizations a token can act in](/api-reference/platform/endpoint/identity/list-organizations) has a value ROOTKey cannot use, such as a `limit` outside its range or an `order` that is not `asc` or `desc`. The `details` array lists each offending parameter as a `field` and a `message`; it never repeats the value you sent.
 - **Solution:** Correct the parameters named in `details`, then send the request again.
 
+<span id="invalid-pagination" className="error-alias" />
+
+### `invalid_pagination`
+- **Status:** 400
+- **Problem:** The `limit` or the `order` of a listing has a value ROOTKey cannot use. It applies to [List files](/api-reference/platform/endpoint/files/get-files), [List file versions](/api-reference/platform/endpoint/files/get-file-versions), [List records](/api-reference/platform/endpoint/records/list-records) and [List record versions](/api-reference/platform/endpoint/records/get-record-versions). `limit` is a whole number from 1 to 100, and `order` is exactly `asc` or `desc`. A value outside that, such as `0`, `101`, `10.5` or `ASC`, is refused instead of being clamped to a default. An empty `limit` or `order` counts as not sent. The `message` is `Invalid pagination parameters. Please check the input data.`, and the `details` array lists each offending parameter as a `field` (`limit` or `order`) and a `message`; it never repeats the value you sent.
+- **Solution:** Correct the parameters named in `details`, then send the request again. To read more than 100 items, follow `pagination.nextCursor` from page to page.
+
 <span id="invalid-cursor" className="error-alias" />
 
 ### `invalid_cursor`
 - **Status:** 400
-- **Problem:** The `cursor` of a listing is not one ROOTKey issued. ROOTKey refuses it instead of starting again from the first page, so a damaged cursor never makes a client read the same rows twice.
-- **Solution:** Send the `pagination.nextCursor` of the previous page exactly as you received it, or leave `cursor` out to start from the first page. Do not build or change a cursor.
+- **Problem:** The `cursor` of a listing is not one ROOTKey issued. ROOTKey refuses it instead of starting again from the first page, so a damaged cursor never makes a client read the same rows twice. It applies to every paginated listing, the lists of file versions and record versions included. A cursor taken from an older response that is a plain date, such as `2026-07-18T10:12:04.000Z`, is not valid for the lists of files, file versions and record versions, which now issue an opaque cursor. The list of records is the exception: its `pagination.nextCursor` is a date, and a `cursor` that is not a date is refused.
+- **Solution:** Send the `pagination.nextCursor` of the previous page exactly as you received it, or leave `cursor` out to start from the first page. Do not build or change a cursor. If you stored a cursor from before, discard it and start again from the first page.
 
 <span id="parent-version-not-in-vault" className="error-alias" />
 
@@ -154,7 +161,7 @@ Add a little random delay to every wait, so that clients refused together do not
 
 ### `no_promotable_version`
 - **Status:** 409
-- **Problem:** You asked for a new version of a file that is deleted and has no live version left to attach it to, in a plain request or in a [direct upload](/api-reference/platform/endpoint/files/direct-uploads). If a deleted file still has a live version, ROOTKey attaches the new version to the oldest live one; this error means every version is deleted. The `message` is `File '<id>' is deleted and has no live version to attach a new version to. Restore it first, then retry.`
+- **Problem:** You asked for a new version of a file whose original and every version are deleted, in a plain request or in a [direct upload](/api-reference/platform/endpoint/files/direct-uploads). A new version always attaches to the original of the file, whichever of its versions `parentId` names. A deleted original that still has a live version takes new versions as usual; ROOTKey refuses the request only when nothing of the file is live. The `message` is `File '<id>' is deleted and has no live version to attach a new version to. Restore it first, then retry.`, with the `parentId` you sent as `<id>`.
 - **Solution:** Restore the file, from the **Deleted Items** page (the Restore Center) of the ROOTKey app or with [`PATCH /files/{fileId}/restore`](/api-reference/platform/endpoint/files/restore-file), then create the version again. If you no longer need the deleted file, upload the content as a new file instead.
 
 <span id="waiting-for-registration" className="error-alias" />
@@ -485,7 +492,7 @@ These come from a request made with a [personal access token](/api-reference/aut
 
 ## Direct file uploads
 
-These come from the [direct upload](/api-reference/platform/endpoint/files/direct-uploads) endpoints. An upload that is refused for a plan limit gets [`usage_limit_exceeded`](#usage_limit_exceeded), one whose outcome is unknown gets [`creation_outcome_unknown`](#creation_outcome_unknown), and a new version of a deleted file that has no live version left gets [`no_promotable_version`](#no_promotable_version), all described above.
+These come from the [direct upload](/api-reference/platform/endpoint/files/direct-uploads) endpoints. An upload that is refused for a plan limit gets [`usage_limit_exceeded`](#usage_limit_exceeded), one whose outcome is unknown gets [`creation_outcome_unknown`](#creation_outcome_unknown), and a new version of a file whose original and versions are all deleted gets [`no_promotable_version`](#no_promotable_version), all described above.
 
 <span id="file-too-large" className="error-alias" />
 

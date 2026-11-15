@@ -3,3 +3,7 @@ openapi: get /platform/files
 "og:image": "https://docs.rootkey.ai/images/og/api-reference/platform/endpoint/files/get-files.png"
 "twitter:image": "https://docs.rootkey.ai/images/og/api-reference/platform/endpoint/files/get-files.png"
 ---
+
+<Warning>
+  **Page size and file entries.** `limit` is a whole number from 1 to 100 (default 10). A larger value, or an `order` that is not `asc` or `desc`, gets a `400` [`invalid_pagination`](/api-reference/errors#invalid_pagination) instead of a page. A client that asked for more than 100 items at once has to follow `pagination.nextCursor`. The list has one entry per file: a file that has versions is one entry, and its `versionsNumber` counts the live versions. When the original is deleted but a version is live, the entry is that version's, with `originalDeleted` set to `true`.
+</Warning>

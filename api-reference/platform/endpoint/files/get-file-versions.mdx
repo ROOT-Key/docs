@@ -4,6 +4,10 @@ openapi: get /platform/files/{parentId}/versions
 "twitter:image": "https://docs.rootkey.ai/images/og/api-reference/platform/endpoint/files/get-file-versions.png"
 ---
 
+<Warning>
+  **Page size and cursor.** `limit` is a whole number from 1 to 100 (default 10), and `order` is `asc` or `desc`; anything else gets a `400` [`invalid_pagination`](/api-reference/errors#invalid_pagination). A `cursor` must be the `pagination.nextCursor` of the previous page, unchanged. A cursor in the old form, an ISO date, gets a `400` [`invalid_cursor`](/api-reference/errors#invalid_cursor): start again from the first page. `parentId` can be the id of the original, even a deleted one, or of any of its versions.
+</Warning>
+
 <Frame caption="Step-By-Step 05 · Versions, history and restore in ROOTKey">
   <iframe className="w-full aspect-video" src="https://www.youtube-nocookie.com/embed/_2rf72Su6dQ" title="Versions, history and restore in ROOTKey" frameBorder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
 </Frame>

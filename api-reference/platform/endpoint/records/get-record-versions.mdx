@@ -3,3 +3,7 @@ openapi: get /platform/records/{parentId}/versions
 "og:image": "https://docs.rootkey.ai/images/og/api-reference/platform/endpoint/records/get-record-versions.png"
 "twitter:image": "https://docs.rootkey.ai/images/og/api-reference/platform/endpoint/records/get-record-versions.png"
 ---
+
+<Warning>
+  **Page size and cursor.** `limit` is a whole number from 1 to 100 (default 10), and `order` is `asc` or `desc`; anything else gets a `400` [`invalid_pagination`](/api-reference/errors#invalid_pagination). A `cursor` must be the `pagination.nextCursor` of the previous page, unchanged. A cursor in the old form, an ISO date, gets a `400` [`invalid_cursor`](/api-reference/errors#invalid_cursor): start again from the first page.
+</Warning>
