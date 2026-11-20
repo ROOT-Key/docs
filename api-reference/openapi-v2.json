@@ -782,7 +782,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "The opaque `pagination.nextCursor` of the previous page, sent back unchanged. A cursor that does not decode, an old ISO date included, is a 400 `invalid_cursor`, never a restart from the first page."
+            "description": "The opaque `pagination.nextCursor` of the previous page, sent back unchanged. A cursor that does not decode, an old ISO date included, is a 400 `invalid_cursor`, never a restart from the first page. The bracket form (`cursor[]=x`) is a 400 `invalid_pagination`. The cursor also carries the totals of the first page of the walk: send it back exactly as received, never edited or built by hand."
           },
           {
             "name": "limit",
@@ -794,7 +794,7 @@
               "maximum": 100,
               "default": 10
             },
-            "description": "Page size, a whole number from 1 to 100. Empty counts as not sent. Any other value is a 400 `invalid_pagination`, never clamped to a default."
+            "description": "Page size, a whole number from 1 to 100. Empty counts as not sent. Any other value is a 400 `invalid_pagination`, never clamped to a default. The bracket form (`limit[]=1`) is the same 400."
           },
           {
             "name": "order",
@@ -808,7 +808,7 @@
               ],
               "default": "desc"
             },
-            "description": "Sort direction, exactly `asc` or `desc`. Empty counts as not sent. Any other value is a 400 `invalid_pagination`."
+            "description": "Sort direction, exactly `asc` or `desc`. Empty counts as not sent. Any other value is a 400 `invalid_pagination`. The bracket form (`order[]=asc`) is the same 400."
           },
           {
             "name": "name",
@@ -870,7 +870,7 @@
             }
           },
           "400": {
-            "description": "An invalid filter (`invalid_filters`), a `limit` that is not a whole number from 1 to 100 or an `order` that is not `asc` or `desc` (`invalid_pagination`, the offending fields in `details`), or a cursor that does not decode (`invalid_cursor`). A malformed `vaultAddress` (`invalid_wallet_address`), a plan limit (`usage_limit_exceeded`) or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`) also get a 400.",
+            "description": "An invalid filter (`invalid_filters`), a `limit` that is not a whole number from 1 to 100 or an `order` that is not `asc` or `desc` (`invalid_pagination`, the offending fields in `details`), or a cursor that does not decode (`invalid_cursor`). A `limit`, `order` or `cursor` sent in bracket form (`limit[]`, `order[]`, `cursor[]`) is also an `invalid_pagination`. A malformed `vaultAddress` (`invalid_wallet_address`), a plan limit (`usage_limit_exceeded`) or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`) also get a 400.",
             "content": {
               "application/json": {
                 "schema": {
@@ -892,7 +892,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "description": "Lists the files of a vault, one entry per file lineage: the original while it is live, otherwise its oldest live version, flagged `originalDeleted: true`. `versionsNumber` on an entry is the number of live versions of that lineage. `metadata.totalCount` counts those entries and follows every filter, `status` included. `registered`, `pending`, `error`, `totalSizeBytes` and `last24hCount` describe the whole vault under the `name` and date range filters only and do not follow `status` (`last24hCount` always looks at the last day). A personal access token with the `rootkey.read` scope can call it."
+        "description": "Lists the files of a vault, one entry per file lineage: the original while it is live, otherwise its oldest live version, flagged `originalDeleted: true`. `versionsNumber` on an entry is the number of live versions of that lineage. `metadata.totalCount` counts those entries and follows every filter, `status` included. `registered`, `pending`, `error`, `totalSizeBytes` and `last24hCount` describe the whole vault under the `name` and date range filters only and do not follow `status` (`last24hCount` always looks at the last day). The figures of `metadata` (`totalCount` included) are counted by the request that starts the walk, the first page with no `cursor`, and reused by the following pages through the cursor, so they describe the vault as of the first page. They are counted again when the cursor is older than 10 minutes, or was issued for another vault or other filters. A personal access token with the `rootkey.read` scope can call it."
       },
       "post": {
         "summary": "Create file",
@@ -1679,7 +1679,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "The opaque `pagination.nextCursor` of the previous page, sent back unchanged. A cursor that does not decode is a 400 `invalid_cursor`, never a restart from the first page. A cursor in the old form, an ISO date, is refused the same way: start again from the first page."
+            "description": "The opaque `pagination.nextCursor` of the previous page, sent back unchanged. A cursor that does not decode is a 400 `invalid_cursor`, never a restart from the first page. A cursor in the old form, an ISO date, is refused the same way: start again from the first page. The bracket form (`cursor[]=x`) is a 400 `invalid_pagination`."
           },
           {
             "name": "limit",
@@ -1691,7 +1691,7 @@
               "maximum": 100,
               "default": 10
             },
-            "description": "Page size, a whole number from 1 to 100. Empty counts as not sent. Any other value is a 400 `invalid_pagination`, never clamped to a default."
+            "description": "Page size, a whole number from 1 to 100. Empty counts as not sent. Any other value is a 400 `invalid_pagination`, never clamped to a default. The bracket form (`limit[]=1`) is the same 400."
           },
           {
             "name": "order",
@@ -1705,7 +1705,7 @@
               ],
               "default": "desc"
             },
-            "description": "Sort direction, exactly `asc` or `desc`. Empty counts as not sent. Any other value is a 400 `invalid_pagination`."
+            "description": "Sort direction, exactly `asc` or `desc`. Empty counts as not sent. Any other value is a 400 `invalid_pagination`. The bracket form (`order[]=asc`) is the same 400."
           },
           {
             "$ref": "#/components/parameters/OrganizationHeader"
@@ -1726,7 +1726,7 @@
             }
           },
           "400": {
-            "description": "A `limit` that is not a whole number from 1 to 100 or an `order` that is not `asc` or `desc` (`invalid_pagination`, the offending fields in `details`), or a cursor that does not decode (`invalid_cursor`). A malformed `vaultAddress` (`invalid_wallet_address`), a plan limit (`usage_limit_exceeded`) or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`) also get a 400.",
+            "description": "A `limit` that is not a whole number from 1 to 100 or an `order` that is not `asc` or `desc` (`invalid_pagination`, the offending fields in `details`), or a cursor that does not decode (`invalid_cursor`). A `limit`, `order` or `cursor` sent in bracket form (`limit[]`, `order[]`, `cursor[]`) is also an `invalid_pagination`. A malformed `vaultAddress` (`invalid_wallet_address`), a plan limit (`usage_limit_exceeded`) or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`) also get a 400.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2463,7 +2463,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "The `pagination.nextCursor` of the previous page, sent back unchanged. In this listing it is a date. A value that is not a date is a 400 `invalid_cursor`, never a restart from the first page."
+            "description": "The `pagination.nextCursor` of the previous page, sent back unchanged. In this listing it is a date, between 1970-01-01 and 9999-12-31. A value that is not such a date is a 400 `invalid_cursor`, never a restart from the first page. The bracket form (`cursor[]=x`) is a 400 `invalid_pagination`."
           },
           {
             "name": "limit",
@@ -2475,7 +2475,7 @@
               "maximum": 100,
               "default": 10
             },
-            "description": "Page size, a whole number from 1 to 100. Empty counts as not sent. Any other value is a 400 `invalid_pagination`, never clamped to a default."
+            "description": "Page size, a whole number from 1 to 100. Empty counts as not sent. Any other value is a 400 `invalid_pagination`, never clamped to a default. The bracket form (`limit[]=1`) is the same 400."
           },
           {
             "name": "order",
@@ -2489,7 +2489,7 @@
               ],
               "default": "desc"
             },
-            "description": "Sort direction, exactly `asc` or `desc`. Empty counts as not sent. Any other value is a 400 `invalid_pagination`."
+            "description": "Sort direction, exactly `asc` or `desc`. Empty counts as not sent. Any other value is a 400 `invalid_pagination`. The bracket form (`order[]=asc`) is the same 400."
           },
           {
             "name": "startDate",
@@ -2541,7 +2541,7 @@
             }
           },
           "400": {
-            "description": "A `limit` that is not a whole number from 1 to 100 or an `order` that is not `asc` or `desc` (`invalid_pagination`, the offending fields in `details`), a filter that does not exist for records, `name` included, or a date filter that is not a date (`invalid_filters`), or a cursor that is not a date (`invalid_cursor`). A malformed `vaultAddress` (`invalid_wallet_address`), a plan limit (`usage_limit_exceeded`) or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`) also get a 400.",
+            "description": "A `limit` that is not a whole number from 1 to 100 or an `order` that is not `asc` or `desc` (`invalid_pagination`, the offending fields in `details`), a filter that does not exist for records, `name` included, or a date filter that is not a date (`invalid_filters`), or a cursor that is not a date between 1970-01-01 and 9999-12-31 (`invalid_cursor`). A `limit`, `order` or `cursor` sent in bracket form (`limit[]`, `order[]`, `cursor[]`) is also an `invalid_pagination`. A malformed `vaultAddress` (`invalid_wallet_address`), a plan limit (`usage_limit_exceeded`) or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`) also get a 400.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2679,7 +2679,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "The opaque `pagination.nextCursor` of the previous page, sent back unchanged. A cursor that does not decode is a 400 `invalid_cursor`, never a restart from the first page. A cursor in the old form, an ISO date, is refused the same way: start again from the first page."
+            "description": "The opaque `pagination.nextCursor` of the previous page, sent back unchanged. A cursor that does not decode is a 400 `invalid_cursor`, never a restart from the first page. A cursor in the old form, an ISO date, is refused the same way: start again from the first page. The bracket form (`cursor[]=x`) is a 400 `invalid_pagination`."
           },
           {
             "name": "limit",
@@ -2691,7 +2691,7 @@
               "maximum": 100,
               "default": 10
             },
-            "description": "Page size, a whole number from 1 to 100. Empty counts as not sent. Any other value is a 400 `invalid_pagination`, never clamped to a default."
+            "description": "Page size, a whole number from 1 to 100. Empty counts as not sent. Any other value is a 400 `invalid_pagination`, never clamped to a default. The bracket form (`limit[]=1`) is the same 400."
           },
           {
             "name": "order",
@@ -2705,7 +2705,7 @@
               ],
               "default": "desc"
             },
-            "description": "Sort direction, exactly `asc` or `desc`. Empty counts as not sent. Any other value is a 400 `invalid_pagination`."
+            "description": "Sort direction, exactly `asc` or `desc`. Empty counts as not sent. Any other value is a 400 `invalid_pagination`. The bracket form (`order[]=asc`) is the same 400."
           },
           {
             "$ref": "#/components/parameters/OrganizationHeader"
@@ -2726,7 +2726,7 @@
             }
           },
           "400": {
-            "description": "A `limit` that is not a whole number from 1 to 100 or an `order` that is not `asc` or `desc` (`invalid_pagination`, the offending fields in `details`), or a cursor that does not decode (`invalid_cursor`). A malformed `vaultAddress` (`invalid_wallet_address`), a plan limit (`usage_limit_exceeded`) or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`) also get a 400.",
+            "description": "A `limit` that is not a whole number from 1 to 100 or an `order` that is not `asc` or `desc` (`invalid_pagination`, the offending fields in `details`), or a cursor that does not decode (`invalid_cursor`). A `limit`, `order` or `cursor` sent in bracket form (`limit[]`, `order[]`, `cursor[]`) is also an `invalid_pagination`. A malformed `vaultAddress` (`invalid_wallet_address`), a plan limit (`usage_limit_exceeded`) or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`) also get a 400.",
             "content": {
               "application/json": {
                 "schema": {
