@@ -509,7 +509,7 @@
     "/platform/vaults": {
       "post": {
         "summary": "Create vault",
-        "description": "Creates a new vault and assigns it to the specified team. Returns the chain ID, address, name and description. A personal access token with the `rootkey.write` scope can call it, in an organization that lets agents write.",
+        "description": "Creates a new vault and assigns it to the specified team. Returns the chain ID, address, name and description. A personal access token with the `rootkey.write` scope can call it, in an organization that lets agents write. With a personal access token, the member must belong to the team that will own the vault, with one exception: an owner or an administrator can name any team of the organization, but only by sending `teamId`. Without `teamId` the member has to belong to `General`, or the request gets a 403 `not_a_team_member`. A personal access token or a connected app can create at most 20 vaults and tables together per minute and user; over that the request gets a 429 with a `Retry-After` header. An organization API key is not limited this way.",
         "tags": [
           "api-v1-vaults"
         ],
@@ -540,8 +540,7 @@
                   },
                   "teamId": {
                     "type": "string",
-                    "format": "uuid",
-                    "description": "Optional. ID of the team that will own the vault. Defaults to the organization's 'General' team."
+                    "description": "Optional. ID of the team that will own the vault. It is a UUID for the team every organization starts with and a 32-character alphanumeric string for a team made in the ROOTKey app, so do not assume a format. Left out, the vault belongs to the organization's team named `General`; if there is none, the answer is a 404 `resource_not_found` (`Team named \"General\" not found`)."
                   }
                 }
               }
@@ -585,7 +584,17 @@
             "$ref": "#/components/responses/AgentAccessDenied"
           },
           "404": {
-            "description": "Team not found"
+            "description": "Team not found: the `teamId` names no team of the organization, or it was left out and the organization has no team named `General` (`resource_not_found`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests. With a personal access token or a connected app: the per-user limit of 20 vaults and tables created in a minute was spent. `Retry-After` gives the seconds to wait."
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
