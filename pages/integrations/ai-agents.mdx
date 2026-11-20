@@ -9,7 +9,7 @@ icon: shield-check
 
 Members of your organization can connect an AI agent, such as Claude, to ROOTKey with a [personal access token](/api-reference/auth#personal-access-tokens), or by signing in to ROOTKey from an app through the [hosted connector](/pages/integrations/hosted-connector). Any app that supports MCP can connect that way, not only Claude. The agent then acts as that member, with no more access than the member has in the ROOTKey app. As an administrator, you decide whether agents may use your organization's data at all, and how far.
 
-This page is for administrators. If you are a member who wants to connect an agent, start with [Claude (MCP)](/pages/integrations/claude-mcp).
+This page is for administrators. If you are a member who wants to connect an agent, start with [Claude (MCP)](/pages/integrations/claude-mcp). Developers who build an agent will find what it sends to create a table in [Create a table or a vault for a team](#create-a-table-or-a-vault-for-a-team).
 
 ---
 
@@ -101,6 +101,128 @@ If you need to cut one member's agents without touching anyone else's, block tha
 - You can unblock the member at any time with **Unblock this member's agents**. Their tokens that have not expired or been revoked work again.
 
 An administrator cannot revoke a single token that belongs to a member. Members revoke their own under **Account Settings → Personal access tokens**, and blocking the member is the tool you have to cut them off.
+
+---
+
+## Create a table or a vault for a team
+
+An agent can create a **vault**, which holds files, and a **table**, which holds records. Each one belongs to a team, and the customer is the one who knows which. This section is for developers who build an agent, and for administrators who want to know what an agent is allowed to do here.
+
+These calls are for agents only. A personal access token or a connected app can make them. An organization API key is refused with `403` `access_denied` and nothing is created, which is why they are described on this page and not in the API reference.
+
+### What it takes
+
+- A token with the `rootkey.write` scope to create, and `rootkey.read` to list teams.
+- The `X-RootKey-Organization` header on every call, naming the organization. Without it the call is a `400` [`organization_header_required`](/api-reference/errors#organization_header_required).
+- An organization in **Full access** to create. **Read only** still lets an agent list teams. An organization that has agents off, or has blocked the member, refuses both: see [What your members see](#what-your-members-see).
+- A role that allows the member to create tables, and to read teams. A member whose role does not gets [`insufficient_permission`](/api-reference/errors#insufficient_permission).
+- A member can create for a team they belong to. An owner or an administrator can create for any team of the organization.
+
+An agent creates at most 20 tables and vaults together per minute and member. Every request counts, whether it succeeds or not, and the count starts again at the beginning of each minute. Over the limit, the request gets `429` with a `Retry-After` header that gives the seconds to wait. Organization API keys are never limited this way.
+
+### List the teams
+
+An agent calls `GET https://api.rootkey.ai/api-v1/teams` to find the teams it can offer, then asks the customer which one should own the vault or the table. The team id is not something the customer knows.
+
+For an owner or an administrator the list is every team of the organization. For any other member it is the teams the member belongs to. A member who belongs to no team gets an empty list, not an error. It never lists a team of another organization, and it never lists members, vaults or tables.
+
+```json
+{
+  "data": [
+    { "id": "3f8e2c1a-0b6d-4a57-9c1e-5d2f7a8b9c10", "name": "General" },
+    { "id": "kT3mQ9xV2bN7rLw4yHc8dJzP5sGa6FeU", "name": "Finance", "description": "Accounts and audit" }
+  ],
+  "pagination": { "previousCursor": null, "nextCursor": null },
+  "metadata": {
+    "fetchedCount": 2,
+    "totalCount": 2,
+    "serverTimestamp": "2026-11-15T10:00:00.000Z",
+    "parameters": { "limit": 20, "cursor": null, "order": "desc" }
+  }
+}
+```
+
+- A team has an `id`, a `name` and, only when it has one, a `description`. The key is left out otherwise, never `null`.
+- Do not assume what an `id` looks like. The team every organization starts with has a UUID, and a team made in the ROOTKey app has a 32-character alphanumeric id. Pass the id back exactly as listed.
+- `limit` is a whole number from 1 to 500 (default 20) and `order` is `asc` or `desc` (default `desc`, newest team first). `cursor` is the `pagination.nextCursor` of the previous page, sent back unchanged. A `limit` or `order` that is not valid gets [`invalid_query_parameters`](/api-reference/errors#invalid_query_parameters). A cursor that is not valid gets [`invalid_cursor`](/api-reference/errors#invalid_cursor). Neither is replaced by a default.
+- `metadata.totalCount` is the number of teams this member may list. The test or live data of the request makes no difference: teams are the same in both.
+- An organization API key gets `403` `access_denied`.
+
+### Create a table
+
+An agent calls `POST https://api.rootkey.ai/api-v1/tables` (also `POST /api-v1/platform/tables`) and sends the table already defined, schema included. There is no default team and no default schema: a request without `teamId` or without a valid `schema` is a `400`. An agent must ask the customer for these before it calls, and never guess them:
+
+- the team that owns the table,
+- the table's name, and a description if the customer wants one,
+- every column: its name, its type (`string`, `number`, `boolean`, `date` or `json`) and whether a value is required,
+- which column is the **primary key**. Writing a record whose primary key matches an existing one adds a version of that record instead of a second record.
+
+```json
+{
+  "tableName": "Customers",
+  "description": "One record per customer",
+  "teamId": "kT3mQ9xV2bN7rLw4yHc8dJzP5sGa6FeU",
+  "schema": {
+    "columns": [
+      { "name": "customer_id", "type": "string", "required": true, "primaryKey": true },
+      { "name": "email", "type": "string", "required": true, "limit": 320 },
+      { "name": "active", "type": "boolean", "required": false }
+    ]
+  }
+}
+```
+
+| Field | Rule |
+|---|---|
+| `tableName` | Required. 1 to 255 characters after the spaces at both ends are removed, with no control characters. |
+| `description` | Optional. Up to 1000 characters. It can run over several lines. |
+| `teamId` | Required. An id from the teams list, 1 to 64 characters. |
+| `schema.columns` | Required. 1 to 200 columns. |
+| `name` | Letters, digits and underscores, starting with a letter or an underscore, up to 255 characters. Names are unique, upper and lower case counting as the same. |
+| `type` | `string`, `number`, `boolean`, `date` or `json`. |
+| `required` | `true` or `false`. At least one column must be required. |
+| `limit` | Optional. A whole number from 1 to 100000: the longest entry the column holds. |
+| `primaryKey` | Exactly one column sets it to `true`, and that column must be required. |
+
+A key that is not in this list, in the body's `schema` or in a column, is refused, so a misspelled `primary_key` is never dropped without a word. The schema is stored as its first version.
+
+A table that is created answers `201` with its address:
+
+```json
+{
+  "chainId": 137,
+  "address": "0x4b1d0f9a2c7e83d5a6b1c0e9f2d3a4b5c6d7e8f9",
+  "name": "Customers",
+  "description": "One record per customer"
+}
+```
+
+Keep the `address`: it is what an agent passes to write and list the table's records. The response never includes the schema.
+
+| Status | `errorCode` | What happened |
+|---|---|---|
+| `400` | `invalid_fields` | `tableName`, `description` or `teamId` is missing, too long or malformed. The answer names the fields and does not repeat what was sent. |
+| `400` | `invalid_table_schema` | The schema is missing, or breaks one of the rules above. |
+| `400` | [`usage_limit_exceeded`](/api-reference/errors#usage_limit_exceeded) | The plan's limit on tables, or on API requests, is reached. Nothing is created. |
+| `403` | `access_denied` | The caller is not an agent: an organization API key, for one. |
+| `403` | `not_a_team_member` | The member is not in the team, and is not an owner or an administrator. Ask the customer to choose another team, or ask a team member. |
+| `403` | [`insufficient_permission`](/api-reference/errors#insufficient_permission), [`agent_write_not_allowed`](/api-reference/errors#agent_write_not_allowed) and the other [agent refusals](/api-reference/errors#personal-access-tokens-and-agents) | The member's role, the token or the organization does not allow it. Tell the customer and stop. |
+| `404` | [`resource_not_found`](/api-reference/errors#resource_not_found) | The team does not exist in the organization. A team of another organization is answered the same way. |
+| `429` | | More than 20 tables and vaults created in the minute, or the general [rate limit](/pages/rate-limits). Wait the seconds in `Retry-After`. |
+
+A table counts against the plan's limit on tables. A plan with no limit on tables is not capped.
+
+### Create a vault for a team
+
+An agent creates a vault with `POST /platform/vaults`, as the [API reference](/api-reference/platform/endpoint/vaults/create-vault) describes. Its `teamId` is optional, and it takes any team id of the organization, in the same form the teams list gives it, not only a UUID.
+
+- With a `teamId`, the vault belongs to that team. An id that names no team of the organization is a `404` `resource_not_found`.
+- Without a `teamId`, the vault belongs to the team named **General**. If the organization has no team with that name, the answer is a `404` `resource_not_found` whose message reads `Team named "General" not found`. An agent that gets it should list the teams and ask the customer.
+- An owner or an administrator can create for any team of the organization only when they send a `teamId`. Without one, the member has to belong to **General**, or the answer is a `403` `not_a_team_member`.
+
+<Warning>
+  The agent creates the vault or the table for the team the customer chose. If it picks a team for them, the customer may not find what the agent made. Only the members of that team, and the owners and administrators, can see it.
+</Warning>
 
 ---
 
