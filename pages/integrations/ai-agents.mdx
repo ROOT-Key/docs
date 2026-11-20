@@ -113,6 +113,7 @@ These calls are for agents only. A personal access token or a connected app can 
 ### What it takes
 
 - A token with the `rootkey.write` scope to create, and `rootkey.read` to list teams.
+- The `X-RootKey-Organization` header on every call, naming the organization. Without it the call is a `400` [`organization_header_required`](/api-reference/errors#organization_header_required).
 - An organization in **Full access** to create. **Read only** still lets an agent list teams. An organization that has agents off, or has blocked the member, refuses both: see [What your members see](#what-your-members-see).
 - A role that allows the member to create tables, and to read teams. A member whose role does not gets [`insufficient_permission`](/api-reference/errors#insufficient_permission).
 - A member can create for a team they belong to. An owner or an administrator can create for any team of the organization.
