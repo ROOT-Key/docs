@@ -782,16 +782,19 @@
             "schema": {
               "type": "string"
             },
-            "description": "Cursor from the previous page (ISO createdAt of the last item)"
+            "description": "The opaque `pagination.nextCursor` of the previous page, sent back unchanged. A cursor that does not decode, an old ISO date included, is a 400 `invalid_cursor`, never a restart from the first page. The bracket form (`cursor[]=x`) is a 400 `invalid_pagination`. The cursor also carries the totals of the first page of the walk: send it back exactly as received, never edited or built by hand."
           },
           {
             "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "number",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
               "default": 10
-            }
+            },
+            "description": "Page size, a whole number from 1 to 100. Empty counts as not sent. Any other value is a 400 `invalid_pagination`, never clamped to a default. The bracket form (`limit[]=1`) is the same 400."
           },
           {
             "name": "order",
@@ -804,7 +807,8 @@
                 "desc"
               ],
               "default": "desc"
-            }
+            },
+            "description": "Sort direction, exactly `asc` or `desc`. Empty counts as not sent. Any other value is a 400 `invalid_pagination`. The bracket form (`order[]=asc`) is the same 400."
           },
           {
             "name": "name",
@@ -866,7 +870,14 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/DomainError"
+            "description": "An invalid filter (`invalid_filters`), a `limit` that is not a whole number from 1 to 100 or an `order` that is not `asc` or `desc` (`invalid_pagination`, the offending fields in `details`), or a cursor that does not decode (`invalid_cursor`). A `limit`, `order` or `cursor` sent in bracket form (`limit[]`, `order[]`, `cursor[]`) is also an `invalid_pagination`. A malformed `vaultAddress` (`invalid_wallet_address`), a plan limit (`usage_limit_exceeded`) or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`) also get a 400.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthenticated"
@@ -881,7 +892,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "description": "A personal access token with the `rootkey.read` scope can call it."
+        "description": "Lists the files of a vault, one entry per file lineage: the original while it is live, otherwise its oldest live version, flagged `originalDeleted: true`. `versionsNumber` on an entry is the number of live versions of that lineage. `metadata.totalCount` counts those entries and follows every filter, `status` included. `registered`, `pending`, `error`, `totalSizeBytes` and `last24hCount` describe the whole vault under the `name` and date range filters only and do not follow `status` (`last24hCount` always looks at the last day). The figures of `metadata` (`totalCount` included) are counted by the request that starts the walk, the first page with no `cursor`, and reused by the following pages through the cursor, so they describe the vault as of the first page. They are counted again when the cursor is older than 10 minutes, or was issued for another vault or other filters. A personal access token with the `rootkey.read` scope can call it."
       },
       "post": {
         "summary": "Create file",
@@ -1649,7 +1660,8 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The id of the original file, even if it is deleted, or of any of its versions."
           },
           {
             "name": "vaultAddress",
@@ -1666,16 +1678,20 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The opaque `pagination.nextCursor` of the previous page, sent back unchanged. A cursor that does not decode is a 400 `invalid_cursor`, never a restart from the first page. A cursor in the old form, an ISO date, is refused the same way: start again from the first page. The bracket form (`cursor[]=x`) is a 400 `invalid_pagination`."
           },
           {
             "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "number",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
               "default": 10
-            }
+            },
+            "description": "Page size, a whole number from 1 to 100. Empty counts as not sent. Any other value is a 400 `invalid_pagination`, never clamped to a default. The bracket form (`limit[]=1`) is the same 400."
           },
           {
             "name": "order",
@@ -1688,7 +1704,8 @@
                 "desc"
               ],
               "default": "desc"
-            }
+            },
+            "description": "Sort direction, exactly `asc` or `desc`. Empty counts as not sent. Any other value is a 400 `invalid_pagination`. The bracket form (`order[]=asc`) is the same 400."
           },
           {
             "$ref": "#/components/parameters/OrganizationHeader"
@@ -1709,7 +1726,14 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/DomainError"
+            "description": "A `limit` that is not a whole number from 1 to 100 or an `order` that is not `asc` or `desc` (`invalid_pagination`, the offending fields in `details`), or a cursor that does not decode (`invalid_cursor`). A `limit`, `order` or `cursor` sent in bracket form (`limit[]`, `order[]`, `cursor[]`) is also an `invalid_pagination`. A malformed `vaultAddress` (`invalid_wallet_address`), a plan limit (`usage_limit_exceeded`) or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`) also get a 400.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthenticated"
@@ -1718,17 +1742,24 @@
             "$ref": "#/components/responses/AgentAccessDenied"
           },
           "404": {
-            "description": "Parent file not found"
+            "description": "File not found: the id is unknown, or it (or the original of its file) is not in the vault named.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "description": "A personal access token with the `rootkey.read` scope can call it."
+        "description": "Lists the live versions of a file, newest first by default. `parentId` can be the id of the original, even if the original is deleted, or the id of any of its versions: the answer is the same list of live versions of that file, and the original itself is not in it. `metadata.totalCount` is the number of live versions. A personal access token with the `rootkey.read` scope can call it."
       },
       "post": {
         "summary": "Create file version",
-        "description": "Uploads a new version of an existing file, keeping the parent's version history. A personal access token with the `rootkey.write` scope can call it, in an organization that lets agents write.",
+        "description": "Uploads a new version of an existing file, keeping the original's version history. `parentId` can be the original or any of its versions: the new version is always attached to the original, so the versions of a file form one list under it. A deleted original still takes new versions while at least one of its versions is live; when the original is deleted and none of its versions is live, the request is refused with a 409 `no_promotable_version`. A personal access token with the `rootkey.write` scope can call it, in an organization that lets agents write.",
         "tags": [
           "api-v1-files"
         ],
@@ -1809,6 +1840,16 @@
           },
           "404": {
             "description": "Wallet not found"
+          },
+          "409": {
+            "description": "The original file is deleted and none of its versions is live (`no_promotable_version`). Restore the file first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -2421,16 +2462,20 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The `pagination.nextCursor` of the previous page, sent back unchanged. In this listing it is a date, between 1970-01-01 and 9999-12-31. A value that is not such a date is a 400 `invalid_cursor`, never a restart from the first page. The bracket form (`cursor[]=x`) is a 400 `invalid_pagination`."
           },
           {
             "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "number",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
               "default": 10
-            }
+            },
+            "description": "Page size, a whole number from 1 to 100. Empty counts as not sent. Any other value is a 400 `invalid_pagination`, never clamped to a default. The bracket form (`limit[]=1`) is the same 400."
           },
           {
             "name": "order",
@@ -2443,15 +2488,8 @@
                 "desc"
               ],
               "default": "desc"
-            }
-          },
-          {
-            "name": "name",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
+            },
+            "description": "Sort direction, exactly `asc` or `desc`. Empty counts as not sent. Any other value is a 400 `invalid_pagination`. The bracket form (`order[]=asc`) is the same 400."
           },
           {
             "name": "startDate",
@@ -2503,7 +2541,14 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/DomainError"
+            "description": "A `limit` that is not a whole number from 1 to 100 or an `order` that is not `asc` or `desc` (`invalid_pagination`, the offending fields in `details`), a filter that does not exist for records, `name` included, or a date filter that is not a date (`invalid_filters`), or a cursor that is not a date between 1970-01-01 and 9999-12-31 (`invalid_cursor`). A `limit`, `order` or `cursor` sent in bracket form (`limit[]`, `order[]`, `cursor[]`) is also an `invalid_pagination`. A malformed `vaultAddress` (`invalid_wallet_address`), a plan limit (`usage_limit_exceeded`) or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`) also get a 400.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthenticated"
@@ -2518,7 +2563,7 @@
             "$ref": "#/components/responses/InternalError"
           }
         },
-        "description": "A personal access token with the `rootkey.read` scope can call it."
+        "description": "Lists the records of a table, newest first by default, one entry per record (its versions are listed by List record versions). A record has no name, so there is no `name` filter: sending one is a 400 `invalid_filters`. `metadata.totalCount` follows every filter, `status` included. `registered`, `pending`, `error` and `last24hCount` describe the whole table under the date range filters only and do not follow `status`. A personal access token with the `rootkey.read` scope can call it."
       },
       "post": {
         "summary": "Create record",
@@ -2633,16 +2678,20 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "The opaque `pagination.nextCursor` of the previous page, sent back unchanged. A cursor that does not decode is a 400 `invalid_cursor`, never a restart from the first page. A cursor in the old form, an ISO date, is refused the same way: start again from the first page. The bracket form (`cursor[]=x`) is a 400 `invalid_pagination`."
           },
           {
             "name": "limit",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "number",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
               "default": 10
-            }
+            },
+            "description": "Page size, a whole number from 1 to 100. Empty counts as not sent. Any other value is a 400 `invalid_pagination`, never clamped to a default. The bracket form (`limit[]=1`) is the same 400."
           },
           {
             "name": "order",
@@ -2655,7 +2704,8 @@
                 "desc"
               ],
               "default": "desc"
-            }
+            },
+            "description": "Sort direction, exactly `asc` or `desc`. Empty counts as not sent. Any other value is a 400 `invalid_pagination`. The bracket form (`order[]=asc`) is the same 400."
           },
           {
             "$ref": "#/components/parameters/OrganizationHeader"
@@ -2676,7 +2726,14 @@
             }
           },
           "400": {
-            "$ref": "#/components/responses/DomainError"
+            "description": "A `limit` that is not a whole number from 1 to 100 or an `order` that is not `asc` or `desc` (`invalid_pagination`, the offending fields in `details`), or a cursor that does not decode (`invalid_cursor`). A `limit`, `order` or `cursor` sent in bracket form (`limit[]`, `order[]`, `cursor[]`) is also an `invalid_pagination`. A malformed `vaultAddress` (`invalid_wallet_address`), a plan limit (`usage_limit_exceeded`) or, with a personal access token, a missing `X-RootKey-Organization` header (`organization_header_required`) also get a 400.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthenticated"
@@ -2685,7 +2742,14 @@
             "$ref": "#/components/responses/AgentAccessDenied"
           },
           "404": {
-            "description": "Record not found (or not owned by the caller's table)"
+            "description": "Record not found: the id is unknown or the record is not in the table named.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -4374,7 +4438,12 @@
             "nullable": true
           },
           "versionsNumber": {
-            "type": "number"
+            "type": "number",
+            "description": "In List files: the number of live versions of the file the entry stands for, the number List file versions answers as `metadata.totalCount` for it."
+          },
+          "originalDeleted": {
+            "type": "boolean",
+            "description": "In List files: true only for an entry that stands in for a deleted original, the oldest live version of a file whose original is deleted. `versionsNumber` then counts the live versions of that file."
           },
           "name": {
             "type": "string",

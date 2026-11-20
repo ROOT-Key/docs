@@ -3,3 +3,7 @@ openapi: get /platform/records
 "og:image": "https://docs.rootkey.ai/images/og/api-reference/platform/endpoint/records/list-records.png"
 "twitter:image": "https://docs.rootkey.ai/images/og/api-reference/platform/endpoint/records/list-records.png"
 ---
+
+<Warning>
+  **Page size.** `limit` is a whole number from 1 to 100 (default 10), and `order` is `asc` or `desc`; anything else gets a `400` [`invalid_pagination`](/api-reference/errors#invalid_pagination). A client that asked for more than 100 items at once has to follow `pagination.nextCursor`. A record has no name, so a `name` filter gets a `400` [`invalid_filters`](/api-reference/errors#invalid_filters).
+</Warning>
