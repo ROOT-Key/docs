@@ -56,6 +56,41 @@
     }
   ],
   "paths": {
+    "/healthz": {
+      "get": {
+        "summary": "Service status",
+        "description": "Returns the status of the platform's database, messaging and queue checks, each with how long it took. It needs no API key. The answer is computed at most once every 10 seconds and shared by every caller, so asking more often returns the same answer. A check that does not answer within 2 seconds counts as `Failed`. The status is `Healthy` when all three are `Ready`, `Degraded` when only messaging is `Failed` (still a 200), and `Unhealthy` when the database or the queue is `Failed` (a 503). The body carries only statuses and latencies.",
+        "tags": [
+          "api-v1-public"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Healthy, or Degraded when only messaging is down",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "description": "Unhealthy: the database or the queue is not ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/me": {
       "get": {
         "summary": "Identify the token",
@@ -5120,91 +5155,67 @@
       },
       "HealthResponse": {
         "type": "object",
+        "description": "Status of the dependencies. Healthy: all Ready. Degraded: only messaging Failed (answered with 200). Unhealthy: the database or the queue Failed (answered with 503). Carries no counts, memory or error text.",
         "properties": {
           "status": {
             "type": "string",
             "enum": [
               "Healthy",
+              "Degraded",
               "Unhealthy"
             ],
             "example": "Healthy"
           },
-          "uptime": {
-            "type": "number",
-            "description": "Process uptime in seconds"
-          },
-          "responseTime": {
-            "type": "array",
-            "items": {
-              "type": "number"
-            },
-            "description": "process.hrtime() tuple — [seconds, nanoseconds]"
-          },
           "checks": {
             "type": "object",
             "properties": {
-              "databse": {
-                "type": "object",
-                "properties": {
-                  "status": {
-                    "type": "string"
-                  }
-                },
-                "description": "NOTE: source key is misspelled `databse` (see VerifyAppHealth use case)"
+              "database": {
+                "$ref": "#/components/schemas/HealthCheck"
               },
               "messaging": {
-                "type": "object",
-                "properties": {
-                  "status": {
-                    "type": "string"
-                  }
-                }
+                "$ref": "#/components/schemas/HealthCheck"
               },
               "queue": {
-                "type": "object",
-                "properties": {
-                  "status": {
-                    "type": "string"
-                  }
-                }
+                "$ref": "#/components/schemas/HealthCheck"
               }
-            }
-          },
-          "metrics": {
-            "type": "object",
-            "properties": {
-              "numberOfTeams": {
-                "type": "number"
-              },
-              "numberOfVaults": {
-                "type": "number"
-              },
-              "numberOfOrganizations": {
-                "type": "number"
-              },
-              "numberOfUsers": {
-                "type": "number"
-              }
-            }
-          },
-          "heapUsed": {
-            "type": "string",
-            "example": "42 MB"
-          },
-          "heapTotal": {
-            "type": "string"
-          },
-          "external": {
-            "type": "string"
-          },
-          "rss": {
-            "type": "string"
+            },
+            "required": [
+              "database",
+              "messaging",
+              "queue"
+            ]
           },
           "date": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "When the answer was computed; the same answer is served for up to 10 seconds"
           }
-        }
+        },
+        "required": [
+          "status",
+          "checks",
+          "date"
+        ]
+      },
+      "HealthCheck": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "Ready",
+              "Failed"
+            ]
+          },
+          "latencyMs": {
+            "type": "number",
+            "description": "Milliseconds the check took; about 2000 when it did not answer in time"
+          }
+        },
+        "required": [
+          "status",
+          "latencyMs"
+        ]
       },
       "PlanDTO": {
         "type": "object",
